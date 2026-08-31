@@ -1,0 +1,44 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+
+# testing
+/coverage
+/test-results
+/playwright-report
+/blob-report
+/playwright/.cache
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+Thumbs.db
+*.pem
+debug.log
+*.log
+
+# env files — never commit secrets, but DO commit the example
+.env*
+!.env*.example
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# supabase local
+/supabase/.branches
+/supabase/.temp
+
+# Vendored read-only reference repo (has its own .git).
+# Convert to a real submodule if it should be tracked.
+/Skills/
