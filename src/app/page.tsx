@@ -8,15 +8,17 @@ import { ButtonLink } from "@/components/ui/Button";
 import { ListingGrid } from "@/components/listing/ListingGrid";
 import { SearchBar } from "@/components/listing/SearchBar";
 import { countWithNoun } from "@/lib/format";
-import { MOCK_CATEGORIES, MOCK_LISTINGS } from "@/lib/data/mock";
+import { getCategoriesWithCounts } from "@/lib/data/categories";
+import { getLatestListings } from "@/lib/data/listings";
 
 /** ISR: 5 minutes. See the ISR POLICY table in @/config/site. */
 export const revalidate = 300;
 
-export default function HomePage() {
-  // TODO(M2.10): swap for getActiveListings() / getCategoriesWithCounts().
-  const categories = MOCK_CATEGORIES;
-  const latest = MOCK_LISTINGS.slice(0, LIMITS.homepageListings);
+export default async function HomePage() {
+  const [categories, latest] = await Promise.all([
+    getCategoriesWithCounts(),
+    getLatestListings(LIMITS.homepageListings),
+  ]);
 
   return (
     <>

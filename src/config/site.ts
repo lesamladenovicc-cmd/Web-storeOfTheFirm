@@ -130,7 +130,7 @@ export const LIMITS = {
  * Keep this table and the route literals in sync.
  *
  *   /                        300   — 5 min, latest-listings strip
- *   /kategorija/[slug]      3600   — 1 h, SSG + ISR
+ *   /kategorija/[slug]         –   — SSR (reads searchParams for filters)
  *   /oglas/[slug]           3600   — 1 h, plus on-demand revalidatePath
  *   /sitemap.xml            3600   — 1 h
  *   /oglasi                    –   — SSR per request (reads searchParams)

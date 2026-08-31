@@ -1,0 +1,107 @@
+import Link from "next/link";
+import { COPY } from "@/config/copy";
+import { cn } from "@/lib/cn";
+import { buildUrl } from "@/lib/filters";
+import type { ListingFilters } from "@/types/domain";
+
+/**
+ * Server-rendered pagination. Real <a> links, so crawlers can follow
+ * them and users can open pages in a new tab.
+ */
+export function Pagination({
+  page,
+  pageCount,
+  filters,
+  basePath = "/oglasi",
+}: {
+  page: number;
+  pageCount: number;
+  filters: ListingFilters;
+  basePath?: string;
+}) {
+  if (pageCount <= 1) return null;
+
+  const pages = pageWindow(page, pageCount);
+
+  const linkClass = (active: boolean) =>
+    cn(
+      "u-numeric inline-flex h-10 min-w-10 items-center justify-center rounded-sm border px-3 text-sm transition-colors",
+      active
+        ? "border-accent bg-accent text-bg"
+        : "border-border text-paper-muted hover:border-border-strong hover:text-paper",
+    );
+
+  return (
+    <nav aria-label={COPY.listings.page} className="mt-12 flex justify-center">
+      <ul className="flex flex-wrap items-center gap-1.5">
+        <li>
+          {page > 1 ? (
+            <Link
+              href={buildUrl(basePath, filters, { page: page - 1 })}
+              rel="prev"
+              className={linkClass(false)}
+            >
+              &larr;<span className="sr-only">{COPY.common.previous}</span>
+            </Link>
+          ) : (
+            <span className={cn(linkClass(false), "opacity-35")} aria-hidden="true">
+              &larr;
+            </span>
+          )}
+        </li>
+
+        {pages.map((p, i) =>
+          p === null ? (
+            <li key={`gap-${i}`} aria-hidden="true" className="px-1 text-paper-faint">
+              &hellip;
+            </li>
+          ) : (
+            <li key={p}>
+              <Link
+                href={buildUrl(basePath, filters, { page: p })}
+                aria-current={p === page ? "page" : undefined}
+                className={linkClass(p === page)}
+              >
+                {p}
+              </Link>
+            </li>
+          ),
+        )}
+
+        <li>
+          {page < pageCount ? (
+            <Link
+              href={buildUrl(basePath, filters, { page: page + 1 })}
+              rel="next"
+              className={linkClass(false)}
+            >
+              &rarr;<span className="sr-only">{COPY.common.next}</span>
+            </Link>
+          ) : (
+            <span className={cn(linkClass(false), "opacity-35")} aria-hidden="true">
+              &rarr;
+            </span>
+          )}
+        </li>
+      </ul>
+    </nav>
+  );
+}
+
+/** First, last, and a window around the current page; null = ellipsis. */
+function pageWindow(page: number, pageCount: number): (number | null)[] {
+  if (pageCount <= 7) {
+    return Array.from({ length: pageCount }, (_, i) => i + 1);
+  }
+
+  const out: (number | null)[] = [1];
+  const start = Math.max(2, page - 1);
+  const end = Math.min(pageCount - 1, page + 1);
+
+  if (start > 2) out.push(null);
+  for (let p = start; p <= end; p++) out.push(p);
+  if (end < pageCount - 1) out.push(null);
+
+  out.push(pageCount);
+  return out;
+}

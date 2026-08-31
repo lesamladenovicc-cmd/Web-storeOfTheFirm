@@ -7,23 +7,28 @@ import { COPY } from "@/config/copy";
 import { MAIN_NAV } from "@/config/site";
 import { cn } from "@/lib/cn";
 
-export function MobileNav({ isAuthed }: { isAuthed: boolean }) {
-  const [open, setOpen] = useState(false);
+export function MobileNav({ isAuthed = false }: { isAuthed?: boolean }) {
   const pathname = usePathname();
 
-  // Close on navigation.
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
+  /**
+   * The sheet stores the route it was opened on, and `open` is derived
+   * from it. Navigating changes `pathname`, so the menu closes on its
+   * own — including on browser back/forward — with no effect and no
+   * cascading render. (An effect calling setState on pathname change is
+   * the obvious version of this and is what the React compiler flags.)
+   */
+  const [openedOn, setOpenedOn] = useState<string | null>(null);
+  const open = openedOn === pathname;
 
-  // Lock body scroll and close on Escape while the sheet is open.
+  // Body-scroll lock and Escape: a genuine external-system sync.
   useEffect(() => {
     if (!open) return;
+
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") setOpenedOn(null);
     };
     document.addEventListener("keydown", onKey);
 
@@ -37,7 +42,7 @@ export function MobileNav({ isAuthed }: { isAuthed: boolean }) {
     <>
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpenedOn(open ? null : pathname)}
         aria-expanded={open}
         aria-controls="mobile-nav"
         aria-label={open ? COPY.nav.closeMenu : COPY.nav.openMenu}
@@ -75,6 +80,7 @@ export function MobileNav({ isAuthed }: { isAuthed: boolean }) {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setOpenedOn(null)}
                 className={cn(
                   "border-b border-border py-4 font-display text-h3 transition-colors",
                   pathname === item.href ? "text-accent" : "text-paper hover:text-accent",
@@ -85,6 +91,7 @@ export function MobileNav({ isAuthed }: { isAuthed: boolean }) {
             ))}
             <Link
               href={isAuthed ? "/dashboard" : "/prijava"}
+              onClick={() => setOpenedOn(null)}
               className="mt-6 inline-flex h-12 items-center justify-center rounded-sm bg-accent font-medium text-bg"
             >
               {isAuthed ? COPY.nav.dashboard : COPY.nav.login}

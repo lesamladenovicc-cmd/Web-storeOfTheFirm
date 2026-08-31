@@ -43,7 +43,20 @@ export function buildMetadata({
 }: BuildMetadataInput = {}): Metadata {
   const url = absoluteUrl(path);
   const desc = truncate(toPlainText(description ?? SITE.description), 155);
-  const ogImages = images?.length ? images : [absoluteUrl("/og-default.png")];
+
+  // Defining `openGraph` at all SUPPRESSES Next's opengraph-image.tsx
+  // file-convention injection for that route — verified in the build
+  // output: the homepage (which does not call this helper) gets the
+  // generated card, while every route that does would silently ship no
+  // og:image. So the fallback is referenced explicitly. The route works
+  // without Next's cache-busting query.
+  const fallbackOgImage = absoluteUrl("/opengraph-image");
+  const ogImages = (images?.length ? images : [fallbackOgImage]).map((img) => ({
+    url: img,
+    width: 1200,
+    height: 630,
+    alt: title ?? SITE.name,
+  }));
 
   return {
     title,
@@ -59,18 +72,13 @@ export function buildMetadata({
       url,
       siteName: SITE.name,
       locale: SITE.ogLocale,
-      images: ogImages.map((img) => ({
-        url: img,
-        width: 1200,
-        height: 630,
-        alt: title ?? SITE.name,
-      })),
+      images: ogImages,
     },
     twitter: {
       card: "summary_large_image",
       title: title ?? SITE.name,
       description: desc,
-      images: ogImages,
+      images: images?.length ? images : [fallbackOgImage],
     },
     ...(other ? { other } : {}),
   };
