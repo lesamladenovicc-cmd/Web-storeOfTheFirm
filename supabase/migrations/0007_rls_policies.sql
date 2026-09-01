@@ -107,13 +107,24 @@ create policy categories_write_admin
 -- listings
 -- =====================================================================
 
--- Anyone, including anon, may read ACTIVE listings. This is the entire
--- public surface of the application.
+-- Anyone, including anon, may read PUBLISHED listings — active or sold.
+-- This is the entire public surface of the application.
+--
+-- Sold listings stay readable on purpose. A link shared to a buyer, or
+-- an indexed URL, must not turn into a 404 the moment the seller marks
+-- the item sold; the page shows a "Prodato" badge, a struck-through
+-- price and SoldOut in its JSON-LD instead. They are still kept out of
+-- browsing: search_listings() and the sitemap query filter to 'aktivan'
+-- on their own, and the page emits noindex once it is no longer active.
+--
+-- DRAFTS remain completely invisible here, which is the part that
+-- matters for security.
 drop policy if exists listings_select_active on public.listings;
-create policy listings_select_active
+drop policy if exists listings_select_public on public.listings;
+create policy listings_select_public
   on public.listings for select
   to anon, authenticated
-  using (status = 'aktivan');
+  using (status in ('aktivan', 'prodato'));
 
 -- OR'd with the above: staff additionally see their own drafts and sold
 -- listings; admins see everything.
@@ -165,14 +176,15 @@ create policy listings_delete_own_or_admin
 -- Visibility follows the parent listing exactly.
 
 drop policy if exists listing_images_select_active on public.listing_images;
-create policy listing_images_select_active
+drop policy if exists listing_images_select_public on public.listing_images;
+create policy listing_images_select_public
   on public.listing_images for select
   to anon, authenticated
   using (
     exists (
       select 1 from public.listings l
       where l.id = listing_id
-        and l.status = 'aktivan'
+        and l.status in ('aktivan', 'prodato')
     )
   );
 

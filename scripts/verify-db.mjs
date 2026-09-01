@@ -90,6 +90,135 @@ async function asRole(db, role, userId) {
   if (role) await db.exec(`set role ${role};`);
 }
 
+/**
+ * Replays the exact statement sequence createListingAction /
+ * updateListingAction / deleteListingAction issue, as an authenticated
+ * seller with RLS active.
+ *
+ * The Server Actions themselves cannot run here (they need Next's
+ * request context), so this covers the half that actually touches the
+ * database: whether a seller can create a draft, attach images, publish
+ * it, have it appear publicly, and delete it cleanly.
+ */
+async function createFlowSection(db) {
+  console.log("\nListing create/publish/delete flow (as a seller, RLS on)");
+
+  const SELLER = "22222222-2222-4222-8222-222222222222";
+  // The client generates the id up front so images can be uploaded to
+  // {sellerId}/{listingId}/ before the row exists.
+  const NEW_ID = "99999999-9999-4999-8999-999999999999";
+  const CATEGORY = "aaaaaaaa-0000-4000-8000-000000000001";
+
+  await asRole(db, "authenticated", SELLER);
+
+  // --- 1. Save as draft -------------------------------------------
+  await allow(
+    db,
+    "seller creates a draft with a client-generated id",
+    `insert into public.listings
+       (id, slug, title, description, condition, price_rsd, is_negotiable,
+        status, location, category_id, seller_id, contact_name, contact_phone)
+     values ($1, 'novi-bager-test-a1b2c3', 'Novi bager za test',
+             'Opis koji je dovoljno dugacak da prodje validaciju objave.',
+             'korisceno', 1250000, true, 'nacrt', 'Novi Sad', $2, $3,
+             'Prodavac A', '+381641234567')`,
+    [NEW_ID, CATEGORY, SELLER],
+  );
+
+  await expectValue(db, "draft has no published_at yet",
+    `select published_at is null from public.listings where id = '${NEW_ID}'`, true);
+
+  // --- 2. Attach images -------------------------------------------
+  await allow(
+    db,
+    "seller attaches images under their own storage prefix",
+    `insert into public.listing_images (listing_id, storage_path, alt, sort_order)
+     values ('${NEW_ID}', '${SELLER}/${NEW_ID}/foto-1.webp', 'Novi bager', 0),
+            ('${NEW_ID}', '${SELLER}/${NEW_ID}/foto-2.webp', 'Novi bager', 1)`,
+  );
+
+  await allow(
+    db,
+    "cover_image_path is set from the first image",
+    `update public.listings
+     set cover_image_path = '${SELLER}/${NEW_ID}/foto-1.webp'
+     where id = '${NEW_ID}'`,
+  );
+
+  // --- 3. Publish --------------------------------------------------
+  await allow(db, "seller publishes the draft",
+    `update public.listings set status = 'aktivan' where id = '${NEW_ID}'`);
+
+  await expectValue(db, "published_at was stamped on publish",
+    `select published_at is not null from public.listings where id = '${NEW_ID}'`, true);
+
+  // --- 4. Visible to the public ------------------------------------
+  await asRole(db, "anon", null);
+  await expectValue(db, "anon can now see it",
+    `select count(*) from public.listings where id = '${NEW_ID}'`, 1);
+  await expectValue(db, "it appears in public search",
+    "select count(*) from public.search_listings('bager za test')", 1);
+  await expectValue(db, "its images are public too",
+    `select count(*) from public.listing_images where listing_id = '${NEW_ID}'`, 2);
+
+  // --- 5. Edit -----------------------------------------------------
+  await asRole(db, "authenticated", SELLER);
+  await allow(db, "seller edits the price",
+    `update public.listings set price_rsd = 1190000 where id = '${NEW_ID}'`);
+  await expectValue(db, "the new price is stored",
+    `select price_rsd from public.listings where id = '${NEW_ID}'`, 1190000);
+
+  await allow(db, "seller marks it sold",
+    `update public.listings set status = 'prodato' where id = '${NEW_ID}'`);
+  await asRole(db, "anon", null);
+  await expectValue(db, "a sold listing drops out of public SEARCH",
+    "select count(*) from public.search_listings('bager za test')", 0);
+  // ...but the page itself must still resolve, so a shared or indexed
+  // link does not 404 the moment the seller marks the item sold.
+  await expectValue(db, "yet the sold page is still readable by anon",
+    `select count(*) from public.listings where id = '${NEW_ID}'`, 1);
+  await expectValue(db, "and so are its images",
+    `select count(*) from public.listing_images where listing_id = '${NEW_ID}'`, 2);
+
+  // --- 6. Republish, then delete -----------------------------------
+  await asRole(db, "authenticated", SELLER);
+  await allow(db, "seller puts it back on sale",
+    `update public.listings set status = 'aktivan' where id = '${NEW_ID}'`);
+
+  await allow(db, "seller deletes the listing",
+    `delete from public.listings where id = '${NEW_ID}'`);
+  await expectValue(db, "its images cascade away",
+    `select count(*) from public.listing_images where listing_id = '${NEW_ID}'`, 0);
+
+  // --- 7. Publish guards -------------------------------------------
+  // These are the DB half of the publish schema: even if the zod layer
+  // were bypassed, the database refuses an unusable public listing.
+  await deny(
+    db,
+    "cannot publish without a contact channel",
+    `insert into public.listings
+       (slug, title, condition, status, location, category_id, seller_id)
+     values ('bez-kontakta-test-x1y2z3', 'Oglas bez kontakta', 'novo',
+             'aktivan', 'Nis', '${CATEGORY}', '${SELLER}')`,
+  );
+  await deny(
+    db,
+    "cannot publish without a category",
+    `insert into public.listings
+       (slug, title, condition, status, location, seller_id, contact_phone)
+     values ('bez-kategorije-test-x1y2z3', 'Oglas bez kategorije', 'novo',
+             'aktivan', 'Nis', '${SELLER}', '+381641234567')`,
+  );
+  await deny(
+    db,
+    "cannot reuse an existing slug",
+    `insert into public.listings (slug, title, condition, seller_id)
+     values ('bager-masina-aktivan-a1b2c3', 'Duplirani slug', 'novo', '${SELLER}')`,
+  );
+
+  await asRole(db, null, null);
+}
+
 /** seed.sql is 150 lines of untested SQL; execute it for real. */
 async function seedSection(db) {
   console.log("\nseed.sql");
@@ -237,7 +366,7 @@ async function main() {
   console.log("\n[1mANON — the public surface[0m");
   await asRole(db, "anon", null);
 
-  await expectValue(db, "sees only active listings",
+  await expectValue(db, "sees published listings, never drafts",
     "select count(*) from public.listings", 2);
   await expectValue(db, "cannot see drafts",
     `select count(*) from public.listings where id = '${L_DRAFT_A}'`, 0);
@@ -417,6 +546,7 @@ async function main() {
     `insert into storage.objects (bucket_id, name) values ('listings', 'anon/x/y.webp')`);
 
   // =================================================================
+  await createFlowSection(db);
   await seedSection(db);
 
   await asRole(db, null, null);
