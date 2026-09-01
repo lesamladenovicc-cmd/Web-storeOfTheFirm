@@ -148,4 +148,12 @@ export type ActionState<T = undefined> = {
   data?: T;
 };
 
-export const ACTION_IDLE: ActionState = { ok: false };
+/**
+ * Initial state for useActionState.
+ *
+ * Deliberately NOT annotated as `ActionState` (i.e. ActionState<undefined>):
+ * that would pin `data` to undefined and make it unusable as the initial
+ * state of a typed action such as ActionState<{ password: string }>.
+ * `data` is optional, so this literal satisfies ActionState<T> for every T.
+ */
+export const ACTION_IDLE = { ok: false } as const;

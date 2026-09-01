@@ -20,12 +20,34 @@ Internal listings web store (MVP). KupujemProdajem-style but **listing-only**: a
 - Do **NOT** consult or invoke skills during planning — skills are for implementation only.
 - `Skills/` is **read-only reference**. Never edit anything under it.
 
-## Stack
-Confirm/lock during Plan Mode, then fill in exact versions here. Default:
-- Next.js (App Router, TypeScript) — SEO + SSR/SSG
-- Supabase — Postgres, Auth, Storage (images)
-- Tailwind CSS
-- Vercel hosting
+## Stack (LOCKED)
+- **Next.js 16.3.4** (App Router, TypeScript strict) — SEO + SSR/SSG
+- **React 19.2.8**
+- **Supabase** — Postgres, Auth, Storage (`@supabase/supabase-js` 2.x, `@supabase/ssr` 0.8)
+- **Tailwind CSS v4** — CSS-first `@theme` tokens in `src/app/globals.css`
+- **zod 4** — every server-side validation boundary
+- **Vercel** hosting
+- Tests: Vitest (units), PGlite (SQL/RLS), Playwright (e2e)
+
+Fonts: Archivo (display) + IBM Plex Sans (body) + IBM Plex Mono (numerics).
+Always request the `latin-ext` subset — Serbian č ć š ž đ live there.
+
+### Hard-won constraints (do not regress these)
+- **Two Supabase clients.** `lib/supabase/public.ts` (session-less, anon) for
+  every public read — reading cookies opts a route out of static generation and
+  silently kills ISR. `lib/supabase/server.ts` (cookie) for dashboard reads only.
+- `generateStaticParams` and `sitemap()` run at build time with **no request** —
+  they must never touch the cookie client.
+- Defining `openGraph` in `generateMetadata` **suppresses** the
+  `opengraph-image.tsx` file convention; `buildMetadata` references the fallback
+  explicitly.
+- `export const revalidate` must be a **literal**, not an imported constant.
+  The ISR policy table lives in `src/config/site.ts` as documentation only.
+- Never call `incrementViewCount` from an ISR page body — it would count once
+  per regeneration, not per visitor.
+- Formatting is hand-rolled in `lib/format.ts`, never `Intl` — server/client ICU
+  disagreement causes hydration mismatches on prices.
+- `"use server"` modules may only export async functions.
 
 ## Design system
 Beige + dark, one bright accent, minimal but powerful. Tokens (swappable — change these to re-theme):
@@ -68,11 +90,16 @@ Enums (Serbian, user-facing):
 - Secrets in `.env.local`, never committed. Document required env vars in the README.
 
 ## Commands
-Fill in once scaffolded:
 - dev: `npm run dev`
-- build: `npm run build`
+- build: `npm run build` (requires a reachable Supabase project)
 - lint: `npm run lint`
 - typecheck: `npm run typecheck`
+- unit tests: `npm run test`
+- **db + RLS verification: `npm run verify:db`** — runs every migration and 75
+  assertions in PGlite (real Postgres in WASM). No Docker needed. Run this after
+  ANY change under `supabase/migrations/`.
+- e2e: `npm run test:e2e`
+- seed staff accounts: `npm run seed:users`
 
 ## Don'ts
 - No payment/checkout. No public registration. No nested category trees.

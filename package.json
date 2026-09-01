@@ -15,6 +15,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "verify:db": "node scripts/verify-db.mjs",
+    "seed:users": "node scripts/seed-users.mjs",
     "types:db": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID --schema public > src/types/database.ts"
   },
   "dependencies": {

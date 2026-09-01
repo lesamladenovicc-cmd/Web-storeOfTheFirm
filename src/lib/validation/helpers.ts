@@ -15,7 +15,15 @@ export function toFieldErrors(error: ZodError): Record<string, string> {
   return out;
 }
 
-export function fail(message: string, fieldErrors?: Record<string, string>): ActionState {
+/**
+ * Generic in T so a failure is assignable to a typed ActionState<T>.
+ * A failed action carries no data, but must still satisfy the same
+ * return type as the success path.
+ */
+export function fail<T = undefined>(
+  message: string,
+  fieldErrors?: Record<string, string>,
+): ActionState<T> {
   return { ok: false, message, ...(fieldErrors ? { fieldErrors } : {}) };
 }
 
