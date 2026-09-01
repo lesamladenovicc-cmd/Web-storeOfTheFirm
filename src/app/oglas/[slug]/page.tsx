@@ -13,7 +13,7 @@ import { ListingGrid } from "@/components/listing/ListingGrid";
 import { PriceTag } from "@/components/listing/PriceTag";
 import { ShareButton } from "@/components/listing/ShareButton";
 import { ViewTracker } from "@/components/listing/ViewTracker";
-import { ConditionBadge } from "@/components/ui/Badge";
+import { Badge, ConditionBadge } from "@/components/ui/Badge";
 import { JsonLd } from "@/components/seo/JsonLd";
 import {
   getActiveListingSlugs,
@@ -132,6 +132,12 @@ export default async function ListingPage({
 
               <div className="mt-8">
                 <div className="flex flex-wrap items-center gap-3">
+                  {/* A sold listing stays reachable (inbound links, and
+                      it is still useful as a price reference) but must
+                      say so before the visitor reads the price. */}
+                  {listing.status === "prodato" ? (
+                    <Badge tone="danger">{COPY.listing.soldRibbon}</Badge>
+                  ) : null}
                   <ConditionBadge condition={listing.condition} />
                   {listing.categoryName && listing.categorySlug ? (
                     <Link
@@ -150,6 +156,7 @@ export default async function ListingPage({
                     price={listing.priceRsd}
                     isNegotiable={listing.isNegotiable}
                     size="lg"
+                    className={listing.status === "prodato" ? "line-through opacity-60" : undefined}
                   />
                   <ShareButton title={listing.title} />
                 </div>

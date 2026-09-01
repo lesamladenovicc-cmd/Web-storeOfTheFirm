@@ -62,6 +62,9 @@ export default function RootLayout({
   return (
     <html
       lang={SITE.locale}
+      /* Opts smooth scrolling out of route transitions: without this Next
+         warns, and every navigation animates the scroll reset. */
+      data-scroll-behavior="smooth"
       className={`${archivo.variable} ${plexSans.variable} ${plexMono.variable}`}
     >
       <body className="min-h-dvh antialiased">

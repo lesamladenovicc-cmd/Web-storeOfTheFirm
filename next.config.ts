@@ -20,6 +20,9 @@ const nextConfig: NextConfig = {
   // Pin the workspace root; otherwise Turbopack walks up and finds an
   // unrelated package-lock.json in the user's home directory.
   turbopack: { root: import.meta.dirname },
+  // Playwright drives the dev server over 127.0.0.1; without this Next
+  // logs a cross-origin warning on every request.
+  allowedDevOrigins: ["127.0.0.1"],
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: supabaseHost

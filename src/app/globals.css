@@ -9,11 +9,15 @@
    a workshop-dark ground. Hairline technical rules instead of shadows,
    monospace for anything numeric (prices, hours, reference codes).
 
-   CONTRAST NOTES (measured, WCAG 2.1):
-     accent #FF4D00 on bg #141414 ....... 5.63:1  PASS AA text
-     ink    #1A1A1A on accent #FF4D00 ... 5.63:1  PASS AA text
+   CONTRAST NOTES (verified by axe-core in e2e/a11y.spec.ts, not by eye):
+     accent #FF4D00 on bg #141414 ....... 5.54:1  PASS AA text
+     ink    #141414 on accent #FF4D00 ... 5.54:1  PASS AA text
+     paper-faint on surface-2 ........... 4.60:1  PASS (worst case)
      accent #FF4D00 on beige #E7DECB .... 2.49:1  FAIL — never use
                                                   accent as TEXT on beige.
+
+   NEVER put opacity on text sitting over the accent: 70% ink over
+   #FF4D00 blends to #5b250e (3.67:1) and fails. Use a solid token.
    ================================================================== */
 
 @theme {
@@ -34,7 +38,11 @@
 
   --color-paper: #f4efe3;
   --color-paper-muted: #a8a296;
-  --color-paper-faint: #6f6a60;
+  /* Measured, not chosen by eye: this is the lightest value that clears
+     4.5:1 on ALL THREE dark grounds (4.60 on the worst case, surface-2).
+     The previous #6f6a60 failed everywhere (3.43 / 3.10 / 2.82) and axe
+     caught it across the footer, eyebrows and every metadata line. */
+  --color-paper-faint: #948d80;
 
   /* --- Accent — primary actions and highlights ONLY ---------------- */
   --color-accent: #ff4d00;

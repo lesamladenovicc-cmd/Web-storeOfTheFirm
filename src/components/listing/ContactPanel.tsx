@@ -67,8 +67,10 @@ export function ContactPanel({ listing }: { listing: Listing }) {
                   <path d="M5.5 1.5 7 4.5 5.5 6c.8 1.7 2.3 3.2 4 4L11 8.5l3 1.5v3c0 .6-.4 1-1 1C7 14 2 9 2 2.5c0-.6.4-1 1-1h2.5Z" />
                 </svg>
                 {COPY.contact.revealPhone}
-                {/* Masked digits keep the button from reflowing on reveal. */}
-                <span className="u-numeric text-sm opacity-70">{maskPhone(phone)}</span>
+                {/* Masked digits keep the button from reflowing on reveal.
+                    No opacity here: 70% ink over the accent blends to
+                    #5b250e (3.67:1) and fails AA — axe caught it. */}
+                <span className="u-numeric text-sm">{maskPhone(phone)}</span>
               </button>
             )
           ) : null}

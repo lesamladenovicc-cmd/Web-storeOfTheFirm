@@ -52,7 +52,11 @@ test("wrong credentials give a generic error, not user enumeration", async ({ pa
   await page.getByRole("button", { name: /prijavi se/i }).click();
 
   // Must not distinguish "no such user" from "wrong password".
-  await expect(page.getByRole("alert")).toContainText(/pogrešna/i);
+  //
+  // Scoped with .first(): both the form-level Alert and any FieldError
+  // carry role="alert", so an unscoped getByRole is a strict-mode
+  // violation whenever a submit produces both.
+  await expect(page.getByRole("alert").first()).toContainText(/pogrešna|greška/i);
 });
 
 test("registration route does not exist", async ({ page }) => {
