@@ -28,7 +28,29 @@ Fonts: Archivo (display) + IBM Plex Sans (body) + IBM Plex Mono
 
 ---
 
-## Getting started
+## Just want to look at it?
+
+```bash
+npm install
+npm run dev:preview
+```
+
+Open <http://localhost:3000>. No Supabase project, no `.env.local`, no
+setup at all.
+
+This boots a mock backend (`scripts/mock-supabase.mjs`) with ten
+realistic Serbian listings and generated placeholder photos, then starts
+the dev server against it. Everything public works: homepage, search
+(including diacritic-free — try `masina`), filters, sorting, categories,
+listing detail with gallery and contact panel, a sold listing, a
+"Po dogovoru" listing, `sitemap.xml` and the Product JSON-LD.
+
+**The dashboard is not included** — it needs real Supabase Auth. Follow
+the setup below when you want to log in and post listings.
+
+---
+
+## Getting started for real
 
 ```bash
 npm install
@@ -106,7 +128,8 @@ it into a client component is a build error rather than a silent leak.
 ## Commands
 
 ```bash
-npm run dev          # dev server
+npm run dev:preview  # storefront with mock data -- no Supabase needed
+npm run dev          # dev server (needs Supabase)
 npm run build        # production build (needs a reachable Supabase)
 npm run typecheck    # tsc --noEmit
 npm run lint         # eslint
