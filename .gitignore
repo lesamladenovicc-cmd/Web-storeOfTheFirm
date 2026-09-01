@@ -42,3 +42,7 @@ next-env.d.ts
 # Vendored read-only reference repo (has its own .git).
 # Convert to a real submodule if it should be tracked.
 /Skills/
+
+# playwright
+/test-results
+/playwright-report

@@ -31,6 +31,23 @@ import { breadcrumbJsonLd, buildMetadata, productJsonLd } from "@/lib/seo";
  * `dynamicParams` so a listing published after the build renders on its
  * first request. Seller edits additionally call revalidatePath, so the
  * cached copy is never stale after a save.
+ *
+ * NO loading.tsx IN THIS SEGMENT — deliberately.
+ *
+ * A Suspense fallback makes the response stream, and once the response
+ * headers are committed the status can no longer change. With one here,
+ * a deleted or unpublished listing returned HTTP 200 (a soft 404) and
+ * rendered the generic root not-found copy instead of this segment's
+ * listing-specific not-found.tsx, which never got a chance to mount.
+ *
+ * Next injects `noindex` on streamed not-found responses, so indexation
+ * was not actually at risk — but a real 404 is still the right answer
+ * for analytics, for crawlers that flag soft 404s, and for showing the
+ * correct message. The skeleton cost nothing to give up: this page is
+ * ISR-cached, so it is served from cache and rarely suspends at all.
+ *
+ * /oglasi keeps its loading.tsx — that route is dynamic SSR, genuinely
+ * slow, and has no 404 path.
  */
 export const revalidate = 3600; // See the ISR POLICY table in @/config/site.
 export const dynamicParams = true;
