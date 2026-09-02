@@ -102,6 +102,58 @@ function generatedImage(path) {
 }
 
 /* ================================================================== */
+/* Multipart                                                           */
+/* ================================================================== */
+
+/**
+ * Extracts the uploaded file from a multipart/form-data body.
+ *
+ * supabase-js does NOT PUT raw bytes for a Storage upload — it posts a
+ * multipart form (cacheControl field, then the file). Storing the raw
+ * request body therefore stored the whole MIME envelope and served it
+ * as an image, so next/image rejected every uploaded cover with a 400
+ * and covers rendered blank on the public page.
+ *
+ * Deliberately minimal: one file part, no nested multipart, no
+ * transfer-encoding. That is all the client sends.
+ */
+function parseMultipart(body, contentTypeHeader) {
+  const boundaryMatch = /boundary=(?:"([^"]+)"|([^;]+))/i.exec(contentTypeHeader ?? "");
+  const boundary = boundaryMatch?.[1] ?? boundaryMatch?.[2];
+  if (!boundary) return null;
+
+  const delimiter = Buffer.from(`--${boundary}`);
+  const parts = [];
+  let index = body.indexOf(delimiter);
+
+  while (index !== -1) {
+    const start = index + delimiter.length;
+    const next = body.indexOf(delimiter, start);
+    if (next === -1) break;
+    // Trim the CRLF that follows the boundary and precedes the next one.
+    parts.push(body.subarray(start + 2, next - 2));
+    index = next;
+  }
+
+  for (const part of parts) {
+    const headerEnd = part.indexOf("\r\n\r\n");
+    if (headerEnd === -1) continue;
+
+    const headers = part.subarray(0, headerEnd).toString("utf8");
+    // The file part is the one carrying a filename.
+    if (!/filename=/i.test(headers)) continue;
+
+    const typeMatch = /content-type:\s*([^\r\n]+)/i.exec(headers);
+    return {
+      body: part.subarray(headerEnd + 4),
+      contentType: typeMatch?.[1]?.trim() ?? "application/octet-stream",
+    };
+  }
+
+  return null;
+}
+
+/* ================================================================== */
 /* In-memory database                                                  */
 /* ================================================================== */
 
@@ -118,7 +170,13 @@ const db = {
   listings: [],
   listing_images: [],
   inquiries: [],
-  /** path -> Buffer. Uploaded objects live here alongside generated ones. */
+  /**
+   * path -> { body: Buffer, contentType: string }.
+   *
+   * The content type is stored, not assumed: the uploader re-encodes
+   * everything to WebP, so serving a fixed image/png made next/image
+   * reject every uploaded cover with a 400.
+   */
   storage: new Map(),
 };
 
@@ -480,14 +538,23 @@ export function start(port = DEFAULT_PORT) {
       req.method === "GET"
     ) {
       const key = pathname.replace("/storage/v1/object/public/listings/", "");
-      const png = db.storage.get(key) ?? generatedImage(key);
+      const stored = db.storage.get(key);
+
+      // Serve the type the object was uploaded with. Hardcoding
+      // image/png here served every uploaded file as PNG — and the
+      // uploader always re-encodes to WebP — so next/image rejected
+      // them with 400 "not a valid image" and covers rendered blank.
+      // Seeded placeholders are genuinely PNG.
+      const body = stored?.body ?? generatedImage(key);
+      const contentType = stored?.contentType ?? "image/png";
+
       res.writeHead(200, {
         ...cors,
-        "Content-Type": "image/png",
-        "Content-Length": png.length,
+        "Content-Type": contentType,
+        "Content-Length": body.length,
         "Cache-Control": "public, max-age=3600",
       });
-      res.end(png);
+      res.end(body);
       return;
     }
 
@@ -519,7 +586,17 @@ export function start(port = DEFAULT_PORT) {
       if (pathname.startsWith("/storage/v1/object/listings/")) {
         const key = pathname.replace("/storage/v1/object/listings/", "");
         if (req.method === "POST" || req.method === "PUT") {
-          db.storage.set(decodeURIComponent(key), rawBody);
+          const type = req.headers["content-type"] ?? "";
+          // supabase-js posts a multipart form, not the raw file.
+          const filePart = type.startsWith("multipart/")
+            ? parseMultipart(rawBody, type)
+            : { body: rawBody, contentType: type || "application/octet-stream" };
+
+          if (!filePart) {
+            return send({ error: "could not parse upload" }, 400);
+          }
+
+          db.storage.set(decodeURIComponent(key), filePart);
           return send({ Key: `listings/${key}`, Id: randomUUID() }, 200);
         }
         if (req.method === "DELETE") {

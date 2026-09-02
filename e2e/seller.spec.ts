@@ -139,6 +139,24 @@ test("CREATE — a new listing is published and goes live publicly", async ({ pa
   // And it is genuinely on the public storefront.
   await page.goto(`/oglasi?q=${encodeURIComponent("Busilica stubna")}`);
   await expect(page.getByText(title)).toBeVisible();
+
+  /**
+   * The uploaded cover must actually RENDER, not merely be referenced.
+   *
+   * This assertion exists because the suite previously checked only
+   * that the title appeared, and so missed a real bug: the mock served
+   * every uploaded object as image/png while the uploader re-encodes to
+   * WebP, and next/image rejected the mismatch with a 400 — covers came
+   * out blank on the public page while every test stayed green.
+   */
+  const card = page.locator("article").filter({ hasText: title }).first();
+  const imgSrc = await card.locator("img").first().getAttribute("src");
+  expect(imgSrc, "the card should render an optimised image").toContain("/_next/image");
+
+  const optimised = await page.request.get(imgSrc!);
+  expect(optimised.status(), "next/image must accept the uploaded file").toBe(200);
+  expect(optimised.headers()["content-type"]).toMatch(/^image\//);
+  expect((await optimised.body()).length).toBeGreaterThan(100);
 });
 
 test("CREATE — publishing without a photo is rejected", async ({ page }) => {
@@ -247,7 +265,24 @@ test("DELETE — requires the exact title, then removes the listing", async ({ p
   await expect(page).toHaveURL(/\/dashboard\/oglasi/, { timeout: 15_000 });
   await expect(page.getByRole("link", { name: /Agregat Honda/i })).toHaveCount(0);
 
-  // And it is gone from the public site too.
-  const response = await page.goto("/oglas/agregat-honda-ex7-za-delove-v4w5x6");
-  expect(response?.status()).toBe(404);
+  /**
+   * And it goes away on the public site.
+   *
+   * NOT asserted as an immediate 404. The detail route is ISR-cached, so
+   * revalidatePath marks the entry stale rather than purging it: the
+   * first request after the delete still serves the cached copy while
+   * regeneration runs, and the next one 404s. Measured on a production
+   * build — 200, then 404, then 404.
+   *
+   * That is Next's stale-while-revalidate contract, not a defect, and
+   * one extra stale hit on a deleted listing is harmless. Asserting an
+   * instant 404 would encode an expectation the framework never makes,
+   * and would pass only in dev, where nothing is cached.
+   */
+  await expect
+    .poll(
+      async () => (await page.request.get("/oglas/agregat-honda-ex7-za-delove-v4w5x6")).status(),
+      { timeout: 15_000, message: "deleted listing should stop resolving" },
+    )
+    .toBe(404);
 });
