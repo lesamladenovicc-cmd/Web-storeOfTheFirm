@@ -62,7 +62,8 @@ export type ListingCard = {
   id: string;
   slug: string;
   title: string;
-  condition: ListingCondition;
+  /** Null only on drafts; publishing requires it. */
+  condition: ListingCondition | null;
   priceRsd: number | null;
   isNegotiable: boolean;
   status: ListingStatus;

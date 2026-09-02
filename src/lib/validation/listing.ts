@@ -56,7 +56,13 @@ const imagePaths = z
 const base = {
   title,
   description,
-  condition: z.enum(LISTING_CONDITIONS, { message: COPY.validation.invalidCondition }),
+  // Optional in the base, required by the publish schema below — the
+  // same shape as categoryId and contact. A draft exists to hold
+  // half-finished work, so nothing that only a buyer needs may block
+  // saving one. Mirrors listings_active_needs_condition.
+  condition: z
+    .enum(LISTING_CONDITIONS, { message: COPY.validation.invalidCondition })
+    .nullable(),
   priceRsd,
   isNegotiable: z.boolean(),
   location,
@@ -81,6 +87,9 @@ export const listingDraftSchema = z.object({
 export const listingPublishSchema = z
   .object({
     ...base,
+    condition: z.enum(LISTING_CONDITIONS, {
+      message: COPY.validation.invalidCondition,
+    }),
     description: description.min(LIMITS.descriptionMin, {
       message: COPY.validation.descriptionLength,
     }),

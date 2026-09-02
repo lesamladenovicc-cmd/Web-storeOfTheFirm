@@ -37,11 +37,13 @@ function publishable(overrides: Record<string, unknown> = {}) {
 }
 
 describe("draft schema — deliberately lenient", () => {
-  it("accepts a half-finished listing", () => {
+  it("accepts a half-finished listing, including no condition yet", () => {
     const result = listingDraftSchema.safeParse({
       title: "Nacrt oglasa",
       description: "",
-      condition: "novo",
+      // The whole point of a draft: a seller can park work before
+      // deciding the condition. Mirrors listings_active_needs_condition.
+      condition: null,
       priceRsd: null,
       isNegotiable: false,
       location: "",
@@ -59,7 +61,7 @@ describe("draft schema — deliberately lenient", () => {
     const tooShort = listingDraftSchema.safeParse({
       title: "abc",
       description: "",
-      condition: "novo",
+      condition: null,
       priceRsd: null,
       isNegotiable: false,
       location: "",
@@ -84,6 +86,12 @@ describe("publish schema — the rules that protect the buyer", () => {
     const result = listingPublishSchema.safeParse(publishable({ imagePaths: [] }));
     expect(result.success).toBe(false);
     expect(issuePaths(result)).toContain("imagePaths");
+  });
+
+  it("requires a condition", () => {
+    const result = listingPublishSchema.safeParse(publishable({ condition: null }));
+    expect(result.success).toBe(false);
+    expect(issuePaths(result)).toContain("condition");
   });
 
   it("requires a category", () => {

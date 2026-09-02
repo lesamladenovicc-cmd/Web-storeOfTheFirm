@@ -65,7 +65,7 @@ export function ListingCard({
         </h3>
 
         <p className="u-numeric mt-2 text-xs text-paper-faint">
-          {CONDITION_LABELS[listing.condition]}
+          {listing.condition ? CONDITION_LABELS[listing.condition] : ""}
           {listing.location ? ` · ${listing.location}` : ""}
           {listing.publishedAt ? ` · ${formatRelativeDate(listing.publishedAt)}` : ""}
         </p>

@@ -112,7 +112,9 @@ export function productJsonLd(listing: Listing, now: Date = new Date()): JsonLdO
       ? [publicImageUrl(listing.coverImagePath)]
       : [];
 
-  const condition = CONDITION_SCHEMA_URL[listing.condition];
+  // Always set in practice — publishing requires a condition — but the
+  // type allows null for drafts, and a draft is never rendered here.
+  const condition = listing.condition ? CONDITION_SCHEMA_URL[listing.condition] : null;
 
   const jsonLd: JsonLdObject = {
     "@context": "https://schema.org",
@@ -121,8 +123,9 @@ export function productJsonLd(listing: Listing, now: Date = new Date()): JsonLdO
     description: truncate(toPlainText(listing.description), 300),
     sku: listing.id,
     url,
-    itemCondition: condition,
   };
+
+  if (condition) jsonLd.itemCondition = condition;
 
   if (images.length) jsonLd.image = images;
   if (listing.categoryName) jsonLd.category = listing.categoryName;
@@ -135,7 +138,9 @@ export function productJsonLd(listing: Listing, now: Date = new Date()): JsonLdO
       price: String(listing.priceRsd),
       priceValidUntil: priceValidUntil(now),
       availability: STATUS_SCHEMA_AVAILABILITY[listing.status],
-      itemCondition: condition,
+      // Omitted rather than emitted as null: a null value is invalid
+      // markup, whereas an absent optional property is fine.
+      ...(condition ? { itemCondition: condition } : {}),
       seller: {
         "@type": "Organization",
         name: SITE.name,

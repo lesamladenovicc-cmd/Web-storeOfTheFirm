@@ -162,9 +162,11 @@ export default async function ListingPage({
                 </div>
 
                 <dl className="u-numeric mt-7 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-border pt-6 text-sm sm:grid-cols-4">
-                  <Detail label={COPY.listing.conditionLabel}>
-                    {CONDITION_LABELS[listing.condition]}
-                  </Detail>
+                  {listing.condition ? (
+                    <Detail label={COPY.listing.conditionLabel}>
+                      {CONDITION_LABELS[listing.condition]}
+                    </Detail>
+                  ) : null}
                   {listing.location ? (
                     <Detail label={COPY.listing.locationLabel}>{listing.location}</Detail>
                   ) : null}

@@ -294,5 +294,13 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    /* Delay must be zeroed too, not just duration. `.u-reveal` uses
+       animation-delay with `backwards` fill, so an element stays at its
+       from-state (opacity 0) for the whole delay even when the duration
+       is collapsed — a reduced-motion visitor would watch content pop in
+       over ~440ms across a nine-card grid. Caught by axe, which sampled
+       the half-faded colours and reported them as contrast failures. */
+    animation-delay: 0s !important;
+    transition-delay: 0s !important;
   }
 }

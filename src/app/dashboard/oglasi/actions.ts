@@ -65,7 +65,12 @@ function parseListingForm(formData: FormData): ParsedForm {
     values: {
       title: formString(formData, "title") ?? "",
       description: formString(formData, "description") ?? "",
-      condition: formString(formData, "condition"),
+      // `?? null`, not bare: formString returns undefined for a blank
+      // field, and zod's .nullable() accepts null but NOT undefined —
+      // so an unselected dropdown was failing the lenient draft schema
+      // with "Izaberite stanje." Every other nullable field below
+      // already normalises the same way.
+      condition: formString(formData, "condition") ?? null,
       priceRsd: price ?? null,
       isNegotiable: formBool(formData, "isNegotiable"),
       location: formString(formData, "location") ?? "",

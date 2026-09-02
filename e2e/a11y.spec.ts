@@ -11,6 +11,37 @@ import { expect, test } from "@playwright/test";
  * trustworthy check is the rendered page.
  */
 
+/**
+ * Exercise the reduced-motion path, which is a real user configuration
+ * and the one where the staggered entrance is supposed to collapse.
+ *
+ * Chasing an intermittent failure here found a genuine bug: the
+ * prefers-reduced-motion block zeroed animation-duration but not
+ * animation-delay, and `.u-reveal` uses a delay with `backwards` fill.
+ * A reduced-motion visitor therefore still waited out the full stagger
+ * — about 440ms across a nine-card grid — watching content pop in.
+ * Fixed in globals.css.
+ */
+test.use({ reducedMotion: "reduce" });
+
+/**
+ * Waits until every running animation has settled.
+ *
+ * axe samples computed colour at whatever opacity an element currently
+ * has. Mid-fade it reports blended values — #4e220f on #161616 for a
+ * price that is really #ff4d00 on #141414 — which no user ever sees and
+ * which WCAG is not about. Reduced motion alone was not enough, so this
+ * waits on the actual animation objects rather than on a guessed delay.
+ */
+async function settle(page: import("@playwright/test").Page) {
+  await page.waitForLoadState("networkidle");
+  await page.evaluate(async () => {
+    await Promise.all(
+      document.getAnimations().map((a) => a.finished.catch(() => undefined)),
+    );
+  });
+}
+
 const PUBLIC_ROUTES = [
   { path: "/", name: "homepage" },
   { path: "/oglasi", name: "listing index" },
@@ -22,6 +53,7 @@ const PUBLIC_ROUTES = [
 for (const route of PUBLIC_ROUTES) {
   test(`${route.name} has no WCAG A/AA violations`, async ({ page }) => {
     await page.goto(route.path);
+    await settle(page);
 
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
@@ -55,6 +87,7 @@ test("listing detail has no WCAG A/AA violations", async ({ page }) => {
   const href = await page.locator("article a").first().getAttribute("href");
   expect(href).toMatch(/\/oglas\//);
   await page.goto(href!);
+  await settle(page);
 
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
@@ -73,6 +106,7 @@ test("listing detail has no WCAG A/AA violations", async ({ page }) => {
  */
 test("accent colour passes contrast where it is used as text", async ({ page }) => {
   await page.goto("/");
+  await settle(page);
 
   const results = await new AxeBuilder({ page })
     .withRules(["color-contrast"])

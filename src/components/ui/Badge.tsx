@@ -52,9 +52,12 @@ export function ConditionBadge({
   condition,
   className,
 }: {
-  condition: ListingCondition;
+  /** Null on an unfinished draft; nothing to show in that case. */
+  condition: ListingCondition | null;
   className?: string;
 }) {
+  if (!condition) return null;
+
   return (
     <Badge tone={CONDITION_TONES[condition]} className={className}>
       {CONDITION_LABELS[condition]}

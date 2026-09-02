@@ -128,6 +128,22 @@ async function createFlowSection(db) {
   await expectValue(db, "draft has no published_at yet",
     `select published_at is null from public.listings where id = '${NEW_ID}'`, true);
 
+  // A draft exists to hold half-finished work, so condition — like
+  // category and contact — may be missing until the listing is published.
+  await allow(
+    db,
+    "seller saves a draft with no condition chosen yet",
+    `insert into public.listings (slug, title, seller_id, status)
+     values ('nacrt-bez-stanja-x1y2z3', 'Nacrt bez izabranog stanja', $1, 'nacrt')`,
+    [SELLER],
+  );
+  await deny(
+    db,
+    "but cannot publish one without a condition",
+    `update public.listings set status = 'aktivan'
+     where slug = 'nacrt-bez-stanja-x1y2z3'`,
+  );
+
   // --- 2. Attach images -------------------------------------------
   await allow(
     db,

@@ -20,7 +20,11 @@ create table if not exists public.listings (
 
   title             text not null,
   description       text not null default '',
-  condition         public.listing_condition not null,
+  -- Nullable, like category_id and the contact columns: a DRAFT is
+  -- meant to hold half-finished work, so nothing that is only needed by
+  -- a buyer may be mandatory before publishing. The check below makes it
+  -- required the moment the listing goes live.
+  condition         public.listing_condition,
 
   price_rsd         integer,
   is_negotiable     boolean not null default false,
@@ -69,6 +73,9 @@ create table if not exists public.listings (
   ),
   constraint listings_active_needs_category check (
     status <> 'aktivan' or category_id is not null
+  ),
+  constraint listings_active_needs_condition check (
+    status <> 'aktivan' or condition is not null
   )
 );
 
