@@ -9,10 +9,11 @@ import { createClient } from "@/lib/supabase/client";
 import {
   STORAGE_BUCKET,
   buildStoragePath,
-  downscaleToWebp,
-  isAllowedImageType,
+  downscaleForUpload,
+  isDecodableFormat,
   publicImageUrl,
   randomImageFileName,
+  sniffImageFormat,
 } from "@/lib/images";
 
 /**
@@ -36,6 +37,8 @@ export type UploadedImage = {
   path: string;
   status: "uploading" | "done" | "error";
   previewUrl?: string;
+  /** Technical reason, shown on hover and logged. Never localised. */
+  reason?: string;
 };
 
 export function ImageUploader({
@@ -57,17 +60,29 @@ export function ImageUploader({
     async (file: File, key: string) => {
       const supabase = createClient();
       try {
-        const { blob } = await downscaleToWebp(file);
-        const path = buildStoragePath(sellerId, listingId, randomImageFileName());
+        const { blob, encoding } = await downscaleForUpload(file);
+        const path = buildStoragePath(
+          sellerId,
+          listingId,
+          randomImageFileName(encoding.extension),
+        );
 
         const { error: uploadError } = await supabase.storage
           .from(STORAGE_BUCKET)
-          .upload(path, blob, { contentType: "image/webp", upsert: false });
+          .upload(path, blob, {
+            contentType: encoding.contentType,
+            upsert: false,
+          });
 
         if (uploadError) throw uploadError;
         return { path, ok: true as const };
-      } catch {
-        return { path: "", ok: false as const, key };
+      } catch (error) {
+        // Swallowing this silently made a failed upload undiagnosable —
+        // the UI said only "Otpremanje nije uspelo" and nothing reached
+        // the console. The cause is kept for the tile and logged.
+        const reason = error instanceof Error ? error.message : String(error);
+        console.error(`Upload failed for ${file.name}:`, error);
+        return { path: "", ok: false as const, key, reason };
       }
     },
     [sellerId, listingId],
@@ -85,7 +100,16 @@ export function ImageUploader({
 
       const accepted: { file: File; key: string }[] = [];
       for (const file of incoming) {
-        if (!isAllowedImageType(file.type)) {
+        // The bytes decide, not the name. An iPhone photo arrives as
+        // HEIC under a .JPG name, which the OS reports as image/jpeg —
+        // it would pass a File.type check and then fail undecodably.
+        const format = await sniffImageFormat(file);
+
+        if (format === "heic") {
+          setError(COPY.validation.imageHeic);
+          continue;
+        }
+        if (!isDecodableFormat(format)) {
           setError(COPY.validation.imageWrongType);
           continue;
         }
@@ -113,10 +137,16 @@ export function ImageUploader({
           img.key === key
             ? result.ok
               ? { ...img, path: result.path, status: "done" as const }
-              : { ...img, status: "error" as const }
+              : { ...img, status: "error" as const, reason: result.reason }
             : img,
         );
         onChange(current);
+        // Surface the cause where it is actually read. The per-tile
+        // label is too small for a reason, and expecting a seller to
+        // open DevTools is not a diagnosis path.
+        if (!result.ok && result.reason) {
+          setError(`${COPY.dashboard.form.imageFailed}: ${result.reason}`);
+        }
       }
     },
     [value, onChange, uploadOne],
@@ -227,7 +257,10 @@ export function ImageUploader({
                 ) : null}
 
                 {img.status === "error" ? (
-                  <span className="absolute inset-0 grid place-items-center bg-danger-soft px-2 text-center text-xs text-danger">
+                  <span
+                    title={img.reason}
+                    className="absolute inset-0 grid place-items-center bg-danger-soft px-2 text-center text-xs text-danger"
+                  >
                     {COPY.dashboard.form.imageFailed}
                   </span>
                 ) : null}

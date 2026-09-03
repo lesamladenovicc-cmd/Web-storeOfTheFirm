@@ -163,7 +163,10 @@ export async function createListingAction(
   }
 
   revalidateListing(slug);
-  redirect(`/dashboard/oglasi/${listingId}/izmena?sacuvano=1`);
+  // Back to the seller's own list, not the edit form they just filled
+  // in: the work is done, and landing back on the same form reads as
+  // "nothing happened". The list is also where the new row proves it.
+  redirect(`/dashboard/oglasi?sacuvano=${input.status}`);
 }
 
 /* ------------------------------------------------------------------ */

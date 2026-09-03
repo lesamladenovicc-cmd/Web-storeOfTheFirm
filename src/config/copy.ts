@@ -427,6 +427,11 @@ export const COPY = {
     tooManyImages: "Možete dodati najviše 10 fotografija.",
     imageTooLarge: "Slika je prevelika (maksimum 5 MB).",
     imageWrongType: "Dozvoljene su samo JPG, PNG i WebP slike.",
+    // iPhone fotografije su najčešće HEIC iako im ime završava na .JPG,
+    // pa poruka mora da objasni i šta korisnik konkretno treba da uradi.
+    imageHeic:
+        "Ova fotografija je u HEIC formatu (iPhone), iako se zove .JPG — pregledači ne mogu da je otvore. " +
+        "Na iPhone-u: Podešavanja → Kamera → Formati → „Najkompatibilnije“, pa je ponovo slikajte ili izvezite kao JPEG.",
     messageLength: "Poruka mora imati između 10 i 2000 karaktera.",
     rateLimited: "Poslali ste previše upita. Pokušajte ponovo za sat vremena.",
     genericError: "Došlo je do greške. Pokušajte ponovo.",

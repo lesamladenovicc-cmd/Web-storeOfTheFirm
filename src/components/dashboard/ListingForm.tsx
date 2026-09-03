@@ -62,7 +62,14 @@ export function ListingForm({
       <input type="hidden" name="listingId" value={listingId} />
 
       {saved && !state.message ? (
-        <Alert tone="success">{COPY.dashboard.form.savedDraft}</Alert>
+        <Alert tone="success">
+          {/* The listing's real status decides this. Hard-coding the
+              draft copy told sellers "sačuvan kao nacrt" directly under
+              an AKTIVAN badge, which reads as a failed publish. */}
+          {listing?.status === "nacrt"
+            ? COPY.dashboard.form.savedDraft
+            : COPY.dashboard.form.published}
+        </Alert>
       ) : null}
       {state.message ? (
         <Alert tone={state.ok ? "success" : "danger"}>{state.message}</Alert>

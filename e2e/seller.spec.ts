@@ -130,11 +130,15 @@ test("CREATE — a new listing is published and goes live publicly", async ({ pa
 
   await page.getByRole("button", { name: /^objavi$/i }).click();
 
-  // Redirects to the edit screen with a saved notice.
-  await expect(page).toHaveURL(/\/dashboard\/oglasi\/[0-9a-f-]+\/izmena/, {
+  // Publishing returns the seller to their own list — staying on the
+  // form they just filled in reads as "nothing happened" — and the
+  // notice there must say published, not "saved as draft".
+  await expect(page).toHaveURL(/\/dashboard\/oglasi\?sacuvano=aktivan/, {
     timeout: 15_000,
   });
-  await expect(page.getByText(/aktivan/i).first()).toBeVisible();
+  await expect(page.getByText(/oglas je objavljen/i)).toBeVisible();
+  await expect(page.getByText(/sačuvan kao nacrt/i)).toHaveCount(0);
+  await expect(page.getByRole("cell", { name: title })).toBeVisible();
 
   // And it is genuinely on the public storefront.
   await page.goto(`/oglasi?q=${encodeURIComponent("Busilica stubna")}`);
@@ -186,8 +190,9 @@ test("CREATE — a draft saves and stays out of the public index", async ({ page
   await page.getByLabel(/naziv oglasa/i).fill(title);
   await page.getByRole("button", { name: /sačuvaj kao nacrt/i }).click();
 
-  await expect(page).toHaveURL(/\/izmena/, { timeout: 15_000 });
-  await expect(page.getByText(/nacrt/i).first()).toBeVisible();
+  await expect(page).toHaveURL(/\/dashboard\/oglasi\?sacuvano=nacrt/, { timeout: 15_000 });
+  await expect(page.getByText(/sačuvan kao nacrt/i)).toBeVisible();
+  await expect(page.getByText(/oglas je objavljen/i)).toHaveCount(0);
 
   // A draft must not be publicly searchable. Scoped to listing cards:
   // the page also echoes the search term in the active-filter chip, so a

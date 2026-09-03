@@ -5,7 +5,7 @@ import { isListingStatus } from "@/config/taxonomy";
 import { PageHeader } from "@/components/layout/Container";
 import { ButtonLink } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/Badge";
-import { EmptyState } from "@/components/ui/Feedback";
+import { Alert, EmptyState } from "@/components/ui/Feedback";
 import { requireProfile } from "@/lib/auth";
 import { getDashboardListings } from "@/lib/data/listings";
 import { formatNumber, formatPrice, formatRelativeDate } from "@/lib/format";
@@ -24,13 +24,25 @@ const TABS = [
 export default async function DashboardListingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; sacuvano?: string; obrisano?: string }>;
 }) {
   const [profile, params] = await Promise.all([requireProfile(), searchParams]);
 
   const status = isListingStatus(params.status) ? params.status : undefined;
   const listings = await getDashboardListings(status);
   const isAdmin = profile.role === "admin";
+
+  // Both actions redirect here on success, so this is where their
+  // confirmation has to appear — otherwise a save looks like a no-op.
+  const saved = isListingStatus(params.sacuvano) ? params.sacuvano : undefined;
+  const confirmation =
+    params.obrisano === "1"
+      ? COPY.dashboard.delete.success
+      : saved === "nacrt"
+        ? COPY.dashboard.form.savedDraft
+        : saved
+          ? COPY.dashboard.form.published
+          : null;
 
   return (
     <>
@@ -43,6 +55,12 @@ export default async function DashboardListingsPage({
           </ButtonLink>
         }
       />
+
+      {confirmation ? (
+        <div className="mt-6">
+          <Alert tone="success">{confirmation}</Alert>
+        </div>
+      ) : null}
 
       <nav aria-label={COPY.dashboard.listings.colStatus} className="mt-8">
         <ul className="flex flex-wrap gap-2">
