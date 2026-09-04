@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { COPY } from "@/config/copy";
-import { Container, PageHeader } from "@/components/layout/Container";
+import { Container } from "@/components/layout/Container";
+import { PageBanner } from "@/components/layout/PageBanner";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
-import { Breadcrumbs, type Crumb } from "@/components/layout/Breadcrumbs";
+import type { Crumb } from "@/components/layout/Breadcrumbs";
 import { ListingGrid } from "@/components/listing/ListingGrid";
 import { FilterBar, FilterChips } from "@/components/listing/FilterBar";
 import { Pagination } from "@/components/ui/Pagination";
@@ -68,10 +69,7 @@ export default async function CategoryPage({
   // The route owns the category; a query param must not override it.
   const filters = { ...parseFilters(rawParams), categorySlug: category.slug };
 
-  const [result, categories] = await Promise.all([
-    searchListings(filters),
-    getActiveCategories(),
-  ]);
+  const [result, categories] = await Promise.all([searchListings(filters), getActiveCategories()]);
 
   const basePath = `/kategorija/${category.slug}`;
   const crumbs: Crumb[] = [
@@ -88,45 +86,41 @@ export default async function CategoryPage({
       <SiteHeader />
 
       <main id="sadrzaj">
-        <Container className="py-12 sm:py-16">
-          <Breadcrumbs items={crumbs} />
+        <PageBanner
+          tag={COPY.listings.category}
+          title={category.name}
+          lead={category.description ?? undefined}
+          crumbs={crumbs}
+          meta={
+            <p className="u-eyebrow text-fg-muted">
+              {COPY.listings.resultsPrefix} {countWithNoun(result.total, "oglas")}
+            </p>
+          }
+        />
 
-          <PageHeader
-            eyebrow={COPY.listings.category}
-            title={category.name}
-            subtitle={category.description ?? undefined}
-          />
-
-          <div className="mt-8">
+        <section className="theme-light">
+          <Container className="py-10 sm:py-14">
             <FilterBar
               filters={filters}
               categories={categories}
               basePath={basePath}
               showCategory={false}
             />
-          </div>
 
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-            <p className="u-numeric text-sm text-paper-muted">
-              {COPY.listings.resultsPrefix} {countWithNoun(result.total, "oglas")}
-            </p>
-            <FilterChips
-              filters={{ ...filters, categorySlug: undefined }}
+            <FilterChips filters={{ ...filters, categorySlug: undefined }} basePath={basePath} />
+
+            <div className="mt-10">
+              <ListingGrid listings={result.items} filtered={filtered} />
+            </div>
+
+            <Pagination
+              page={result.page}
+              pageCount={result.pageCount}
+              filters={filters}
               basePath={basePath}
             />
-          </div>
-
-          <div className="mt-8">
-            <ListingGrid listings={result.items} filtered={filtered} />
-          </div>
-
-          <Pagination
-            page={result.page}
-            pageCount={result.pageCount}
-            filters={filters}
-            basePath={basePath}
-          />
-        </Container>
+          </Container>
+        </section>
       </main>
 
       <SiteFooter />

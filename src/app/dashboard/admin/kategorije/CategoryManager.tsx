@@ -31,10 +31,10 @@ export function CategoryManager({ categories }: { categories: CategoryWithCount[
         <Button onClick={() => setCreating(true)}>{COPY.dashboard.categories.create}</Button>
       )}
 
-      <ul className="divide-y divide-border overflow-hidden rounded-md border border-border">
+      <ul className="divide-line border-line divide-y overflow-hidden rounded-md border">
         {categories.map((category) =>
           editing === category.id ? (
-            <li key={category.id} className="bg-surface p-5">
+            <li key={category.id} className="bg-panel p-5">
               <CategoryForm
                 mode="edit"
                 category={category}
@@ -55,34 +55,26 @@ export function CategoryManager({ categories }: { categories: CategoryWithCount[
   );
 }
 
-function CategoryRow({
-  category,
-  onEdit,
-}: {
-  category: CategoryWithCount;
-  onEdit: () => void;
-}) {
+function CategoryRow({ category, onEdit }: { category: CategoryWithCount; onEdit: () => void }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   return (
-    <li className={cn("bg-surface p-5", !category.isActive && "opacity-60")}>
+    <li className={cn("bg-panel p-5", !category.isActive && "opacity-60")}>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2.5">
-            <p className="font-display font-semibold text-paper">{category.name}</p>
+            <p className="font-display text-fg font-semibold">{category.name}</p>
             {!category.isActive ? (
               <Badge tone="danger">{COPY.dashboard.users.inactive}</Badge>
             ) : null}
           </div>
-          <p className="u-numeric mt-1 text-xs text-paper-faint">
-            /{category.slug} · {COPY.dashboard.categories.colCount}: {category.listingCount}{" "}
-            · {COPY.dashboard.categories.colOrder}: {category.sortOrder}
+          <p className="u-numeric text-fg-faint mt-1 text-xs">
+            /{category.slug} · {COPY.dashboard.categories.colCount}: {category.listingCount} ·{" "}
+            {COPY.dashboard.categories.colOrder}: {category.sortOrder}
           </p>
           {category.description ? (
-            <p className="mt-2 max-w-[60ch] text-sm text-paper-muted">
-              {category.description}
-            </p>
+            <p className="text-fg-muted mt-2 max-w-[60ch] text-sm">{category.description}</p>
           ) : null}
         </div>
 
@@ -90,7 +82,7 @@ function CategoryRow({
           <button
             type="button"
             onClick={onEdit}
-            className="text-paper-muted underline-offset-4 transition-colors hover:text-accent hover:underline"
+            className="text-fg-muted hover:text-accent-text underline-offset-4 transition-colors hover:underline"
           >
             {COPY.common.edit}
           </button>
@@ -98,15 +90,13 @@ function CategoryRow({
             type="button"
             disabled={pending}
             onClick={() =>
-              startTransition(() =>
-                void toggleCategoryActiveAction(category.id, !category.isActive),
+              startTransition(
+                () => void toggleCategoryActiveAction(category.id, !category.isActive),
               )
             }
-            className="text-paper-muted underline-offset-4 transition-colors hover:text-accent hover:underline disabled:opacity-40"
+            className="text-fg-muted hover:text-accent-text underline-offset-4 transition-colors hover:underline disabled:opacity-40"
           >
-            {category.isActive
-              ? COPY.dashboard.users.deactivate
-              : COPY.dashboard.users.activate}
+            {category.isActive ? COPY.dashboard.users.deactivate : COPY.dashboard.users.activate}
           </button>
           <button
             type="button"
@@ -117,7 +107,7 @@ function CategoryRow({
                 if (!result.ok) setError(result.message ?? COPY.validation.genericError);
               })
             }
-            className="text-paper-faint underline-offset-4 transition-colors hover:text-danger hover:underline disabled:opacity-40"
+            className="text-fg-faint hover:text-danger underline-offset-4 transition-colors hover:underline disabled:opacity-40"
           >
             {COPY.common.delete}
           </button>
@@ -157,10 +147,7 @@ function CategoryForm({
   return (
     <form
       action={formAction}
-      className={cn(
-        "space-y-5",
-        mode === "create" && "rounded-md border border-border bg-surface p-6",
-      )}
+      className={cn("space-y-5", mode === "create" && "border-line bg-panel rounded-md border p-6")}
     >
       {category ? <input type="hidden" name="id" value={category.id} /> : null}
 

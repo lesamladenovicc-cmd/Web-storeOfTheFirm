@@ -7,10 +7,7 @@
 
 import type { Metadata } from "next";
 import { SITE, SITE_URL } from "@/config/site";
-import {
-  CONDITION_SCHEMA_URL,
-  STATUS_SCHEMA_AVAILABILITY,
-} from "@/config/taxonomy";
+import { CONDITION_SCHEMA_URL, STATUS_SCHEMA_AVAILABILITY } from "@/config/taxonomy";
 import { toPlainText, truncate } from "./format";
 import { publicImageUrl } from "./images";
 import type { Listing } from "@/types/domain";
@@ -151,9 +148,7 @@ export function productJsonLd(listing: Listing, now: Date = new Date()): JsonLdO
   return jsonLd;
 }
 
-export function breadcrumbJsonLd(
-  items: { name: string; path: string }[],
-): JsonLdObject {
+export function breadcrumbJsonLd(items: { name: string; path: string }[]): JsonLdObject {
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",

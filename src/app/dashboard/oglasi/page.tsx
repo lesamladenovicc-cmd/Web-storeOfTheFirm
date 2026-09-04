@@ -74,8 +74,8 @@ export default async function DashboardListingsPage({
                   className={cn(
                     "inline-flex h-9 items-center rounded-sm border px-3.5 text-sm transition-colors",
                     active
-                      ? "border-accent text-accent"
-                      : "border-border text-paper-muted hover:border-border-strong hover:text-paper",
+                      ? "border-accent text-accent-text"
+                      : "border-line text-fg-muted hover:border-line-strong hover:text-fg",
                   )}
                 >
                   {tab.label}
@@ -96,10 +96,10 @@ export default async function DashboardListingsPage({
             }}
           />
         ) : (
-          <div className="overflow-x-auto rounded-md border border-border">
+          <div className="border-line overflow-x-auto rounded-md border">
             <table className="w-full min-w-[52rem] border-collapse text-sm">
               <thead>
-                <tr className="border-b border-border bg-surface text-left">
+                <tr className="border-line bg-panel border-b text-left">
                   <Th className="w-16">{COPY.dashboard.listings.colImage}</Th>
                   <Th>{COPY.dashboard.listings.colTitle}</Th>
                   <Th>{COPY.dashboard.listings.colStatus}</Th>
@@ -114,10 +114,10 @@ export default async function DashboardListingsPage({
                 {listings.map((listing) => (
                   <tr
                     key={listing.id}
-                    className="border-b border-border last:border-0 hover:bg-surface"
+                    className="border-line hover:bg-panel border-b last:border-0"
                   >
                     <Td>
-                      <div className="relative h-10 w-14 overflow-hidden rounded-xs bg-surface-2">
+                      <div className="bg-panel-2 relative h-10 w-14 overflow-hidden rounded-xs">
                         {listing.coverImagePath ? (
                           <Image
                             src={publicImageUrl(listing.coverImagePath)}
@@ -134,12 +134,12 @@ export default async function DashboardListingsPage({
                     <Td>
                       <Link
                         href={`/dashboard/oglasi/${listing.id}/izmena`}
-                        className="font-medium text-paper transition-colors hover:text-accent"
+                        className="text-fg hover:text-accent-text font-medium transition-colors"
                       >
                         {listing.title}
                       </Link>
                       {listing.categoryName ? (
-                        <p className="u-numeric mt-0.5 text-xs text-paper-faint">
+                        <p className="u-numeric text-fg-faint mt-0.5 text-xs">
                           {listing.categoryName}
                         </p>
                       ) : null}
@@ -151,31 +151,31 @@ export default async function DashboardListingsPage({
                       {formatPrice(listing.priceRsd)}
                     </Td>
                     {isAdmin ? (
-                      <Td className="text-paper-muted">{listing.sellerName ?? "—"}</Td>
+                      <Td className="text-fg-muted">{listing.sellerName ?? "—"}</Td>
                     ) : null}
-                    <Td className="u-numeric text-right text-paper-muted">
+                    <Td className="u-numeric text-fg-muted text-right">
                       {formatNumber(listing.viewCount)}
                     </Td>
-                    <Td className="u-numeric whitespace-nowrap text-paper-muted">
+                    <Td className="u-numeric text-fg-muted whitespace-nowrap">
                       {formatRelativeDate(listing.updatedAt)}
                     </Td>
                     <Td className="text-right whitespace-nowrap">
                       <Link
                         href={`/dashboard/oglasi/${listing.id}/izmena`}
-                        className="text-paper-muted transition-colors hover:text-accent"
+                        className="text-fg-muted hover:text-accent-text transition-colors"
                       >
                         {COPY.common.edit}
                       </Link>
                       {listing.status !== "nacrt" ? (
                         <>
-                          <span aria-hidden="true" className="mx-2 text-border-strong">
+                          <span aria-hidden="true" className="text-line-strong mx-2">
                             |
                           </span>
                           <Link
                             href={`/oglas/${listing.slug}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-paper-muted transition-colors hover:text-accent"
+                            className="text-fg-muted hover:text-accent-text transition-colors"
                           >
                             {COPY.dashboard.listings.view}
                           </Link>
@@ -195,7 +195,7 @@ export default async function DashboardListingsPage({
 
 function Th({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <th scope="col" className={cn("u-eyebrow px-4 py-3 text-paper-faint", className)}>
+    <th scope="col" className={cn("u-eyebrow text-fg-faint px-4 py-3", className)}>
       {children}
     </th>
   );

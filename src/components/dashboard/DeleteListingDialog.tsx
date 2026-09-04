@@ -15,13 +15,7 @@ import { deleteListingAction } from "@/app/dashboard/oglasi/actions";
  * client-side guard on a destructive, irreversible action is a UX
  * affordance, not a control.
  */
-export function DeleteListingDialog({
-  listingId,
-  title,
-}: {
-  listingId: string;
-  title: string;
-}) {
+export function DeleteListingDialog({ listingId, title }: { listingId: string; title: string }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(deleteListingAction, ACTION_IDLE);
 

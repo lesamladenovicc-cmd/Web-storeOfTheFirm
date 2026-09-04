@@ -13,7 +13,13 @@ import { InquiryForm } from "./InquiryForm";
  * for crawlers and for JS-off users — and is only visually masked until
  * the reveal click. This is friction against casual scraping, not a
  * security measure, and is not treated as one.
+ *
+ * Rendered as a plate with register marks. The reveal/call button is the
+ * page's primary action and the only brick element in the panel.
  */
+const UI_LABEL =
+  "font-[family-name:var(--font-ui)] text-xs font-semibold tracking-[0.12em] uppercase transition-colors duration-200";
+
 export function ContactPanel({ listing }: { listing: Listing }) {
   const [revealed, setRevealed] = useState(false);
 
@@ -22,31 +28,31 @@ export function ContactPanel({ listing }: { listing: Listing }) {
   const mailSubject = `${COPY.contact.emailSubjectPrefix} ${listing.title}`;
 
   return (
-    <aside className="rounded-md border border-border bg-surface">
-      <div className="border-b border-border p-5">
-        <h2 className="u-eyebrow text-paper-faint">{COPY.contact.title}</h2>
+    <aside className="u-marks border-line bg-panel border">
+      <div className="border-line border-b p-6 sm:p-7">
+        <h2 className="u-eyebrow text-fg-faint">{COPY.contact.title}</h2>
 
-        <p className="mt-3 font-display text-lg font-semibold text-paper">
+        <p className="font-display text-h3 text-fg mt-4 font-semibold">
           {listing.contactName || COPY.contact.seller}
         </p>
         {listing.location ? (
-          <p className="u-numeric mt-1 text-sm text-paper-faint">{listing.location}</p>
+          <p className="u-eyebrow text-fg-faint mt-2">{listing.location}</p>
         ) : null}
 
         {isSold ? (
-          <p className="mt-4 rounded-sm border border-danger/40 bg-danger-soft px-3 py-2.5 text-sm text-danger">
+          <p className="border-danger/40 bg-danger-soft text-danger mt-5 border px-3 py-2.5 text-sm">
             {COPY.listing.soldNotice}
           </p>
         ) : null}
       </div>
 
       {!isSold ? (
-        <div className="space-y-3 p-5">
+        <div className="space-y-2.5 p-6 sm:p-7">
           {phone ? (
             revealed ? (
               <a
                 href={telHref(phone)}
-                className="u-numeric flex h-12 items-center justify-center rounded-sm bg-accent text-lg font-semibold text-bg transition-colors hover:bg-accent-hover"
+                className="u-numeric border-accent bg-accent text-on-accent hover:border-accent-hover hover:bg-accent-hover flex h-14 items-center justify-center border text-lg font-semibold transition-colors duration-200"
               >
                 {formatPhone(phone)}
               </a>
@@ -54,7 +60,7 @@ export function ContactPanel({ listing }: { listing: Listing }) {
               <button
                 type="button"
                 onClick={() => setRevealed(true)}
-                className="flex h-12 w-full items-center justify-center gap-2 rounded-sm bg-accent font-medium text-bg transition-colors hover:bg-accent-hover"
+                className={`${UI_LABEL} border-accent bg-accent text-on-accent hover:border-accent-hover hover:bg-accent-hover flex h-14 w-full items-center justify-center gap-3 border px-4`}
               >
                 <svg
                   aria-hidden="true"
@@ -68,9 +74,10 @@ export function ContactPanel({ listing }: { listing: Listing }) {
                 </svg>
                 {COPY.contact.revealPhone}
                 {/* Masked digits keep the button from reflowing on reveal.
-                    No opacity here: 70% ink over the accent blends to
-                    #5b250e (3.67:1) and fails AA — axe caught it. */}
-                <span className="u-numeric text-sm">{maskPhone(phone)}</span>
+                    No opacity here: faded text over the accent fails AA. */}
+                <span className="u-numeric text-sm font-medium tracking-normal normal-case">
+                  {maskPhone(phone)}
+                </span>
               </button>
             )
           ) : null}
@@ -78,17 +85,17 @@ export function ContactPanel({ listing }: { listing: Listing }) {
           {listing.contactEmail ? (
             <a
               href={`mailto:${listing.contactEmail}?subject=${encodeURIComponent(mailSubject)}`}
-              className="flex h-11 items-center justify-center rounded-sm border border-border-strong text-sm font-medium text-paper transition-colors hover:border-accent hover:text-accent"
+              className={`${UI_LABEL} border-fg bg-fg text-ground hover:text-fg flex h-12 items-center justify-center border hover:bg-transparent`}
             >
               {COPY.contact.sendEmail}
             </a>
           ) : null}
 
           {phone ? (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2.5">
               <a
                 href={viberHref(phone)}
-                className="flex h-10 items-center justify-center rounded-sm border border-border text-sm text-paper-muted transition-colors hover:border-border-strong hover:text-paper"
+                className={`${UI_LABEL} border-line-strong text-fg-muted hover:border-fg hover:text-fg flex h-11 items-center justify-center border text-[0.6875rem]`}
               >
                 {COPY.contact.viber}
               </a>
@@ -96,7 +103,7 @@ export function ContactPanel({ listing }: { listing: Listing }) {
                 href={whatsappHref(phone)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-10 items-center justify-center rounded-sm border border-border text-sm text-paper-muted transition-colors hover:border-border-strong hover:text-paper"
+                className={`${UI_LABEL} border-line-strong text-fg-muted hover:border-fg hover:text-fg flex h-11 items-center justify-center border text-[0.6875rem]`}
               >
                 {COPY.contact.whatsapp}
               </a>
@@ -106,7 +113,7 @@ export function ContactPanel({ listing }: { listing: Listing }) {
       ) : null}
 
       {!isSold ? (
-        <div className="border-t border-border p-5">
+        <div className="border-line border-t p-6 sm:p-7">
           <InquiryForm listingId={listing.id} />
         </div>
       ) : null}

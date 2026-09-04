@@ -14,11 +14,13 @@ export function ProfileForm({ profile }: { profile: Profile }) {
 
   return (
     <form action={formAction} className="max-w-md space-y-5">
-      {state.message ? (
-        <Alert tone={state.ok ? "success" : "danger"}>{state.message}</Alert>
-      ) : null}
+      {state.message ? <Alert tone={state.ok ? "success" : "danger"}>{state.message}</Alert> : null}
 
-      <Field label={COPY.dashboard.settings.fullName} name="fullName" error={state.fieldErrors?.fullName}>
+      <Field
+        label={COPY.dashboard.settings.fullName}
+        name="fullName"
+        error={state.fieldErrors?.fullName}
+      >
         {(aria) => (
           <Input {...aria} name="fullName" defaultValue={profile.fullName} maxLength={120} />
         )}
@@ -42,7 +44,11 @@ export function ProfileForm({ profile }: { profile: Profile }) {
         )}
       </Field>
 
-      <Field label={COPY.dashboard.settings.location} name="location" error={state.fieldErrors?.location}>
+      <Field
+        label={COPY.dashboard.settings.location}
+        name="location"
+        error={state.fieldErrors?.location}
+      >
         {(aria) => (
           <Input
             {...aria}

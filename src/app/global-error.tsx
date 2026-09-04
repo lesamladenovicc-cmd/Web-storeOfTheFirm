@@ -40,7 +40,7 @@ export default function GlobalError({
           <p
             style={{
               margin: 0,
-              color: "#FF4D00",
+              color: "#EC6D3E",
               fontSize: "0.6875rem",
               letterSpacing: "0.16em",
               textTransform: "uppercase",
@@ -65,18 +65,20 @@ export default function GlobalError({
               height: "48px",
               padding: "0 28px",
               border: "none",
-              borderRadius: "4px",
-              background: "#FF4D00",
-              color: "#141414",
-              fontSize: "1rem",
-              fontWeight: 500,
+              borderRadius: 0,
+              background: "#BF3F0C",
+              color: "#FBF7EE",
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
               cursor: "pointer",
             }}
           >
             Pokušaj ponovo
           </button>
           {error.digest ? (
-            <p style={{ marginTop: "24px", fontSize: "0.75rem", color: "#6F6A60" }}>
+            <p style={{ marginTop: "24px", fontSize: "0.75rem", color: "#9A9386" }}>
               Ref: {error.digest}
             </p>
           ) : null}

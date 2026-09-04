@@ -23,22 +23,14 @@ export function ListingGrid({
         action={{ href: "/oglasi", label: COPY.listings.clearFilters }}
       />
     ) : (
-      <EmptyState
-        title={COPY.states.emptyListingsTitle}
-        body={COPY.states.emptyListingsBody}
-      />
+      <EmptyState title={COPY.states.emptyListingsTitle} body={COPY.states.emptyListingsBody} />
     );
   }
 
   return (
     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {listings.map((listing, i) => (
-        <ListingCard
-          key={listing.id}
-          listing={listing}
-          index={i}
-          priority={i < priorityCount}
-        />
+        <ListingCard key={listing.id} listing={listing} index={i} priority={i < priorityCount} />
       ))}
     </div>
   );

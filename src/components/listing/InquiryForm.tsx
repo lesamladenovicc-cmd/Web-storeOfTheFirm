@@ -26,12 +26,10 @@ export function InquiryForm({ listingId }: { listingId: string }) {
   }
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form action={formAction} className="space-y-5">
       <div>
-        <h2 className="font-display text-base font-semibold text-paper">
-          {COPY.contact.inquiryTitle}
-        </h2>
-        <p className="mt-1 text-sm text-paper-faint">{COPY.contact.inquirySubtitle}</p>
+        <h2 className="text-h3 text-fg">{COPY.contact.inquiryTitle}</h2>
+        <p className="text-fg-muted mt-1.5 text-sm">{COPY.contact.inquirySubtitle}</p>
       </div>
 
       {state.message ? <Alert tone="danger">{state.message}</Alert> : null}
@@ -59,11 +57,7 @@ export function InquiryForm({ listingId }: { listingId: string }) {
         )}
       </Field>
 
-      <Field
-        label={COPY.contact.phone}
-        name="senderPhone"
-        error={state.fieldErrors?.senderPhone}
-      >
+      <Field label={COPY.contact.phone} name="senderPhone" error={state.fieldErrors?.senderPhone}>
         {(aria) => (
           <Input
             {...aria}
@@ -108,7 +102,7 @@ export function InquiryForm({ listingId }: { listingId: string }) {
         )}
       </Field>
 
-      <Button type="submit" disabled={pending} className="w-full">
+      <Button type="submit" size="lg" disabled={pending} className="w-full">
         {pending ? (
           <>
             <Spinner />
@@ -119,8 +113,11 @@ export function InquiryForm({ listingId }: { listingId: string }) {
         )}
       </Button>
 
-      <p className="text-xs leading-relaxed text-paper-faint">
-        <Link href="/politika-privatnosti" className="underline underline-offset-2 hover:text-accent">
+      <p className="text-fg-faint text-xs leading-relaxed">
+        <Link
+          href="/politika-privatnosti"
+          className="hover:text-fg underline underline-offset-2 transition-colors"
+        >
           {COPY.contact.consent}
         </Link>
       </p>

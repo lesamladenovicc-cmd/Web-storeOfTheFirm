@@ -100,10 +100,7 @@ export async function createUserAction(
 }
 
 /** Changes another user's role. Self-changes are refused. */
-export async function setUserRoleAction(
-  userId: string,
-  role: string,
-): Promise<ActionState> {
+export async function setUserRoleAction(userId: string, role: string): Promise<ActionState> {
   const admin = await requireAdmin();
 
   if (!isUserRole(role)) return fail(COPY.validation.genericError);
@@ -127,19 +124,13 @@ export async function setUserRoleAction(
  * An admin cannot deactivate themselves — that is the one move that can
  * lock the last administrator out of the system.
  */
-export async function setUserActiveAction(
-  userId: string,
-  isActive: boolean,
-): Promise<ActionState> {
+export async function setUserActiveAction(userId: string, isActive: boolean): Promise<ActionState> {
   const admin = await requireAdmin();
 
   if (userId === admin.id) return fail(COPY.dashboard.users.selfEditBlocked);
 
   const client = createAdminClient();
-  const { error } = await client
-    .from("profiles")
-    .update({ is_active: isActive })
-    .eq("id", userId);
+  const { error } = await client.from("profiles").update({ is_active: isActive }).eq("id", userId);
 
   if (error) return fail(COPY.validation.genericError);
 

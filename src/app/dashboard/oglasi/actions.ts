@@ -27,14 +27,16 @@ import type { ActionState } from "@/types/domain";
  * Serbian error message instead of an opaque policy violation.
  */
 
-type ParsedForm = {
-  ok: true;
-  values: Record<string, unknown>;
-  status: string;
-} | {
-  ok: false;
-  state: ActionState;
-};
+type ParsedForm =
+  | {
+      ok: true;
+      values: Record<string, unknown>;
+      status: string;
+    }
+  | {
+      ok: false;
+      state: ActionState;
+    };
 
 function parseListingForm(formData: FormData): ParsedForm {
   const status = formString(formData, "status") ?? "nacrt";
@@ -85,11 +87,7 @@ function parseListingForm(formData: FormData): ParsedForm {
 }
 
 /** Rejects any image path not under {sellerId}/{listingId}/. */
-function imagePathsAreOwned(
-  paths: string[],
-  sellerId: string,
-  listingId: string,
-): boolean {
+function imagePathsAreOwned(paths: string[], sellerId: string, listingId: string): boolean {
   return paths.every((p) => isOwnedStoragePath(p, sellerId, listingId));
 }
 
@@ -275,11 +273,12 @@ async function syncImages(listingId: string, paths: string[], alt: string) {
     await supabase
       .from("listing_images")
       .delete()
-      .in("id", toDelete.map((r) => r.id));
+      .in(
+        "id",
+        toDelete.map((r) => r.id),
+      );
     // Best-effort: an orphaned object costs storage, not correctness.
-    await supabase.storage
-      .from(STORAGE_BUCKET)
-      .remove(toDelete.map((r) => r.storage_path));
+    await supabase.storage.from(STORAGE_BUCKET).remove(toDelete.map((r) => r.storage_path));
   }
 
   const known = new Map(existing.map((r) => [r.storage_path, r.id]));
@@ -323,10 +322,7 @@ export async function setListingStatusAction(
     return fail(COPY.validation.unauthorized);
   }
 
-  const { error } = await supabase
-    .from("listings")
-    .update({ status })
-    .eq("id", listingId);
+  const { error } = await supabase.from("listings").update({ status }).eq("id", listingId);
 
   // The publish CHECK constraints can legitimately reject this.
   if (error) return fail(COPY.validation.genericError);

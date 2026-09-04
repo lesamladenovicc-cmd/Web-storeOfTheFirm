@@ -22,15 +22,15 @@ export default async function LoginPage({
   const next = safeRedirectPath(params.next);
 
   return (
-    <main className="u-grain relative grid min-h-dvh place-items-center px-4 py-12">
-      <div className="w-full max-w-sm">
+    <main className="theme-dark u-grid u-grain relative grid min-h-dvh place-items-center px-4 py-12">
+      <div className="relative w-full max-w-sm">
         <div className="mb-10 flex justify-center">
           <Logo />
         </div>
 
-        <div className="rounded-md border border-border bg-surface p-7">
-          <h1 className="text-h2 text-paper">{COPY.auth.loginTitle}</h1>
-          <p className="mt-2 mb-7 text-sm text-paper-muted">{COPY.auth.loginSubtitle}</p>
+        <div className="u-marks border-line bg-panel border p-7">
+          <h1 className="text-h2 text-fg">{COPY.auth.loginTitle}</h1>
+          <p className="text-fg-muted mt-2 mb-7 text-sm">{COPY.auth.loginSubtitle}</p>
 
           {params.greska === "deaktiviran" ? (
             <div className="mb-5">
@@ -42,12 +42,12 @@ export default async function LoginPage({
         </div>
 
         {/* There is no public sign-up route, by design. */}
-        <p className="mt-6 text-center text-sm leading-relaxed text-paper-faint">
+        <p className="text-fg-faint mt-6 text-center text-sm leading-relaxed">
           {COPY.auth.noSignupNote}
         </p>
 
         <p className="mt-8 text-center">
-          <Link href="/" className="text-sm text-paper-muted transition-colors hover:text-accent">
+          <Link href="/" className="u-eyebrow text-fg-muted hover:text-fg transition-colors">
             &larr; {SITE.name}
           </Link>
         </p>

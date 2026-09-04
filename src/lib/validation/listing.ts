@@ -60,9 +60,7 @@ const base = {
   // same shape as categoryId and contact. A draft exists to hold
   // half-finished work, so nothing that only a buyer needs may block
   // saving one. Mirrors listings_active_needs_condition.
-  condition: z
-    .enum(LISTING_CONDITIONS, { message: COPY.validation.invalidCondition })
-    .nullable(),
+  condition: z.enum(LISTING_CONDITIONS, { message: COPY.validation.invalidCondition }).nullable(),
   priceRsd,
   isNegotiable: z.boolean(),
   location,

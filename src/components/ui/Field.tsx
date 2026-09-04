@@ -2,10 +2,16 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { COPY } from "@/config/copy";
 
+/**
+ * Form controls sit on a `panel` inside whatever ground they are in, so a
+ * field on beige is a lighter paper plate and a field on dark is a
+ * slightly lifted surface. Focus is a solid foreground border — a crisp
+ * technical outline rather than a coloured glow.
+ */
 const CONTROL_BASE =
-  "w-full rounded-sm border bg-surface px-3.5 text-paper transition-colors duration-150 placeholder:text-paper-faint focus:border-accent focus:outline-none disabled:cursor-not-allowed disabled:opacity-60";
+  "w-full border bg-panel px-4 font-sans text-[0.9375rem] text-fg transition-colors duration-150 placeholder:text-fg-faint focus:border-fg focus:outline-none disabled:cursor-not-allowed disabled:opacity-60";
 
-const CONTROL_OK = "border-border hover:border-border-strong";
+const CONTROL_OK = "border-line hover:border-line-strong";
 const CONTROL_ERROR = "border-danger";
 
 /* ------------------------------------------------------------------ */
@@ -22,15 +28,10 @@ export function Label({
   className?: string;
 }) {
   return (
-    <label
-      htmlFor={htmlFor}
-      className={cn("mb-1.5 block text-sm font-medium text-paper", className)}
-    >
+    <label htmlFor={htmlFor} className={cn("u-eyebrow text-fg-muted mb-2.5 block", className)}>
       {children}
       {optional ? (
-        <span className="ml-1.5 font-normal text-paper-faint">
-          ({COPY.common.optional})
-        </span>
+        <span className="text-fg-faint ml-1.5 font-normal">({COPY.common.optional})</span>
       ) : null}
     </label>
   );
@@ -39,7 +40,7 @@ export function Label({
 export function FieldError({ id, children }: { id?: string; children?: string }) {
   if (!children) return null;
   return (
-    <p id={id} role="alert" className="mt-1.5 text-sm text-danger">
+    <p id={id} role="alert" className="text-danger mt-1.5 text-sm">
       {children}
     </p>
   );
@@ -48,7 +49,7 @@ export function FieldError({ id, children }: { id?: string; children?: string })
 export function FieldHint({ id, children }: { id?: string; children?: ReactNode }) {
   if (!children) return null;
   return (
-    <p id={id} className="mt-1.5 text-sm text-paper-faint">
+    <p id={id} className="text-fg-faint mt-1.5 text-sm">
       {children}
     </p>
   );
@@ -70,14 +71,7 @@ type FieldWrapperProps = {
 };
 
 /** Wires label / hint / error to the control with correct ARIA. */
-export function Field({
-  label,
-  name,
-  error,
-  hint,
-  optional,
-  children,
-}: FieldWrapperProps) {
+export function Field({ label, name, error, hint, optional, children }: FieldWrapperProps) {
   const id = `f-${name}`;
   const errorId = error ? `${id}-error` : undefined;
   const hintId = hint ? `${id}-hint` : undefined;
@@ -110,7 +104,7 @@ export function Input({
 }: ComponentPropsWithoutRef<"input"> & { hasError?: boolean }) {
   return (
     <input
-      className={cn(CONTROL_BASE, "h-11", hasError ? CONTROL_ERROR : CONTROL_OK, className)}
+      className={cn(CONTROL_BASE, "h-12", hasError ? CONTROL_ERROR : CONTROL_OK, className)}
       {...props}
     />
   );
@@ -147,7 +141,7 @@ export function Select({
       <select
         className={cn(
           CONTROL_BASE,
-          "h-11 cursor-pointer appearance-none pr-10",
+          "h-12 cursor-pointer appearance-none pr-11",
           hasError ? CONTROL_ERROR : CONTROL_OK,
           className,
         )}
@@ -158,7 +152,7 @@ export function Select({
       <svg
         aria-hidden="true"
         viewBox="0 0 12 12"
-        className="pointer-events-none absolute top-1/2 right-3.5 h-3 w-3 -translate-y-1/2 text-paper-muted"
+        className="text-fg-muted pointer-events-none absolute top-1/2 right-4 h-3 w-3 -translate-y-1/2"
       >
         <path d="M2 4.5 6 8.5 10 4.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
       </svg>
@@ -174,13 +168,13 @@ export function Checkbox({
   return (
     <label
       className={cn(
-        "flex cursor-pointer items-center gap-2.5 text-sm text-paper-muted transition-colors hover:text-paper",
+        "text-fg-muted hover:text-fg flex cursor-pointer items-center gap-2.5 text-sm transition-colors",
         className,
       )}
     >
       <input
         type="checkbox"
-        className="h-4 w-4 shrink-0 cursor-pointer appearance-none rounded-xs border border-border-strong bg-surface transition-colors checked:border-accent checked:bg-accent"
+        className="border-line-strong bg-panel checked:border-accent checked:bg-accent h-4 w-4 shrink-0 cursor-pointer appearance-none border transition-colors"
         {...props}
       />
       <span>{label}</span>

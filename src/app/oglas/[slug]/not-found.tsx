@@ -9,13 +9,15 @@ export default function ListingNotFound() {
     <>
       <SiteHeader />
       <main id="sadrzaj">
-        <Container className="py-20">
-          <EmptyState
-            title={COPY.states.listingNotFoundTitle}
-            body={COPY.states.listingNotFoundBody}
-            action={{ href: "/oglasi", label: COPY.states.listingNotFoundCta }}
-          />
-        </Container>
+        <section className="theme-light">
+          <Container className="py-20 sm:py-28">
+            <EmptyState
+              title={COPY.states.listingNotFoundTitle}
+              body={COPY.states.listingNotFoundBody}
+              action={{ href: "/oglasi", label: COPY.states.listingNotFoundCta }}
+            />
+          </Container>
+        </section>
       </main>
       <SiteFooter />
     </>

@@ -6,28 +6,36 @@ export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "outl
 export type ButtonSize = "sm" | "md" | "lg";
 
 /**
+ * Square, hairline-bordered, uppercase in the display face. Every variant
+ * reads its colours from the surrounding ground, so the same button is
+ * correct on a dark band and on beige paper.
+ *
  * Accent is reserved for PRIMARY actions only. If a screen shows two
- * orange buttons, one of them is the wrong variant.
+ * brick buttons, one of them is the wrong variant. `secondary` is the
+ * inverse plate (ink on beige, paper on dark) and is the right choice
+ * for the second-most-important action.
  */
 const VARIANTS: Record<ButtonVariant, string> = {
   primary:
-    "bg-accent text-bg hover:bg-accent-hover active:translate-y-px disabled:hover:bg-accent",
+    "border-accent bg-accent text-on-accent hover:border-accent-hover hover:bg-accent-hover disabled:hover:border-accent disabled:hover:bg-accent",
   secondary:
-    "bg-beige text-ink hover:bg-beige-muted active:translate-y-px disabled:hover:bg-beige",
+    "border-fg bg-fg text-ground hover:bg-transparent hover:text-fg disabled:hover:bg-fg disabled:hover:text-ground",
   outline:
-    "border border-border-strong bg-transparent text-paper hover:border-accent hover:text-accent disabled:hover:border-border-strong disabled:hover:text-paper",
-  ghost: "bg-transparent text-paper-muted hover:bg-surface-2 hover:text-paper",
-  danger: "bg-danger text-paper hover:brightness-110 active:translate-y-px",
+    "border-line-strong bg-transparent text-fg hover:border-fg disabled:hover:border-line-strong",
+  ghost: "border-transparent bg-transparent text-fg-muted hover:border-line-strong hover:text-fg",
+  danger:
+    "border-danger bg-danger text-ground hover:bg-transparent hover:text-danger disabled:hover:bg-danger disabled:hover:text-ground",
 };
 
+/** 40 / 48 / 56px. */
 const SIZES: Record<ButtonSize, string> = {
-  sm: "h-9 px-3.5 text-sm gap-1.5",
-  md: "h-11 px-5 text-[0.9375rem] gap-2",
-  lg: "h-13 px-7 text-base gap-2.5",
+  sm: "h-10 px-5 text-[0.6875rem] gap-2",
+  md: "h-12 px-7 text-xs gap-2.5",
+  lg: "h-14 px-9 text-xs gap-3",
 };
 
 const BASE =
-  "inline-flex items-center justify-center rounded-sm font-medium transition-[background-color,border-color,color,transform] duration-150 ease-[var(--ease-out-quart)] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:translate-y-0 whitespace-nowrap";
+  "inline-flex items-center justify-center border font-[family-name:var(--font-ui)] font-semibold tracking-[0.12em] uppercase whitespace-nowrap transition-colors duration-200 select-none disabled:cursor-not-allowed disabled:opacity-50";
 
 type BaseProps = {
   variant?: ButtonVariant;
@@ -47,11 +55,7 @@ export function Button({
   ...props
 }: ButtonProps) {
   return (
-    <button
-      type={type}
-      className={cn(BASE, VARIANTS[variant], SIZES[size], className)}
-      {...props}
-    >
+    <button type={type} className={cn(BASE, VARIANTS[variant], SIZES[size], className)} {...props}>
       {children}
     </button>
   );

@@ -2,105 +2,202 @@
 
 /* ==================================================================
    DESIGN TOKENS
-   Re-theming the entire store = editing this @theme block.
+   Re-theming the entire store = editing this file.
    No component may hardcode a hex value.
 
-   Aesthetic direction: "industrial ledger" — beige paper stock laid on
-   a workshop-dark ground. Hairline technical rules instead of shadows,
-   monospace for anything numeric (prices, hours, reference codes).
+   Aesthetic direction: "tehnicki list" — a machine's spec sheet. Two
+   grounds: workshop-dark (header, hero, trust, footer) and beige paper
+   stock (listings, detail, content). Hairline rules instead of shadows,
+   register marks on the corners of plates, monospace for anything
+   numeric, a brick accent used only as a stamp on primary actions.
 
-   CONTRAST NOTES (verified by axe-core in e2e/a11y.spec.ts, not by eye):
-     accent #FF4D00 on bg #141414 ....... 5.54:1  PASS AA text
-     ink    #141414 on accent #FF4D00 ... 5.54:1  PASS AA text
-     paper-faint on surface-2 ........... 4.60:1  PASS (worst case)
-     accent #FF4D00 on beige #E7DECB .... 2.49:1  FAIL — never use
-                                                  accent as TEXT on beige.
+   TWO GROUNDS, ONE SET OF CLASS NAMES
+   Every ground-dependent token (fg, panel, line, accent-text, danger…)
+   is a plain CSS variable set on `.theme-dark` / `.theme-light`, and
+   exposed to Tailwind via `@theme inline` so utilities read the nearest
+   wrapper's value. `text-fg` is therefore paper on a dark section and
+   ink on a beige one, with no component changes. The root is dark;
+   wrap a section in `theme-light` to switch it to beige.
 
-   NEVER put opacity on text sitting over the accent: 70% ink over
-   #FF4D00 blends to #5b250e (3.67:1) and fails. Use a solid token.
+   CONTRAST (verified by axe-core in e2e/a11y.spec.ts, not by eye).
+   Every text token below clears 4.5:1 on its ground AND on `panel`.
+   Known limits, do not regress:
+     fg-faint on panel-3 (dark) ......... 4.70   OK, the floor
+     fg-faint on panel-2 (light) ........ 4.25   FAIL — never faint on
+                                                 panel-2 in a beige section
+     accent (fill) as TEXT on dark ...... 3.45   FAIL — use accent-text
+     accent-text on panel-2 (light) ..... 4.39   FAIL — never on panel-2
+     on-accent over accent .............. 5.00   OK
+   Never put opacity on text over the accent fill; use `on-accent`.
    ================================================================== */
 
-@theme {
-  /* --- Surfaces ---------------------------------------------------- */
-  --color-bg: #141414;
-  --color-surface: #1e1e1e;
-  --color-surface-2: #262626;
-  --color-surface-3: #2f2f2f;
+/* --- Ground variables ------------------------------------------------ */
 
+:root,
+.theme-dark {
+  color-scheme: dark;
+
+  --t-ground: #141414;
+  --t-panel: #1c1b19;
+  --t-panel-2: #242320;
+  --t-panel-3: #2c2a26;
+
+  --t-fg: #f4efe3;
+  --t-fg-muted: #a8a296;
+  --t-fg-faint: #9a9386;
+
+  --t-line: #2e2c28;
+  --t-line-strong: #4a463f;
+
+  /* The accent lightened until it clears 4.5:1 as text on this ground. */
+  --t-accent-text: #ec6d3e;
+
+  --t-danger: #ea6450;
+  --t-success: #4a9e68;
+  --t-warning: #d9a441;
+
+  --t-grid: rgb(244 239 227 / 0.05);
+}
+
+.theme-light {
+  color-scheme: light;
+
+  --t-ground: #e7decb;
+  --t-panel: #f3eee2;
+  --t-panel-2: #ddd3bd;
+  --t-panel-3: #d3c7ae;
+
+  --t-fg: #1a1a1a;
+  --t-fg-muted: #5a544a;
+  --t-fg-faint: #665f52;
+
+  --t-line: #cfc4aa;
+  --t-line-strong: #a99c80;
+
+  --t-accent-text: #a83708;
+
+  --t-danger: #a8321b;
+  --t-success: #2a6640;
+  --t-warning: #7a4f00;
+
+  --t-grid: rgb(26 26 26 / 0.07);
+}
+
+/* Applying a ground paints it. Layered under `base` so a utility on the
+   same element (`bg-ground/92` on the sticky header) still wins. */
+@layer base {
+  .theme-dark,
+  .theme-light {
+    background-color: var(--t-ground);
+    color: var(--t-fg);
+  }
+}
+
+/* --- Contextual tokens (read the nearest ground) ---------------------- */
+
+@theme inline {
+  --color-ground: var(--t-ground);
+  --color-panel: var(--t-panel);
+  --color-panel-2: var(--t-panel-2);
+  --color-panel-3: var(--t-panel-3);
+
+  --color-fg: var(--t-fg);
+  --color-fg-muted: var(--t-fg-muted);
+  --color-fg-faint: var(--t-fg-faint);
+
+  --color-line: var(--t-line);
+  --color-line-strong: var(--t-line-strong);
+
+  --color-accent-text: var(--t-accent-text);
+
+  --color-danger: var(--t-danger);
+  --color-danger-soft: color-mix(in oklab, var(--t-danger) 12%, transparent);
+  --color-success: var(--t-success);
+  --color-success-soft: color-mix(in oklab, var(--t-success) 12%, transparent);
+  --color-warning: var(--t-warning);
+}
+
+/* --- Fixed palette (same on both grounds) ----------------------------- */
+
+@theme {
+  /* Raw stock — for elements that pin a ground regardless of context. */
+  --color-dark: #141414;
+  --color-dark-2: #1c1b19;
   --color-beige: #e7decb;
   --color-beige-muted: #d3c7ae;
   --color-beige-deep: #c4b696;
-
-  /* --- Text -------------------------------------------------------- */
+  --color-paper: #f4efe3;
   --color-ink: #1a1a1a;
   --color-ink-muted: #5a544a;
-  --color-ink-faint: #857e70;
+  --color-ink-faint: #665f52;
 
-  --color-paper: #f4efe3;
-  --color-paper-muted: #a8a296;
-  /* Measured, not chosen by eye: this is the lightest value that clears
-     4.5:1 on ALL THREE dark grounds (4.60 on the worst case, surface-2).
-     The previous #6f6a60 failed everywhere (3.43 / 3.10 / 2.82) and axe
-     caught it across the footer, eyebrows and every metadata line. */
-  --color-paper-faint: #948d80;
-
-  /* --- Accent — primary actions and highlights ONLY ---------------- */
-  --color-accent: #ff4d00;
-  --color-accent-hover: #e64500;
-  --color-accent-soft: #ff4d0014;
+  /* Accent — brick. Primary actions and the active marker ONLY.
+     As a FILL it is the same on both grounds; as TEXT use `accent-text`. */
+  --color-accent: #bf3f0c;
+  --color-accent-hover: #a83708;
+  --color-on-accent: #fbf7ee;
+  --color-accent-soft: #bf3f0c1f;
+  /* Optional second highlight, unused by default. */
   --color-accent-2: #c6ff3d;
 
-  /* --- Lines & feedback -------------------------------------------- */
-  --color-border: #332f2a;
-  --color-border-strong: #4a443c;
-  --color-border-light: #00000018;
-  --color-danger: #e0553f;
-  --color-danger-soft: #e0553f1a;
-  --color-success: #4a9e68;
-  --color-success-soft: #4a9e681a;
-  --color-warning: #d9a441;
-
-  /* --- Typography -------------------------------------------------- */
+  /* --- Typography ----------------------------------------------------
+     display  Archivo — headings and UI labels, 600 and tight
+     sans     IBM Plex Sans — body copy
+     mono     IBM Plex Mono — prices, codes, dates, eyebrows
+     ui       alias of display; kept so `--font-ui` call sites work
+     ------------------------------------------------------------------ */
   --font-display: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
+  --font-ui: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
 
   /* Fluid type scale */
-  --text-display: clamp(2.5rem, 1.4rem + 4.4vw, 4rem);
+  --text-display: clamp(2.5rem, 1.5rem + 3.8vw, 4.75rem);
   --text-display--line-height: 0.98;
   --text-display--letter-spacing: -0.03em;
 
-  --text-h1: clamp(2rem, 1.4rem + 2.4vw, 2.75rem);
-  --text-h1--line-height: 1.06;
+  --text-banner: clamp(2.125rem, 1.4rem + 2.6vw, 3.5rem);
+  --text-banner--line-height: 1;
+  --text-banner--letter-spacing: -0.03em;
+
+  --text-h1: clamp(1.875rem, 1.35rem + 1.9vw, 2.75rem);
+  --text-h1--line-height: 1.04;
   --text-h1--letter-spacing: -0.025em;
 
-  --text-h2: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);
-  --text-h2--line-height: 1.12;
+  --text-h2: clamp(1.5rem, 1.25rem + 1vw, 2rem);
+  --text-h2--line-height: 1.1;
   --text-h2--letter-spacing: -0.02em;
 
-  --text-h3: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  --text-h3: clamp(1.125rem, 1rem + 0.45vw, 1.375rem);
   --text-h3--line-height: 1.2;
   --text-h3--letter-spacing: -0.015em;
 
+  --text-h4: 1.125rem;
+  --text-h4--line-height: 1.25;
+  --text-h4--letter-spacing: -0.01em;
+
+  /* Small mono label — the eyebrow, the data strip, table headers. */
   --text-eyebrow: 0.6875rem;
   --text-eyebrow--line-height: 1.2;
   --text-eyebrow--letter-spacing: 0.16em;
 
-  /* --- Radius ------------------------------------------------------ */
-  --radius-xs: 2px;
-  --radius-sm: 4px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
+  /* --- Radius: a spec sheet is square. ------------------------------- */
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
 
-  /* --- Elevation — exactly two, per the design rules --------------- */
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.28);
+  /* --- Elevation: overlays only; everything else is a rule. ---------- */
+  --shadow-card: none;
   --shadow-overlay: 0 24px 60px -12px rgb(0 0 0 / 0.6);
+  --shadow-button: none;
+  --shadow-strip: none;
 
-  /* --- Motion ------------------------------------------------------ */
+  /* --- Motion -------------------------------------------------------- */
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
 
-  /* --- Layout ------------------------------------------------------ */
-  --container-page: 1280px;
+  /* --- Layout -------------------------------------------------------- */
+  --container-page: 1400px;
 }
 
 /* ==================================================================
@@ -109,7 +206,7 @@
 
 @layer base {
   * {
-    border-color: var(--color-border);
+    border-color: var(--color-line);
   }
 
   html {
@@ -118,8 +215,8 @@
   }
 
   body {
-    background-color: var(--color-bg);
-    color: var(--color-paper);
+    background-color: var(--color-ground);
+    color: var(--color-fg);
     font-family: var(--font-sans);
     font-size: 1rem;
     line-height: 1.6;
@@ -134,7 +231,7 @@
   h3,
   h4 {
     font-family: var(--font-display);
-    font-weight: 700;
+    font-weight: 600;
     text-wrap: balance;
   }
 
@@ -142,7 +239,6 @@
     text-wrap: pretty;
   }
 
-  /* Numerals line up in tables and price columns. */
   table,
   input[type="number"] {
     font-variant-numeric: tabular-nums;
@@ -150,13 +246,12 @@
 
   ::selection {
     background-color: var(--color-accent);
-    color: var(--color-bg);
+    color: var(--color-on-accent);
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-accent-text);
     outline-offset: 2px;
-    border-radius: var(--radius-xs);
   }
 
   /* Only remove the ring for mouse users, never for keyboard users. */
@@ -165,13 +260,13 @@
   }
 
   ::placeholder {
-    color: var(--color-paper-faint);
+    color: var(--color-fg-faint);
     opacity: 1;
   }
 
   /* Firefox */
   * {
-    scrollbar-color: var(--color-border-strong) transparent;
+    scrollbar-color: var(--color-line-strong) transparent;
   }
 
   ::-webkit-scrollbar {
@@ -182,9 +277,8 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background-color: var(--color-border-strong);
-    border-radius: 999px;
-    border: 3px solid var(--color-bg);
+    background-color: var(--color-line-strong);
+    border: 3px solid var(--color-ground);
   }
 }
 
@@ -193,10 +287,11 @@
    ================================================================== */
 
 @layer utilities {
-  /* Section label: "INTERNA PONUDA" — small, tracked, industrial. */
+  /* Mono label: eyebrows, data strips, table heads, badges. */
   .u-eyebrow {
     font-family: var(--font-mono);
     font-size: var(--text-eyebrow);
+    line-height: var(--text-eyebrow--line-height);
     letter-spacing: var(--text-eyebrow--letter-spacing);
     text-transform: uppercase;
     font-weight: 500;
@@ -206,15 +301,65 @@
   .u-numeric {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
   }
 
-  /* Hairline rule, like a technical drawing. */
+  /* Hairline rule. */
   .u-rule {
-    border-top: 1px solid var(--color-border);
+    border-top: 1px solid var(--color-line);
   }
 
-  /* Fine grain overlay — adds paper texture without an image request. */
+  /* Register marks: an L in each corner, drawn with backgrounds so the
+     element keeps its own background-color. The mark of a "plate". */
+  .u-marks {
+    --mark: var(--color-line-strong);
+    --mark-len: 12px;
+    background-image:
+      linear-gradient(var(--mark), var(--mark)), linear-gradient(var(--mark), var(--mark)),
+      linear-gradient(var(--mark), var(--mark)), linear-gradient(var(--mark), var(--mark)),
+      linear-gradient(var(--mark), var(--mark)), linear-gradient(var(--mark), var(--mark)),
+      linear-gradient(var(--mark), var(--mark)), linear-gradient(var(--mark), var(--mark));
+    background-repeat: no-repeat;
+    background-size:
+      var(--mark-len) 1px,
+      1px var(--mark-len),
+      var(--mark-len) 1px,
+      1px var(--mark-len),
+      var(--mark-len) 1px,
+      1px var(--mark-len),
+      var(--mark-len) 1px,
+      1px var(--mark-len);
+    background-position:
+      top left,
+      top left,
+      top right,
+      top right,
+      bottom left,
+      bottom left,
+      bottom right,
+      bottom right;
+  }
+
+  /* Blueprint grid behind the hero and banners. Sits on a pseudo-element
+     so the section's own background stays a flat token. */
+  .u-grid {
+    position: relative;
+    isolation: isolate;
+  }
+  .u-grid::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+      linear-gradient(var(--t-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--t-grid) 1px, transparent 1px);
+    background-size: 56px 56px;
+    background-position: -1px -1px;
+    mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
+  }
+
+  /* Fine grain overlay — texture without an image request. */
   .u-grain::after {
     content: "";
     position: absolute;
@@ -223,33 +368,6 @@
     opacity: 0.035;
     mix-blend-mode: overlay;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
-
-  /* Corner ticks — registration marks on cards and panels. */
-  .u-ticks {
-    position: relative;
-  }
-  .u-ticks::before,
-  .u-ticks::after {
-    content: "";
-    position: absolute;
-    width: 7px;
-    height: 7px;
-    border-color: var(--color-accent);
-    opacity: 0.55;
-    transition: opacity 200ms var(--ease-out-quart);
-  }
-  .u-ticks::before {
-    top: -1px;
-    left: -1px;
-    border-top: 1.5px solid;
-    border-left: 1.5px solid;
-  }
-  .u-ticks::after {
-    bottom: -1px;
-    right: -1px;
-    border-bottom: 1.5px solid;
-    border-right: 1.5px solid;
   }
 
   /* Staggered page-load reveal. Index set inline via --i. */
@@ -276,7 +394,7 @@
 @keyframes reveal {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -297,9 +415,8 @@
     /* Delay must be zeroed too, not just duration. `.u-reveal` uses
        animation-delay with `backwards` fill, so an element stays at its
        from-state (opacity 0) for the whole delay even when the duration
-       is collapsed — a reduced-motion visitor would watch content pop in
-       over ~440ms across a nine-card grid. Caught by axe, which sampled
-       the half-faded colours and reported them as contrast failures. */
+       is collapsed. Caught by axe, which sampled the half-faded colours
+       and reported them as contrast failures. */
     animation-delay: 0s !important;
     transition-delay: 0s !important;
   }

@@ -19,16 +19,9 @@ export default async function EditListingPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ sacuvano?: string }>;
 }) {
-  const [{ id }, query, profile] = await Promise.all([
-    params,
-    searchParams,
-    requireProfile(),
-  ]);
+  const [{ id }, query, profile] = await Promise.all([params, searchParams, requireProfile()]);
 
-  const [listing, categories] = await Promise.all([
-    getListingById(id),
-    getAllCategories(),
-  ]);
+  const [listing, categories] = await Promise.all([getListingById(id), getAllCategories()]);
 
   // RLS already hides other sellers' listings, so this is normally a
   // genuine 404. The explicit ownership check covers the admin path and
@@ -48,7 +41,7 @@ export default async function EditListingPage({
                 href={`/oglas/${listing.slug}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-9 items-center rounded-sm border border-border-strong px-3.5 text-sm text-paper transition-colors hover:border-accent hover:text-accent"
+                className="border-line-strong text-fg hover:border-accent hover:text-accent-text inline-flex h-9 items-center rounded-sm border px-3.5 text-sm transition-colors"
               >
                 {COPY.dashboard.listings.view}
               </Link>
@@ -68,13 +61,11 @@ export default async function EditListingPage({
         />
       </div>
 
-      <div className="mt-14 rounded-md border border-danger/30 bg-danger-soft p-6">
-        <h2 className="font-display text-base font-semibold text-danger">
+      <div className="border-danger/30 bg-danger-soft mt-14 rounded-md border p-6">
+        <h2 className="font-display text-danger text-base font-semibold">
           {COPY.dashboard.delete.title}
         </h2>
-        <p className="mt-2 max-w-[60ch] text-sm text-paper-muted">
-          {COPY.dashboard.delete.body}
-        </p>
+        <p className="text-fg-muted mt-2 max-w-[60ch] text-sm">{COPY.dashboard.delete.body}</p>
         <div className="mt-5">
           <DeleteListingDialog listingId={listing.id} title={listing.title} />
         </div>

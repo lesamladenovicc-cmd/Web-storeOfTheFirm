@@ -4,9 +4,14 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { COPY } from "@/config/copy";
-import { MAIN_NAV } from "@/config/site";
+import { MAIN_NAV, SITE } from "@/config/site";
+import { ButtonLink } from "@/components/ui/Button";
+import { Eyebrow } from "@/components/ui/Eyebrow";
 import { cn } from "@/lib/cn";
 
+/**
+ * Off-canvas panel sliding in from the right, pinned to the dark ground.
+ */
 export function MobileNav({ isAuthed = false }: { isAuthed?: boolean }) {
   const pathname = usePathname();
 
@@ -46,7 +51,7 @@ export function MobileNav({ isAuthed = false }: { isAuthed?: boolean }) {
         aria-expanded={open}
         aria-controls="mobile-nav"
         aria-label={open ? COPY.nav.closeMenu : COPY.nav.openMenu}
-        className="grid h-10 w-10 place-items-center rounded-sm text-paper transition-colors hover:bg-surface-2 md:hidden"
+        className="border-line text-fg hover:border-fg grid h-10 w-10 place-items-center border transition-colors md:hidden"
       >
         <span className="relative block h-4 w-5">
           <span
@@ -71,33 +76,59 @@ export function MobileNav({ isAuthed = false }: { isAuthed?: boolean }) {
       </button>
 
       {open ? (
-        <div
-          id="mobile-nav"
-          className="fixed inset-x-0 top-16 bottom-0 z-40 border-t border-border bg-bg md:hidden"
-        >
-          <nav className="flex flex-col px-4 py-6" aria-label={COPY.nav.menu}>
-            {MAIN_NAV.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpenedOn(null)}
-                className={cn(
-                  "border-b border-border py-4 font-display text-h3 transition-colors",
-                  pathname === item.href ? "text-accent" : "text-paper hover:text-accent",
-                )}
-              >
-                {item.label}
-              </Link>
-            ))}
-            <Link
+        <>
+          <button
+            type="button"
+            aria-label={COPY.nav.closeMenu}
+            onClick={() => setOpenedOn(null)}
+            className="bg-dark/80 fixed inset-0 z-40 md:hidden"
+          />
+
+          <div
+            id="mobile-nav"
+            className="theme-dark border-line fixed inset-y-0 right-0 z-50 flex w-full max-w-[340px] flex-col overflow-y-auto border-l px-7 py-8 md:hidden"
+          >
+            <Eyebrow>{SITE.name}</Eyebrow>
+            <p className="text-fg-muted mt-3 text-sm leading-relaxed">{SITE.tagline}</p>
+
+            <nav className="mt-9 flex flex-col" aria-label={COPY.nav.menu}>
+              {MAIN_NAV.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setOpenedOn(null)}
+                  className={cn(
+                    "border-line font-display border-b py-4 text-2xl font-semibold tracking-tight transition-colors",
+                    pathname === item.href ? "text-accent-text" : "text-fg hover:text-accent-text",
+                  )}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+
+            <ButtonLink
               href={isAuthed ? "/dashboard" : "/prijava"}
               onClick={() => setOpenedOn(null)}
-              className="mt-6 inline-flex h-12 items-center justify-center rounded-sm bg-accent font-medium text-bg"
+              size="lg"
+              className="mt-8 w-full"
             >
               {isAuthed ? COPY.nav.dashboard : COPY.nav.login}
-            </Link>
-          </nav>
-        </div>
+            </ButtonLink>
+
+            <div className="mt-auto pt-10">
+              <a
+                href={SITE.contact.phoneHref}
+                className="u-numeric text-fg hover:text-accent-text block text-sm transition-colors"
+              >
+                {SITE.contact.phone}
+              </a>
+              <p className="text-fg-muted mt-1.5 text-sm">
+                {SITE.contact.address}, {SITE.contact.city}
+              </p>
+            </div>
+          </div>
+        </>
       ) : null}
     </>
   );

@@ -24,10 +24,8 @@ export function UserRowActions({ user, isSelf }: { user: Profile; isSelf: boolea
         id={`role-${user.id}`}
         defaultValue={user.role}
         disabled={isSelf || pending}
-        onChange={(e) =>
-          startTransition(() => void setUserRoleAction(user.id, e.target.value))
-        }
-        className="h-8 cursor-pointer rounded-xs border border-border bg-bg px-2 text-xs text-paper disabled:cursor-not-allowed disabled:opacity-40"
+        onChange={(e) => startTransition(() => void setUserRoleAction(user.id, e.target.value))}
+        className="border-line bg-ground text-fg h-8 cursor-pointer rounded-xs border px-2 text-xs disabled:cursor-not-allowed disabled:opacity-40"
       >
         {USER_ROLES.map((r) => (
           <option key={r} value={r}>
@@ -39,10 +37,8 @@ export function UserRowActions({ user, isSelf }: { user: Profile; isSelf: boolea
       <button
         type="button"
         disabled={isSelf || pending}
-        onClick={() =>
-          startTransition(() => void setUserActiveAction(user.id, !user.isActive))
-        }
-        className="text-xs text-paper-faint underline-offset-4 transition-colors hover:text-accent hover:underline disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:no-underline"
+        onClick={() => startTransition(() => void setUserActiveAction(user.id, !user.isActive))}
+        className="text-fg-faint hover:text-accent-text text-xs underline-offset-4 transition-colors hover:underline disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:no-underline"
       >
         {user.isActive ? COPY.dashboard.users.deactivate : COPY.dashboard.users.activate}
       </button>

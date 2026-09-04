@@ -22,33 +22,27 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false, nocache: true },
 };
 
-export default async function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const profile = await requireProfile();
   const unread = await getUnreadInquiryCount();
 
   return (
     <div className="min-h-dvh">
-      <header className="border-b border-border bg-surface">
+      <header className="border-line bg-panel border-b">
         <Container className="flex h-16 items-center justify-between gap-6">
           <div className="flex items-center gap-6">
             <Logo />
-            <span className="u-eyebrow hidden text-paper-faint sm:inline">
-              {COPY.dashboard.title}
-            </span>
+            <span className="u-eyebrow text-fg-faint hidden sm:inline">{COPY.dashboard.title}</span>
           </div>
 
           <div className="flex items-center gap-4">
-            <span className="hidden text-sm text-paper-muted sm:inline">
+            <span className="text-fg-muted hidden text-sm sm:inline">
               {profile.fullName || profile.email}
             </span>
             <form action={logoutAction}>
               <button
                 type="submit"
-                className="h-9 rounded-sm border border-border-strong px-3.5 text-sm text-paper-muted transition-colors hover:border-danger hover:text-danger"
+                className="border-line-strong text-fg-muted hover:border-danger hover:text-danger h-9 rounded-sm border px-3.5 text-sm transition-colors"
               >
                 {COPY.nav.logout}
               </button>

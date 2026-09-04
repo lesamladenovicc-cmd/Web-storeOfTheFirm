@@ -15,12 +15,7 @@
 /* Condition                                                           */
 /* ------------------------------------------------------------------ */
 
-export const LISTING_CONDITIONS = [
-  "novo",
-  "kao_novo",
-  "korisceno",
-  "neispravno",
-] as const;
+export const LISTING_CONDITIONS = ["novo", "kao_novo", "korisceno", "neispravno"] as const;
 
 export type ListingCondition = (typeof LISTING_CONDITIONS)[number];
 
@@ -90,11 +85,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 /* Sorting                                                             */
 /* ------------------------------------------------------------------ */
 
-export const SORT_OPTIONS = [
-  "najnovije",
-  "cena_rastuce",
-  "cena_opadajuce",
-] as const;
+export const SORT_OPTIONS = ["najnovije", "cena_rastuce", "cena_opadajuce"] as const;
 
 export type SortOption = (typeof SORT_OPTIONS)[number];
 

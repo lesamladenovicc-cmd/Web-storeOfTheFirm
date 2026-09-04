@@ -17,10 +17,7 @@ export default async function InquiriesPage() {
 
   return (
     <>
-      <PageHeader
-        eyebrow={COPY.dashboard.title}
-        title={COPY.dashboard.inquiries.title}
-      />
+      <PageHeader eyebrow={COPY.dashboard.title} title={COPY.dashboard.inquiries.title} />
 
       <div className="mt-8">
         {inquiries.length === 0 ? (
@@ -34,24 +31,21 @@ export default async function InquiriesPage() {
               <li
                 key={inquiry.id}
                 className={cn(
-                  "rounded-md border bg-surface p-5",
-                  inquiry.isRead ? "border-border" : "border-accent/40",
+                  "bg-panel rounded-md border p-5",
+                  inquiry.isRead ? "border-line" : "border-accent/40",
                 )}
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <div className="flex flex-wrap items-center gap-2.5">
-                      <p className="font-display font-semibold text-paper">
-                        {inquiry.senderName}
-                      </p>
+                      <p className="font-display text-fg font-semibold">{inquiry.senderName}</p>
                       {!inquiry.isRead ? (
                         <Badge tone="accent">{COPY.dashboard.inquiries.unread}</Badge>
                       ) : null}
                     </div>
 
-                    <p className="u-numeric mt-1 text-xs text-paper-faint">
-                      {COPY.dashboard.inquiries.received}{" "}
-                      {formatDateTime(inquiry.createdAt)}
+                    <p className="u-numeric text-fg-faint mt-1 text-xs">
+                      {COPY.dashboard.inquiries.received} {formatDateTime(inquiry.createdAt)}
                     </p>
                   </div>
 
@@ -59,26 +53,26 @@ export default async function InquiriesPage() {
                 </div>
 
                 {inquiry.listingTitle && inquiry.listingSlug ? (
-                  <p className="mt-3 text-sm text-paper-muted">
+                  <p className="text-fg-muted mt-3 text-sm">
                     {COPY.dashboard.inquiries.forListing}:{" "}
                     <Link
                       href={`/oglas/${inquiry.listingSlug}`}
-                      className="text-paper transition-colors hover:text-accent"
+                      className="text-fg hover:text-accent-text transition-colors"
                     >
                       {inquiry.listingTitle}
                     </Link>
                   </p>
                 ) : null}
 
-                <p className="mt-4 border-l-2 border-accent pl-4 text-[0.9375rem] leading-relaxed whitespace-pre-line text-paper-muted">
+                <p className="border-accent text-fg-muted mt-4 border-l-2 pl-4 text-[0.9375rem] leading-relaxed whitespace-pre-line">
                   {inquiry.message}
                 </p>
 
-                <div className="u-numeric mt-4 flex flex-wrap gap-x-6 gap-y-1.5 border-t border-border pt-4 text-sm">
+                <div className="u-numeric border-line mt-4 flex flex-wrap gap-x-6 gap-y-1.5 border-t pt-4 text-sm">
                   {inquiry.senderPhone ? (
                     <a
                       href={`tel:${inquiry.senderPhone}`}
-                      className="text-paper transition-colors hover:text-accent"
+                      className="text-fg hover:text-accent-text transition-colors"
                     >
                       {formatPhone(inquiry.senderPhone)}
                     </a>
@@ -86,7 +80,7 @@ export default async function InquiriesPage() {
                   {inquiry.senderEmail ? (
                     <a
                       href={`mailto:${inquiry.senderEmail}`}
-                      className="text-paper transition-colors hover:text-accent"
+                      className="text-fg hover:text-accent-text transition-colors"
                     >
                       {inquiry.senderEmail}
                     </a>

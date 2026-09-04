@@ -3,24 +3,22 @@ import { COPY } from "@/config/copy";
 import { formatPrice } from "@/lib/format";
 
 /**
- * Price is set in monospace — the single most distinctive typographic
- * choice in the storefront. It reads as a stencilled equipment tag and
- * keeps digits aligned down a grid column.
- *
- * Accent-on-dark measures 5.63:1 so this passes AA. Never render this
- * component on a beige surface (2.49:1) — use `tone="ink"` there.
+ * Price is set in the mono face, semibold and tabular, in the foreground
+ * of whatever ground it sits on. It is the loudest thing on a card by
+ * weight and size, not by colour — the accent belongs to actions.
  */
 export function PriceTag({
   price,
   isNegotiable = false,
   size = "md",
-  tone = "accent",
+  tone = "fg",
   className,
 }: {
   price: number | null;
   isNegotiable?: boolean;
   size?: "sm" | "md" | "lg";
-  tone?: "accent" | "paper" | "ink";
+  /** `accent` uses the ground-safe accent-text token, never the fill. */
+  tone?: "fg" | "accent";
   className?: string;
 }) {
   const sizes = {
@@ -30,17 +28,23 @@ export function PriceTag({
   } as const;
 
   const tones = {
-    accent: "text-accent",
-    paper: "text-paper",
-    ink: "text-ink",
+    fg: "text-fg",
+    accent: "text-accent-text",
   } as const;
 
   return (
-    <p className={cn("u-numeric font-semibold", sizes[size], tones[tone], className)}>
-      {formatPrice(price)}
+    <p
+      className={cn(
+        "u-numeric flex flex-wrap items-baseline gap-x-3 gap-y-1 font-semibold tracking-tight",
+        sizes[size],
+        tones[tone],
+        className,
+      )}
+    >
+      <span>{formatPrice(price)}</span>
       {isNegotiable && price !== null ? (
-        <span className="ml-2 align-middle text-xs font-normal text-paper-faint">
-          {COPY.listing.negotiable.toLowerCase()}
+        <span className="u-eyebrow text-fg-faint basis-full font-normal">
+          {COPY.listing.negotiable}
         </span>
       ) : null}
     </p>

@@ -72,12 +72,27 @@ export const COPY = {
     heroSearchLabel: "Pretražite ponudu",
     heroCta: "Pogledaj sve oglase",
 
+    // Small tracked label sitting above each large section heading.
+    categoriesTag: "Ponuda po kategorijama",
     categoriesTitle: "Kategorije",
     categoriesSubtitle: "Pronađite ono što vam treba.",
 
+    latestTag: "Sveže u ponudi",
     latestTitle: "Najnoviji oglasi",
     latestSubtitle: "Sveže objavljeno u ponudi.",
     latestCta: "Svi oglasi",
+
+    trustTag: "Zašto baš mi",
+
+    ctaTag: "Spremni ste?",
+
+    // The data plate beside the hero headline — live figures set in mono.
+    plateTitle: "Stanje ponude",
+    plateListings: "Aktivnih oglasa",
+    plateCategories: "Kategorija",
+    plateCurrency: "Valuta",
+    plateCommission: "Provizija",
+    plateCommissionValue: "0 %",
 
     // MOCK — trust strip.
     trust: [
@@ -430,8 +445,8 @@ export const COPY = {
     // iPhone fotografije su najčešće HEIC iako im ime završava na .JPG,
     // pa poruka mora da objasni i šta korisnik konkretno treba da uradi.
     imageHeic:
-        "Ova fotografija je u HEIC formatu (iPhone), iako se zove .JPG — pregledači ne mogu da je otvore. " +
-        "Na iPhone-u: Podešavanja → Kamera → Formati → „Najkompatibilnije“, pa je ponovo slikajte ili izvezite kao JPEG.",
+      "Ova fotografija je u HEIC formatu (iPhone), iako se zove .JPG — pregledači ne mogu da je otvore. " +
+      "Na iPhone-u: Podešavanja → Kamera → Formati → „Najkompatibilnije“, pa je ponovo slikajte ili izvezite kao JPEG.",
     messageLength: "Poruka mora imati između 10 i 2000 karaktera.",
     rateLimited: "Poslali ste previše upita. Pokušajte ponovo za sat vremena.",
     genericError: "Došlo je do greške. Pokušajte ponovo.",

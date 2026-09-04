@@ -58,8 +58,8 @@ export function parseFilters(params: RawSearchParams): ListingFilters {
   const categorySlug = first(params[PARAM.category])?.trim();
   const location = first(params[PARAM.location])?.trim();
 
-  const conditions = all(params[PARAM.condition]).filter(
-    (c): c is ListingCondition => isListingCondition(c),
+  const conditions = all(params[PARAM.condition]).filter((c): c is ListingCondition =>
+    isListingCondition(c),
   );
 
   const rawSort = first(params[PARAM.sort]);
@@ -91,11 +91,11 @@ export function parseFilters(params: RawSearchParams): ListingFilters {
 export function hasActiveFilters(filters: ListingFilters): boolean {
   return Boolean(
     filters.q ||
-      filters.categorySlug ||
-      filters.conditions?.length ||
-      filters.priceMin !== undefined ||
-      filters.priceMax !== undefined ||
-      filters.location,
+    filters.categorySlug ||
+    filters.conditions?.length ||
+    filters.priceMin !== undefined ||
+    filters.priceMax !== undefined ||
+    filters.location,
   );
 }
 
@@ -111,13 +111,13 @@ export function hasActiveFilters(filters: ListingFilters): boolean {
 export function shouldNoIndex(filters: ListingFilters): boolean {
   return Boolean(
     filters.q ||
-      filters.categorySlug ||
-      filters.conditions?.length ||
-      filters.priceMin !== undefined ||
-      filters.priceMax !== undefined ||
-      filters.location ||
-      (filters.sort && filters.sort !== DEFAULT_SORT) ||
-      (filters.page ?? 1) > 1,
+    filters.categorySlug ||
+    filters.conditions?.length ||
+    filters.priceMin !== undefined ||
+    filters.priceMax !== undefined ||
+    filters.location ||
+    (filters.sort && filters.sort !== DEFAULT_SORT) ||
+    (filters.page ?? 1) > 1,
   );
 }
 

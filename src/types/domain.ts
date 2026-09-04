@@ -7,11 +7,7 @@
  * truth for the wire format; the mappers in `lib/data/*` bridge the two.
  */
 
-import type {
-  ListingCondition,
-  ListingStatus,
-  UserRole,
-} from "@/config/taxonomy";
+import type { ListingCondition, ListingStatus, UserRole } from "@/config/taxonomy";
 
 export type { ListingCondition, ListingStatus, UserRole };
 

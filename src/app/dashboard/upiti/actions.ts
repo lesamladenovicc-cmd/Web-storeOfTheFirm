@@ -20,10 +20,7 @@ export async function markInquiryReadAction(inquiryId: string): Promise<ActionSt
   }
 
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("inquiries")
-    .update({ is_read: true })
-    .eq("id", inquiryId);
+  const { error } = await supabase.from("inquiries").update({ is_read: true }).eq("id", inquiryId);
 
   if (error) return fail(COPY.validation.genericError);
 

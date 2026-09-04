@@ -3,11 +3,7 @@
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import { COPY } from "@/config/copy";
-import {
-  CONDITION_HINTS,
-  CONDITION_LABELS,
-  LISTING_CONDITIONS,
-} from "@/config/taxonomy";
+import { CONDITION_HINTS, CONDITION_LABELS, LISTING_CONDITIONS } from "@/config/taxonomy";
 import { Button } from "@/components/ui/Button";
 import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { Alert, Spinner } from "@/components/ui/Feedback";
@@ -71,15 +67,11 @@ export function ListingForm({
             : COPY.dashboard.form.published}
         </Alert>
       ) : null}
-      {state.message ? (
-        <Alert tone={state.ok ? "success" : "danger"}>{state.message}</Alert>
-      ) : null}
+      {state.message ? <Alert tone={state.ok ? "success" : "danger"}>{state.message}</Alert> : null}
 
       {/* ---------------- Basics ---------------- */}
-      <section className="space-y-5 rounded-md border border-border bg-surface p-6">
-        <h2 className="u-eyebrow text-paper-faint">
-          {COPY.dashboard.form.sectionBasics}
-        </h2>
+      <section className="border-line bg-panel space-y-5 rounded-md border p-6">
+        <h2 className="u-eyebrow text-fg-faint">{COPY.dashboard.form.sectionBasics}</h2>
 
         <Field
           label={COPY.dashboard.form.title}
@@ -199,13 +191,11 @@ export function ListingForm({
       </section>
 
       {/* ---------------- Images ---------------- */}
-      <section className="space-y-5 rounded-md border border-border bg-surface p-6">
+      <section className="border-line bg-panel space-y-5 rounded-md border p-6">
         <div>
-          <h2 className="u-eyebrow text-paper-faint">
-            {COPY.dashboard.form.sectionImages}
-          </h2>
+          <h2 className="u-eyebrow text-fg-faint">{COPY.dashboard.form.sectionImages}</h2>
           {err?.imagePaths ? (
-            <p role="alert" className="mt-2 text-sm text-danger">
+            <p role="alert" className="text-danger mt-2 text-sm">
               {err.imagePaths}
             </p>
           ) : null}
@@ -220,18 +210,18 @@ export function ListingForm({
       </section>
 
       {/* ---------------- Contact ---------------- */}
-      <section className="space-y-5 rounded-md border border-border bg-surface p-6">
+      <section className="border-line bg-panel space-y-5 rounded-md border p-6">
         <div>
-          <h2 className="u-eyebrow text-paper-faint">
-            {COPY.dashboard.form.sectionContact}
-          </h2>
-          <p className="mt-2 text-sm text-paper-faint">
-            {COPY.dashboard.form.contactHint}
-          </p>
+          <h2 className="u-eyebrow text-fg-faint">{COPY.dashboard.form.sectionContact}</h2>
+          <p className="text-fg-faint mt-2 text-sm">{COPY.dashboard.form.contactHint}</p>
         </div>
 
         <div className="grid gap-5 sm:grid-cols-3">
-          <Field label={COPY.dashboard.form.contactName} name="contactName" error={err?.contactName}>
+          <Field
+            label={COPY.dashboard.form.contactName}
+            name="contactName"
+            error={err?.contactName}
+          >
             {(aria) => (
               <Input
                 {...aria}
@@ -243,7 +233,11 @@ export function ListingForm({
             )}
           </Field>
 
-          <Field label={COPY.dashboard.form.contactPhone} name="contactPhone" error={err?.contactPhone}>
+          <Field
+            label={COPY.dashboard.form.contactPhone}
+            name="contactPhone"
+            error={err?.contactPhone}
+          >
             {(aria) => (
               <Input
                 {...aria}
@@ -262,7 +256,11 @@ export function ListingForm({
             )}
           </Field>
 
-          <Field label={COPY.dashboard.form.contactEmail} name="contactEmail" error={err?.contactEmail}>
+          <Field
+            label={COPY.dashboard.form.contactEmail}
+            name="contactEmail"
+            error={err?.contactEmail}
+          >
             {(aria) => (
               <Input
                 {...aria}
@@ -278,43 +276,43 @@ export function ListingForm({
       </section>
 
       {/* ---------------- Actions ---------------- */}
-      <div className="flex flex-wrap items-center gap-3 border-t border-border pt-6">
-        <Button
-          type="submit"
-          name="status"
-          value="nacrt"
-          variant="outline"
-          disabled={pending}
-        >
+      <div className="border-line flex flex-wrap items-center gap-3 border-t pt-6">
+        <Button type="submit" name="status" value="nacrt" variant="outline" disabled={pending}>
           {COPY.dashboard.form.saveDraft}
         </Button>
 
-        <Button
-          type="submit"
-          name="status"
-          value="aktivan"
-          variant="primary"
-          disabled={pending}
-        >
+        <Button type="submit" name="status" value="aktivan" variant="primary" disabled={pending}>
           {pending ? <Spinner /> : null}
           {isPublished ? COPY.dashboard.form.update : COPY.dashboard.form.publish}
         </Button>
 
         {isEdit && listing?.status === "aktivan" ? (
-          <Button type="submit" name="status" value="prodato" variant="secondary" disabled={pending}>
+          <Button
+            type="submit"
+            name="status"
+            value="prodato"
+            variant="secondary"
+            disabled={pending}
+          >
             {COPY.dashboard.form.markSold}
           </Button>
         ) : null}
 
         {isEdit && listing?.status === "prodato" ? (
-          <Button type="submit" name="status" value="aktivan" variant="secondary" disabled={pending}>
+          <Button
+            type="submit"
+            name="status"
+            value="aktivan"
+            variant="secondary"
+            disabled={pending}
+          >
             {COPY.dashboard.form.markActive}
           </Button>
         ) : null}
 
         <Link
           href="/dashboard/oglasi"
-          className="ml-auto text-sm text-paper-muted transition-colors hover:text-paper"
+          className="text-fg-muted hover:text-fg ml-auto text-sm transition-colors"
         >
           {COPY.common.cancel}
         </Link>

@@ -9,10 +9,5 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default function TermsPage() {
-  return (
-    <ProsePage
-      title={COPY.pages.terms.title}
-      paragraphs={COPY.pages.terms.body}
-    />
-  );
+  return <ProsePage title={COPY.pages.terms.title} paragraphs={COPY.pages.terms.body} />;
 }

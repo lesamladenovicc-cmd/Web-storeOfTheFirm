@@ -31,10 +31,7 @@ export const PUBLIC_ENV = {
  */
 export function serverEnv() {
   return {
-    serviceRoleKey: required(
-      "SUPABASE_SERVICE_ROLE_KEY",
-      process.env.SUPABASE_SERVICE_ROLE_KEY,
-    ),
+    serviceRoleKey: required("SUPABASE_SERVICE_ROLE_KEY", process.env.SUPABASE_SERVICE_ROLE_KEY),
     inquiryIpSalt: process.env.INQUIRY_IP_SALT ?? "",
     resendApiKey: process.env.RESEND_API_KEY ?? "",
     resendFrom: process.env.RESEND_FROM_EMAIL ?? "",

@@ -138,10 +138,7 @@ export async function searchListings(
 export const getLatestListings = cache(
   async (limit = LIMITS.homepageListings): Promise<ListingCard[]> => {
     const supabase = createPublicClient();
-    const { data, error } = await supabase.rpc(
-      "search_listings",
-      searchArgs({ p_limit: limit }),
-    );
+    const { data, error } = await supabase.rpc("search_listings", searchArgs({ p_limit: limit }));
 
     if (error) throw new Error(`getLatestListings: ${error.message}`);
     return ((data ?? []) as SearchRow[]).map(toCard);
@@ -317,9 +314,7 @@ export async function incrementViewCount(listingId: string): Promise<void> {
  * Uses the session-less client: sitemap() and generateStaticParams()
  * run at build time where there is no cookie store.
  */
-export async function getListingsForSitemap(): Promise<
-  { slug: string; updatedAt: string }[]
-> {
+export async function getListingsForSitemap(): Promise<{ slug: string; updatedAt: string }[]> {
   const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("listings")
@@ -381,9 +376,7 @@ const DASHBOARD_SELECT =
  * already restricts a seller to their own listings and lets an admin
  * see all of them, so the policy is the filter.
  */
-export async function getDashboardListings(
-  status?: ListingStatus,
-): Promise<ListingRow[]> {
+export async function getDashboardListings(status?: ListingStatus): Promise<ListingRow[]> {
   const supabase = await createClient();
 
   let query = supabase

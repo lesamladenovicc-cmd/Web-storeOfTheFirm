@@ -29,11 +29,7 @@ export const BLUR_DATA_URL =
   "data:image/gif;base64,R0lGODlhAQABAPAAAOfeywAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==";
 
 /** Storage paths are always `{sellerId}/{listingId}/{file}`. */
-export function buildStoragePath(
-  sellerId: string,
-  listingId: string,
-  fileName: string,
-): string {
+export function buildStoragePath(sellerId: string, listingId: string, fileName: string): string {
   return `${sellerId}/${listingId}/${fileName}`;
 }
 
@@ -75,8 +71,7 @@ export type SniffedFormat = "jpeg" | "png" | "webp" | "gif" | "heic" | "avif" | 
 
 export async function sniffImageFormat(file: Blob): Promise<SniffedFormat> {
   const head = new Uint8Array(await file.slice(0, 32).arrayBuffer());
-  const at = (offset: number, ...bytes: number[]) =>
-    bytes.every((b, i) => head[offset + i] === b);
+  const at = (offset: number, ...bytes: number[]) => bytes.every((b, i) => head[offset + i] === b);
   const ascii = (offset: number, text: string) =>
     at(offset, ...[...text].map((c) => c.charCodeAt(0)));
 
@@ -145,10 +140,9 @@ export async function downscaleForUpload(
   try {
     bitmap = await createImageBitmap(file);
   } catch (cause) {
-    throw new Error(
-      `Browser could not decode ${file.type || "unknown type"} (${file.name})`,
-      { cause },
-    );
+    throw new Error(`Browser could not decode ${file.type || "unknown type"} (${file.name})`, {
+      cause,
+    });
   }
 
   const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));

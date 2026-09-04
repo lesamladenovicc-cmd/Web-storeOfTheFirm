@@ -11,17 +11,31 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const profile = await requireProfile();
-  const [stats, unread] = await Promise.all([
-    getDashboardStats(),
-    getUnreadInquiryCount(),
-  ]);
+  const [stats, unread] = await Promise.all([getDashboardStats(), getUnreadInquiryCount()]);
 
   const cards = [
     { label: COPY.dashboard.stats.total, value: stats.total, href: "/dashboard/oglasi" },
-    { label: COPY.dashboard.stats.active, value: stats.aktivan, href: "/dashboard/oglasi?status=aktivan" },
-    { label: COPY.dashboard.stats.drafts, value: stats.nacrt, href: "/dashboard/oglasi?status=nacrt" },
-    { label: COPY.dashboard.stats.sold, value: stats.prodato, href: "/dashboard/oglasi?status=prodato" },
-    { label: COPY.dashboard.stats.unreadInquiries, value: unread, href: "/dashboard/upiti", accent: true },
+    {
+      label: COPY.dashboard.stats.active,
+      value: stats.aktivan,
+      href: "/dashboard/oglasi?status=aktivan",
+    },
+    {
+      label: COPY.dashboard.stats.drafts,
+      value: stats.nacrt,
+      href: "/dashboard/oglasi?status=nacrt",
+    },
+    {
+      label: COPY.dashboard.stats.sold,
+      value: stats.prodato,
+      href: "/dashboard/oglasi?status=prodato",
+    },
+    {
+      label: COPY.dashboard.stats.unreadInquiries,
+      value: unread,
+      href: "/dashboard/upiti",
+      accent: true,
+    },
   ];
 
   return (
@@ -30,9 +44,7 @@ export default async function DashboardPage() {
         eyebrow={COPY.dashboard.welcome}
         title={profile.fullName || profile.email}
         actions={
-          <ButtonLink href="/dashboard/oglasi/novi">
-            {COPY.dashboard.listings.create}
-          </ButtonLink>
+          <ButtonLink href="/dashboard/oglasi/novi">{COPY.dashboard.listings.create}</ButtonLink>
         }
       />
 
@@ -41,14 +53,14 @@ export default async function DashboardPage() {
           <li key={card.label}>
             <Link
               href={card.href}
-              className="group flex h-full flex-col justify-between rounded-md border border-border bg-surface p-5 transition-colors hover:border-border-strong"
+              className="group border-line bg-panel hover:border-line-strong flex h-full flex-col justify-between rounded-md border p-5 transition-colors"
             >
-              <span className="u-eyebrow text-paper-faint">{card.label}</span>
+              <span className="u-eyebrow text-fg-faint">{card.label}</span>
               <span
                 className={
                   card.accent && card.value > 0
-                    ? "u-numeric mt-5 text-3xl font-semibold text-accent"
-                    : "u-numeric mt-5 text-3xl font-semibold text-paper"
+                    ? "u-numeric text-accent-text mt-5 text-3xl font-semibold"
+                    : "u-numeric text-fg mt-5 text-3xl font-semibold"
                 }
               >
                 {formatNumber(card.value)}

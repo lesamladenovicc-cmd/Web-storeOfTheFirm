@@ -6,7 +6,14 @@ import { COPY } from "@/config/copy";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth";
 import { buildCategorySlug, isValidSlug } from "@/lib/slug";
-import { fail, formBool, formInt, formString, succeed, toFieldErrors } from "@/lib/validation/helpers";
+import {
+  fail,
+  formBool,
+  formInt,
+  formString,
+  succeed,
+  toFieldErrors,
+} from "@/lib/validation/helpers";
 import type { ActionState } from "@/types/domain";
 
 /**
@@ -23,12 +30,7 @@ const categorySchema = z.object({
     .trim()
     .min(2, { message: COPY.validation.required })
     .max(60, { message: COPY.validation.required }),
-  slug: z
-    .string()
-    .trim()
-    .min(2)
-    .max(60)
-    .refine(isValidSlug, { message: "Neispravna URL oznaka." }),
+  slug: z.string().trim().min(2).max(60).refine(isValidSlug, { message: "Neispravna URL oznaka." }),
   description: z.string().trim().max(300).nullable(),
   sortOrder: z.number().int().min(0).max(9999),
   isActive: z.boolean(),

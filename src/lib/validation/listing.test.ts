@@ -20,8 +20,7 @@ const LISTING = "33333333-3333-4333-8333-333333333333";
 function publishable(overrides: Record<string, unknown> = {}) {
   return {
     title: "Bager guseničar CAT 320D",
-    description:
-      "Redovno servisiran, gusenice na 70%, hidraulika bez curenja. Može se pogledati.",
+    description: "Redovno servisiran, gusenice na 70%, hidraulika bez curenja. Može se pogledati.",
     condition: "korisceno",
     priceRsd: 8_450_000,
     isNegotiable: true,
@@ -126,9 +125,7 @@ describe("publish schema — the rules that protect the buyer", () => {
   });
 
   it("normalises the phone to E.164 so the DB never holds mixed formats", () => {
-    const result = listingPublishSchema.safeParse(
-      publishable({ contactPhone: "064/111-0002" }),
-    );
+    const result = listingPublishSchema.safeParse(publishable({ contactPhone: "064/111-0002" }));
     expect(result.success).toBe(true);
     if (result.success) expect(result.data.contactPhone).toBe("+381641110002");
   });

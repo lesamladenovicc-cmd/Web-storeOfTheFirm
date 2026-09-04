@@ -10,17 +10,20 @@ import "./globals.css";
  * `latin-ext` is MANDATORY — Serbian č ć š ž đ live in Latin Extended-A.
  * Dropping that subset silently renders fallback glyphs for a large
  * share of real listing titles.
+ *
+ * Three roles:
+ *   display  Archivo — headings and UI labels (variable weight)
+ *   sans     IBM Plex Sans — body copy (variable weight)
+ *   mono     IBM Plex Mono — prices, codes, dates, eyebrows
  */
 const archivo = Archivo({
   subsets: ["latin", "latin-ext"],
-  weight: ["600", "700", "800"],
   variable: "--font-archivo",
   display: "swap",
 });
 
 const plexSans = IBM_Plex_Sans({
   subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600"],
   variable: "--font-plex-sans",
   display: "swap",
 });
@@ -56,9 +59,7 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
       lang={SITE.locale}
@@ -70,7 +71,7 @@ export default function RootLayout({
       <body className="min-h-dvh antialiased">
         <a
           href="#sadrzaj"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-sm focus:bg-accent focus:px-4 focus:py-2 focus:font-medium focus:text-bg"
+          className="focus:bg-accent focus:text-on-accent sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:font-medium"
         >
           {COPY.common.skipToContent}
         </a>

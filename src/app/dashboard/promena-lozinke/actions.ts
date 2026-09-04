@@ -35,10 +35,7 @@ export async function changePasswordAction(
   if (error) return fail(COPY.validation.genericError);
 
   // The flag is on the profile, not on auth.users, so clear it here.
-  await supabase
-    .from("profiles")
-    .update({ must_change_password: false })
-    .eq("id", profile.id);
+  await supabase.from("profiles").update({ must_change_password: false }).eq("id", profile.id);
 
   revalidatePath("/dashboard", "layout");
   redirect("/dashboard");

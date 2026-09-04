@@ -11,44 +11,62 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default function ContactPage() {
-  return (
-    <ProsePage
-      title={COPY.pages.contact.title}
-      lead={COPY.pages.contact.lead}
-    >
-      <div className="max-w-md rounded-md border border-border bg-surface p-6">
-        <h2 className="u-eyebrow mb-5 text-paper-faint">{COPY.pages.contact.infoTitle}</h2>
-        <dl className="space-y-4 text-sm">
-          <div>
-            <dt className="text-paper-faint">{COPY.contact.phone}</dt>
-            <dd className="u-numeric mt-1">
-              <a href={SITE.contact.phoneHref} className="text-paper transition-colors hover:text-accent">
-                {SITE.contact.phone}
-              </a>
-            </dd>
-          </div>
-          <div>
-            <dt className="text-paper-faint">{COPY.contact.email}</dt>
-            <dd className="mt-1">
-              <a href={`mailto:${SITE.contact.email}`} className="text-paper transition-colors hover:text-accent">
-                {SITE.contact.email}
-              </a>
-            </dd>
-          </div>
-          <div>
-            <dt className="text-paper-faint">Adresa</dt>
-            <dd className="mt-1 text-paper">
-              {SITE.contact.address}
-              <br />
-              {SITE.contact.postalCode} {SITE.contact.city}, {SITE.contact.country}
-            </dd>
-          </div>
-        </dl>
-      </div>
+  const rows: { label: string; value: React.ReactNode; numeric?: boolean }[] = [
+    {
+      label: COPY.contact.phone,
+      numeric: true,
+      value: (
+        <a href={SITE.contact.phoneHref} className="hover:text-accent-text transition-colors">
+          {SITE.contact.phone}
+        </a>
+      ),
+    },
+    {
+      label: COPY.contact.email,
+      value: (
+        <a
+          href={`mailto:${SITE.contact.email}`}
+          className="hover:text-accent-text transition-colors"
+        >
+          {SITE.contact.email}
+        </a>
+      ),
+    },
+    {
+      label: "Adresa",
+      value: (
+        <>
+          {SITE.contact.address}
+          <br />
+          {SITE.contact.postalCode} {SITE.contact.city}, {SITE.contact.country}
+        </>
+      ),
+    },
+  ];
 
-      <p className="mt-6 max-w-[68ch] text-sm leading-relaxed text-paper-faint">
-        {COPY.pages.contact.note}
-      </p>
+  return (
+    <ProsePage title={COPY.pages.contact.title} lead={COPY.pages.contact.lead}>
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:gap-16">
+        <div className="u-marks border-line bg-panel border p-6 sm:p-7">
+          {/* The heading sits outside the <dl>: a <dl> may only contain
+              dt/dd groups, and axe fails the page otherwise. */}
+          <p className="u-eyebrow text-fg-faint mb-2">{COPY.pages.contact.infoTitle}</p>
+          <dl>
+            {rows.map((row) => (
+              <div key={row.label} className="border-line border-t py-4 first:border-t-0">
+                <dt className="u-eyebrow text-fg-muted">{row.label}</dt>
+                <dd className={row.numeric ? "u-numeric text-fg mt-1.5" : "text-fg mt-1.5"}>
+                  {row.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+
+        <p className="text-fg-muted max-w-[60ch] text-[1.0625rem] leading-relaxed">
+          {COPY.pages.contact.note}
+        </p>
+      </div>
     </ProsePage>
   );
 }

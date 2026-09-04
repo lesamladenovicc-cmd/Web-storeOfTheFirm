@@ -8,28 +8,24 @@ export function SiteFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="mt-24 border-t border-border bg-surface">
-      <Container className="py-14">
-        <div className="grid gap-10 md:grid-cols-[1.5fr_repeat(3,1fr)]">
+    <footer className="theme-dark border-line border-t">
+      <Container className="py-14 lg:py-16">
+        <div className="grid gap-10 md:grid-cols-[1.6fr_repeat(3,1fr)]">
           <div className="max-w-xs">
             <Logo />
-            <p className="mt-4 text-sm leading-relaxed text-paper-muted">
-              {COPY.footer.tagline}
-            </p>
-            <p className="mt-4 text-sm leading-relaxed text-paper-faint">
-              {COPY.footer.builtNote}
-            </p>
+            <p className="text-fg-muted mt-5 text-sm leading-relaxed">{COPY.footer.tagline}</p>
+            <p className="text-fg-faint mt-3 text-sm leading-relaxed">{COPY.footer.builtNote}</p>
           </div>
 
           {FOOTER_NAV.map((group) => (
             <nav key={group.title} aria-label={group.title}>
-              <h2 className="u-eyebrow mb-4 text-paper-faint">{group.title}</h2>
+              <h2 className="u-eyebrow text-fg-faint mb-5">{group.title}</h2>
               <ul className="space-y-2.5">
                 {group.links.map((link) => (
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-paper-muted transition-colors hover:text-accent"
+                      className="text-fg-muted hover:text-fg text-sm transition-colors"
                     >
                       {link.label}
                     </Link>
@@ -40,13 +36,13 @@ export function SiteFooter() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col gap-3 border-t border-border pt-7 text-sm text-paper-faint sm:flex-row sm:items-center sm:justify-between">
+        <div className="u-numeric border-line text-fg-faint mt-12 flex flex-col gap-3 border-t pt-6 text-xs sm:flex-row sm:items-center sm:justify-between">
           <p>
             © {year} {SITE.legalName}. {COPY.footer.rightsReserved}
           </p>
-          <p className="u-numeric text-xs">
+          <p>
             {COPY.footer.pib} {SITE.registration.pib} · {COPY.footer.maticniBroj}{" "}
-            {SITE.registration.maticniBroj}
+            {SITE.registration.maticniBroj} · {SITE.locale} · {SITE.currency}
           </p>
         </div>
       </Container>

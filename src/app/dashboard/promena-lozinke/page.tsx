@@ -17,9 +17,7 @@ export default async function ChangePasswordPage() {
       <PageHeader
         eyebrow={COPY.dashboard.settings.passwordSection}
         title={COPY.auth.changePasswordTitle}
-        subtitle={
-          profile.mustChangePassword ? COPY.auth.changePasswordSubtitle : undefined
-        }
+        subtitle={profile.mustChangePassword ? COPY.auth.changePasswordSubtitle : undefined}
       />
       <div className="mt-8">
         <PasswordForm />

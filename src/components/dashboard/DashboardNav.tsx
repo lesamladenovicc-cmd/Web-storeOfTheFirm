@@ -35,9 +35,7 @@ export function DashboardNav({
   const linkClass = (active: boolean) =>
     cn(
       "flex items-center justify-between gap-2 rounded-sm px-3 py-2 text-sm transition-colors",
-      active
-        ? "bg-surface-2 text-accent"
-        : "text-paper-muted hover:bg-surface-2 hover:text-paper",
+      active ? "bg-panel-2 text-accent-text" : "text-fg-muted hover:bg-panel-2 hover:text-fg",
     );
 
   return (
@@ -52,7 +50,7 @@ export function DashboardNav({
             >
               {item.label}
               {item.href === "/dashboard/upiti" && unreadInquiries > 0 ? (
-                <span className="u-numeric rounded-xs bg-accent px-1.5 py-0.5 text-[0.6875rem] font-semibold text-bg">
+                <span className="u-numeric bg-accent text-on-accent rounded-xs px-1.5 py-0.5 text-[0.6875rem] font-semibold">
                   {unreadInquiries}
                 </span>
               ) : null}
@@ -63,9 +61,7 @@ export function DashboardNav({
 
       {role === "admin" ? (
         <div>
-          <p className="u-eyebrow mb-2 px-3 text-paper-faint">
-            {COPY.dashboard.nav.adminSection}
-          </p>
+          <p className="u-eyebrow text-fg-faint mb-2 px-3">{COPY.dashboard.nav.adminSection}</p>
           <ul className="space-y-0.5">
             {ADMIN_NAV.map((item) => (
               <li key={item.href}>

@@ -9,8 +9,13 @@ import type { ListingCard as ListingCardType } from "@/types/domain";
 import { PriceTag } from "./PriceTag";
 
 /**
- * Grid card. The monospace spec-line (condition · location · date) under
- * the title is the recurring motif that ties the catalogue together.
+ * Grid card as a small spec sheet: a 4:3 photograph, a mono data strip
+ * (condition / location / date) under its own rule, the title, and the
+ * price row with a square arrow that takes the accent on hover.
+ *
+ * The <Link> in the title is stretched over the whole <article> via a
+ * `before:` pseudo-element, so the card must stay `relative` and must
+ * not gain any other positioned child that would sit above it.
  */
 export function ListingCard({
   listing,
@@ -24,12 +29,18 @@ export function ListingCard({
   const href = `/oglas/${listing.slug}`;
   const isSold = listing.status === "prodato";
 
+  const specs = [
+    listing.condition ? CONDITION_LABELS[listing.condition] : null,
+    listing.location || null,
+    listing.publishedAt ? formatRelativeDate(listing.publishedAt) : null,
+  ].filter((s): s is string => s !== null);
+
   return (
     <article
-      className="u-reveal u-ticks group relative flex flex-col overflow-hidden rounded-md border border-border bg-surface transition-colors duration-200 hover:border-border-strong"
+      className="u-reveal group border-line bg-panel hover:border-fg relative flex flex-col border transition-colors duration-200"
       style={{ "--i": index } as React.CSSProperties}
     >
-      <div className="relative aspect-4/3 overflow-hidden bg-surface-2">
+      <div className="bg-panel-2 relative aspect-[4/3] overflow-hidden">
         {listing.coverImagePath ? (
           <Image
             src={publicImageUrl(listing.coverImagePath)}
@@ -46,32 +57,56 @@ export function ListingCard({
           />
         ) : (
           <div className="grid h-full place-items-center">
-            <span className="u-eyebrow text-paper-faint">{COPY.listing.noImage}</span>
+            <span className="u-eyebrow text-fg-faint">{COPY.listing.noImage}</span>
           </div>
         )}
 
         {isSold ? (
-          <div className="absolute inset-x-0 top-0 bg-danger px-3 py-1.5 text-center">
-            <span className="u-eyebrow text-paper">{COPY.listing.soldRibbon}</span>
-          </div>
+          <span className="u-eyebrow bg-ink text-paper absolute top-3 left-3 flex items-center gap-2 px-2.5 py-1.5 text-[0.625rem]">
+            <span aria-hidden="true" className="bg-danger h-1.5 w-1.5" />
+            {COPY.listing.soldRibbon}
+          </span>
         ) : null}
       </div>
 
-      <div className="flex flex-1 flex-col p-4">
-        <h3 className="u-line-clamp-2 font-display text-[1.0625rem] leading-snug font-semibold text-paper">
+      {specs.length ? (
+        <ul className="u-eyebrow border-line text-fg-faint flex flex-wrap items-center gap-x-2.5 gap-y-1 border-b px-4 py-2.5 text-[0.625rem]">
+          {specs.map((spec, i) => (
+            <li key={i} className="flex items-center gap-2.5 whitespace-nowrap">
+              {i > 0 ? (
+                <span aria-hidden="true" className="text-line-strong">
+                  /
+                </span>
+              ) : null}
+              {spec}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
+        <h3 className="u-line-clamp-2 text-h4 text-fg">
           <Link href={href} className="before:absolute before:inset-0 before:content-['']">
             {listing.title}
           </Link>
         </h3>
 
-        <p className="u-numeric mt-2 text-xs text-paper-faint">
-          {listing.condition ? CONDITION_LABELS[listing.condition] : ""}
-          {listing.location ? ` · ${listing.location}` : ""}
-          {listing.publishedAt ? ` · ${formatRelativeDate(listing.publishedAt)}` : ""}
-        </p>
-
-        <div className="mt-auto pt-4">
+        <div className="mt-auto flex items-end justify-between gap-4 pt-6">
           <PriceTag price={listing.priceRsd} isNegotiable={listing.isNegotiable} size="md" />
+          <span
+            aria-hidden="true"
+            className="border-line text-fg-muted group-hover:border-accent group-hover:bg-accent group-hover:text-on-accent grid h-8 w-8 shrink-0 place-items-center border transition-colors duration-200"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              className="h-3.5 w-3.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            >
+              <path d="M3 8h10M9 4l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
         </div>
       </div>
     </article>

@@ -50,18 +50,31 @@ Always request the `latin-ext` subset — Serbian č ć š ž đ live there.
 - `"use server"` modules may only export async functions.
 
 ## Design system
-Beige + dark, one bright accent, minimal but powerful. Tokens (swappable — change these to re-theme):
+"Tehnički list" — a machine's spec sheet. Two grounds that alternate down every page
+(dark header/hero/footer, beige body), hairline rules instead of shadows, mono for anything
+numeric, register marks on plates, one brick accent used as a stamp. All tokens live in
+`src/app/globals.css`; re-theming = editing that file.
+
 ```
---bg-dark:      #141414   /* page background (dark) */
---surface-dark: #1E1E1E   /* cards / panels on dark  */
---beige:        #E7DECB   /* primary light surface   */
---beige-muted:  #D3C7AE   /* secondary beige         */
---ink:          #1A1A1A   /* text on beige           */
---paper:        #F4EFE3   /* light text on dark      */
---accent:       #FF4D00   /* primary CTA — sparingly */
---accent-2:     #C6FF3D   /* optional highlight      */
+/* Grounds (per-section, set by .theme-dark / .theme-light) */
+dark:  ground #141414  panel #1C1B19  fg #F4EFE3  fg-muted #A8A296  line #2E2C28
+light: ground #E7DECB  panel #F3EEE2  fg #1A1A1A  fg-muted #5A544A  line #CFC4AA
+/* Accent — brick, same on both grounds */
+--accent:      #BF3F0C   /* FILL only: primary buttons, active page, eyebrow square */
+--on-accent:   #FBF7EE   /* text over the accent fill                              */
+accent-text:   #EC6D3E (dark) / #A83708 (light)  /* accent usable as TEXT          */
+--accent-2:    #C6FF3D   /* optional highlight, unused                             */
 ```
-Rules: accent color ONLY on primary actions/highlights. Generous whitespace. Strong type hierarchy. No decorative gradients, no clutter. Must not look templated — lean on the `frontend-design` skill.
+Rules:
+- Components use the **contextual** classes (`text-fg`, `text-fg-muted`, `bg-panel`, `border-line`,
+  `text-accent-text`) and never a ground-specific colour, so the same component is correct on
+  dark and on beige. Wrap a beige section in `theme-light`; the root is dark.
+- Accent as **text** only via `accent-text`; the fill (`bg-accent`) never carries body text on dark
+  (3.45:1). Every text token clears AA on its ground and on `panel` — see the contrast table
+  in globals.css before adding a colour.
+- Accent ONLY on primary actions and the active marker. Generous whitespace. Strong type
+  hierarchy. Square corners. No decorative gradients, no clutter. Must not look templated — lean
+  on the `frontend-design` skill.
 
 ## Domain model (target)
 - **users** — internal staff; `role` (admin | seller)

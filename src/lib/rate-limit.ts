@@ -64,7 +64,10 @@ export async function isRateLimited(ipHash: string | null): Promise<boolean> {
  *  - a honeypot field that is hidden from humans and irresistible to bots
  *  - a minimum fill time; scripted posts are effectively instantaneous
  */
-export function looksAutomated(honeypot: string | undefined, startedAt: number | undefined): boolean {
+export function looksAutomated(
+  honeypot: string | undefined,
+  startedAt: number | undefined,
+): boolean {
   if (honeypot && honeypot.trim() !== "") return true;
   if (startedAt !== undefined && Number.isFinite(startedAt)) {
     const elapsed = Date.now() - startedAt;

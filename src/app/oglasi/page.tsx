@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { COPY } from "@/config/copy";
-import { Container, PageHeader } from "@/components/layout/Container";
+import { Container } from "@/components/layout/Container";
+import { PageBanner } from "@/components/layout/PageBanner";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ListingGrid } from "@/components/listing/ListingGrid";
@@ -45,10 +46,7 @@ export default async function ListingsPage({
 }) {
   const filters = parseFilters(await searchParams);
 
-  const [result, categories] = await Promise.all([
-    searchListings(filters),
-    getActiveCategories(),
-  ]);
+  const [result, categories] = await Promise.all([searchListings(filters), getActiveCategories()]);
 
   const filtered = hasActiveFilters(filters);
   const categoryName = categories.find((c) => c.slug === filters.categorySlug)?.name;
@@ -58,38 +56,36 @@ export default async function ListingsPage({
       <SiteHeader />
 
       <main id="sadrzaj">
-        <Container className="py-12 sm:py-16">
-          <PageHeader
-            eyebrow={COPY.home.heroEyebrow}
-            title={COPY.listings.title}
-            subtitle={COPY.listings.subtitle}
-          />
-
-          <div className="mt-9 max-w-2xl">
-            <SearchBar defaultValue={filters.q ?? ""} />
-          </div>
-
-          <div className="mt-6">
-            <FilterBar filters={filters} categories={categories} />
-          </div>
-
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-            <p className="u-numeric text-sm text-paper-muted">
+        <PageBanner
+          tag={COPY.home.heroEyebrow}
+          title={COPY.listings.title}
+          lead={COPY.listings.subtitle}
+          crumbs={[
+            { name: COPY.listing.breadcrumbHome, path: "/" },
+            { name: COPY.listing.breadcrumbListings, path: "/oglasi" },
+          ]}
+          meta={
+            <p className="u-eyebrow text-fg-muted">
               {COPY.listings.resultsPrefix} {countWithNoun(result.total, "oglas")}
             </p>
+          }
+        >
+          <SearchBar defaultValue={filters.q ?? ""} />
+        </PageBanner>
+
+        <section className="theme-light">
+          <Container className="py-10 sm:py-14">
+            <FilterBar filters={filters} categories={categories} />
+
             <FilterChips filters={filters} categoryName={categoryName} />
-          </div>
 
-          <div className="mt-8">
-            <ListingGrid listings={result.items} filtered={filtered} />
-          </div>
+            <div className="mt-10">
+              <ListingGrid listings={result.items} filtered={filtered} />
+            </div>
 
-          <Pagination
-            page={result.page}
-            pageCount={result.pageCount}
-            filters={filters}
-          />
-        </Container>
+            <Pagination page={result.page} pageCount={result.pageCount} filters={filters} />
+          </Container>
+        </section>
       </main>
 
       <SiteFooter />

@@ -16,7 +16,12 @@ export function SearchBar({
   placeholder?: string;
 }) {
   return (
-    <form action="/oglasi" method="get" role="search" className={cn("flex gap-2", className)}>
+    <form
+      action="/oglasi"
+      method="get"
+      role="search"
+      className={cn("flex flex-col gap-2 sm:flex-row sm:gap-0", className)}
+    >
       <div className="relative flex-1">
         <svg
           aria-hidden="true"
@@ -24,7 +29,7 @@ export function SearchBar({
           fill="none"
           stroke="currentColor"
           strokeWidth="1.6"
-          className="pointer-events-none absolute top-1/2 left-4 h-4.5 w-4.5 -translate-y-1/2 text-paper-faint"
+          className="text-fg-faint pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2"
         >
           <circle cx="9" cy="9" r="6" />
           <path d="m13.5 13.5 3 3" strokeLinecap="round" />
@@ -35,12 +40,12 @@ export function SearchBar({
           defaultValue={defaultValue}
           placeholder={placeholder}
           aria-label={COPY.home.heroSearchLabel}
-          className="h-12 w-full rounded-sm border border-border bg-surface pr-4 pl-11 text-paper transition-colors placeholder:text-paper-faint hover:border-border-strong focus:border-accent focus:outline-none"
+          className="border-line bg-panel text-fg placeholder:text-fg-faint hover:border-line-strong focus:border-fg h-14 w-full appearance-none border pr-4 pl-11 font-sans text-[0.9375rem] transition-colors focus:outline-none sm:border-r-0"
         />
       </div>
       <button
         type="submit"
-        className="inline-flex h-12 shrink-0 items-center rounded-sm bg-accent px-6 font-medium text-bg transition-colors hover:bg-accent-hover"
+        className="border-accent bg-accent text-on-accent hover:border-accent-hover hover:bg-accent-hover inline-flex h-14 shrink-0 items-center justify-center border px-8 font-[family-name:var(--font-ui)] text-xs font-semibold tracking-[0.12em] uppercase transition-colors duration-200"
       >
         {COPY.listings.searchSubmit}
       </button>

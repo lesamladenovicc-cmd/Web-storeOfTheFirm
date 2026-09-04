@@ -9,10 +9,5 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default function PrivacyPage() {
-  return (
-    <ProsePage
-      title={COPY.pages.privacy.title}
-      paragraphs={COPY.pages.privacy.body}
-    />
-  );
+  return <ProsePage title={COPY.pages.privacy.title} paragraphs={COPY.pages.privacy.body} />;
 }

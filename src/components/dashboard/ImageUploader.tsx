@@ -61,11 +61,7 @@ export function ImageUploader({
       const supabase = createClient();
       try {
         const { blob, encoding } = await downscaleForUpload(file);
-        const path = buildStoragePath(
-          sellerId,
-          listingId,
-          randomImageFileName(encoding.extension),
-        );
+        const path = buildStoragePath(sellerId, listingId, randomImageFileName(encoding.extension));
 
         const { error: uploadError } = await supabase.storage
           .from(STORAGE_BUCKET)
@@ -197,18 +193,18 @@ export function ImageUploader({
         }}
         className={cn(
           "rounded-md border border-dashed p-6 text-center transition-colors",
-          dragging ? "border-accent bg-accent-soft" : "border-border",
+          dragging ? "border-accent bg-accent-soft" : "border-line",
         )}
       >
-        <p className="text-sm text-paper-muted">{COPY.dashboard.form.imagesDrop}</p>
+        <p className="text-fg-muted text-sm">{COPY.dashboard.form.imagesDrop}</p>
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="mt-3 inline-flex h-9 items-center rounded-sm border border-border-strong px-4 text-sm text-paper transition-colors hover:border-accent hover:text-accent"
+          className="border-line-strong text-fg hover:border-accent hover:text-accent-text mt-3 inline-flex h-9 items-center rounded-sm border px-4 text-sm transition-colors"
         >
           {COPY.dashboard.form.imagesAdd}
         </button>
-        <p className="mt-3 text-xs text-paper-faint">{COPY.dashboard.form.imagesHint}</p>
+        <p className="text-fg-faint mt-3 text-xs">{COPY.dashboard.form.imagesHint}</p>
 
         <input
           ref={inputRef}
@@ -223,7 +219,7 @@ export function ImageUploader({
         />
       </div>
 
-      {error ? <p className="mt-2 text-sm text-danger">{error}</p> : null}
+      {error ? <p className="text-danger mt-2 text-sm">{error}</p> : null}
 
       {value.length > 0 ? (
         <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -231,8 +227,8 @@ export function ImageUploader({
             <li
               key={img.key}
               className={cn(
-                "relative overflow-hidden rounded-sm border bg-surface",
-                i === 0 ? "border-accent" : "border-border",
+                "bg-panel relative overflow-hidden rounded-sm border",
+                i === 0 ? "border-accent" : "border-line",
               )}
             >
               <div className="relative aspect-square">
@@ -243,15 +239,12 @@ export function ImageUploader({
                     fill
                     sizes="200px"
                     unoptimized={Boolean(img.previewUrl)}
-                    className={cn(
-                      "object-cover",
-                      img.status !== "done" && "opacity-45",
-                    )}
+                    className={cn("object-cover", img.status !== "done" && "opacity-45")}
                   />
                 ) : null}
 
                 {img.status === "uploading" ? (
-                  <span className="absolute inset-0 grid place-items-center text-xs text-paper">
+                  <span className="text-fg absolute inset-0 grid place-items-center text-xs">
                     {COPY.dashboard.form.imageUploading}
                   </span>
                 ) : null}
@@ -259,20 +252,20 @@ export function ImageUploader({
                 {img.status === "error" ? (
                   <span
                     title={img.reason}
-                    className="absolute inset-0 grid place-items-center bg-danger-soft px-2 text-center text-xs text-danger"
+                    className="bg-danger-soft text-danger absolute inset-0 grid place-items-center px-2 text-center text-xs"
                   >
                     {COPY.dashboard.form.imageFailed}
                   </span>
                 ) : null}
 
                 {i === 0 && img.status === "done" ? (
-                  <span className="u-eyebrow absolute top-1.5 left-1.5 rounded-xs bg-accent px-1.5 py-0.5 text-bg">
+                  <span className="u-eyebrow bg-accent text-on-accent absolute top-1.5 left-1.5 rounded-xs px-1.5 py-0.5">
                     {COPY.dashboard.form.imageCover}
                   </span>
                 ) : null}
               </div>
 
-              <div className="flex items-center justify-between gap-1 border-t border-border p-1.5">
+              <div className="border-line flex items-center justify-between gap-1 border-t p-1.5">
                 <div className="flex gap-0.5">
                   <IconButton
                     label={COPY.dashboard.form.imageMoveUp}
@@ -335,8 +328,8 @@ function IconButton({
       className={cn(
         "grid h-7 w-7 place-items-center rounded-xs text-sm transition-colors disabled:opacity-30",
         tone === "danger"
-          ? "text-paper-faint hover:bg-danger-soft hover:text-danger"
-          : "text-paper-faint hover:bg-surface-2 hover:text-paper",
+          ? "text-fg-faint hover:bg-danger-soft hover:text-danger"
+          : "text-fg-faint hover:bg-panel-2 hover:text-fg",
       )}
     >
       {children}

@@ -8,10 +8,7 @@ import { fail, toFieldErrors } from "@/lib/validation/helpers";
 import { COPY } from "@/config/copy";
 import type { ActionState } from "@/types/domain";
 
-export async function loginAction(
-  _prev: ActionState,
-  formData: FormData,
-): Promise<ActionState> {
+export async function loginAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = loginSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),

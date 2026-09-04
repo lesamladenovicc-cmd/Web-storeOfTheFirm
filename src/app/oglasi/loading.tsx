@@ -1,10 +1,11 @@
 import { COPY } from "@/config/copy";
-import { Container, PageHeader } from "@/components/layout/Container";
+import { Container } from "@/components/layout/Container";
+import { PageBanner } from "@/components/layout/PageBanner";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { ListingGridSkeleton, Skeleton } from "@/components/ui/Feedback";
 
 /**
- * Skeleton geometry mirrors the real grid so the swap does not shift
+ * Skeleton geometry mirrors the real page so the swap does not shift
  * layout. No spinner on a content area.
  */
 export default function Loading() {
@@ -12,19 +13,27 @@ export default function Loading() {
     <>
       <SiteHeader />
       <main>
-        <Container className="py-12 sm:py-16">
-          <PageHeader
-            eyebrow={COPY.home.heroEyebrow}
-            title={COPY.listings.title}
-            subtitle={COPY.listings.subtitle}
-          />
-          <Skeleton className="mt-9 h-12 max-w-2xl" />
-          <Skeleton className="mt-6 h-52 rounded-md" />
-          <Skeleton className="mt-6 h-5 w-40" />
-          <div className="mt-8">
-            <ListingGridSkeleton count={8} />
-          </div>
-        </Container>
+        <PageBanner
+          tag={COPY.home.heroEyebrow}
+          title={COPY.listings.title}
+          lead={COPY.listings.subtitle}
+          crumbs={[
+            { name: COPY.listing.breadcrumbHome, path: "/" },
+            { name: COPY.listing.breadcrumbListings, path: "/oglasi" },
+          ]}
+          meta={<Skeleton className="h-3 w-40" />}
+        >
+          <Skeleton className="h-14 w-full" />
+        </PageBanner>
+
+        <section className="theme-light">
+          <Container className="py-10 sm:py-14">
+            <Skeleton className="h-72" />
+            <div className="mt-10">
+              <ListingGridSkeleton count={8} />
+            </div>
+          </Container>
+        </section>
       </main>
     </>
   );

@@ -19,25 +19,23 @@ export function CreateUserForm() {
 
   if (credentials) {
     return (
-      <div className="rounded-md border border-success/40 bg-success-soft p-6">
-        <h2 className="font-display text-base font-semibold text-success">
+      <div className="border-success/40 bg-success-soft rounded-md border p-6">
+        <h2 className="font-display text-success text-base font-semibold">
           {COPY.dashboard.users.tempPasswordTitle}
         </h2>
-        <p className="mt-2 max-w-[60ch] text-sm text-paper-muted">
+        <p className="text-fg-muted mt-2 max-w-[60ch] text-sm">
           {COPY.dashboard.users.tempPasswordBody}
         </p>
 
         <dl className="mt-5 space-y-3">
           <div>
-            <dt className="u-eyebrow text-paper-faint">{COPY.auth.email}</dt>
-            <dd className="u-numeric mt-1 text-paper">{credentials.email}</dd>
+            <dt className="u-eyebrow text-fg-faint">{COPY.auth.email}</dt>
+            <dd className="u-numeric text-fg mt-1">{credentials.email}</dd>
           </div>
           <div>
-            <dt className="u-eyebrow text-paper-faint">
-              {COPY.dashboard.users.tempPasswordLabel}
-            </dt>
+            <dt className="u-eyebrow text-fg-faint">{COPY.dashboard.users.tempPasswordLabel}</dt>
             <dd className="mt-1 flex flex-wrap items-center gap-3">
-              <code className="u-numeric rounded-sm border border-border bg-bg px-3 py-2 text-lg text-accent">
+              <code className="u-numeric border-line bg-ground text-accent-text rounded-sm border px-3 py-2 text-lg">
                 {credentials.password}
               </code>
               <button
@@ -48,7 +46,7 @@ export function CreateUserForm() {
                     setTimeout(() => setCopied(false), 2000);
                   });
                 }}
-                className="h-9 rounded-sm border border-border-strong px-3.5 text-sm text-paper transition-colors hover:border-accent hover:text-accent"
+                className="border-line-strong text-fg hover:border-accent hover:text-accent-text h-9 rounded-sm border px-3.5 text-sm transition-colors"
               >
                 {copied ? COPY.common.copied : COPY.common.copy}
               </button>
@@ -79,15 +77,13 @@ export function CreateUserForm() {
   return (
     <form
       action={formAction}
-      className="max-w-md space-y-5 rounded-md border border-border bg-surface p-6"
+      className="border-line bg-panel max-w-md space-y-5 rounded-md border p-6"
     >
       <div>
-        <h2 className="font-display text-base font-semibold text-paper">
+        <h2 className="font-display text-fg text-base font-semibold">
           {COPY.dashboard.users.createTitle}
         </h2>
-        <p className="mt-1.5 text-sm text-paper-faint">
-          {COPY.dashboard.users.createBody}
-        </p>
+        <p className="text-fg-faint mt-1.5 text-sm">{COPY.dashboard.users.createBody}</p>
       </div>
 
       {state.message && !state.ok ? <Alert tone="danger">{state.message}</Alert> : null}

@@ -9,13 +9,15 @@ export default function NotFound() {
     <>
       <SiteHeader />
       <main id="sadrzaj">
-        <Container className="py-20">
-          <EmptyState
-            title={COPY.states.notFoundTitle}
-            body={COPY.states.notFoundBody}
-            action={{ href: "/", label: COPY.states.notFoundCta }}
-          />
-        </Container>
+        <section className="theme-light">
+          <Container className="py-20 sm:py-28">
+            <EmptyState
+              title={COPY.states.notFoundTitle}
+              body={COPY.states.notFoundBody}
+              action={{ href: "/", label: COPY.states.notFoundCta }}
+            />
+          </Container>
+        </section>
       </main>
       <SiteFooter />
     </>

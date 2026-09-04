@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import { Eyebrow } from "@/components/ui/Eyebrow";
 
 export function Container({
   children,
@@ -17,7 +18,7 @@ export function Container({
   );
 }
 
-/** Page title block with an optional monospace eyebrow and trailing slot. */
+/** Page title block with an optional mono eyebrow and trailing slot. */
 export function PageHeader({
   eyebrow,
   title,
@@ -33,15 +34,12 @@ export function PageHeader({
 }) {
   return (
     <div
-      className={cn(
-        "flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between",
-        className,
-      )}
+      className={cn("flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between", className)}
     >
       <div className="max-w-2xl">
-        {eyebrow ? <p className="u-eyebrow mb-3 text-accent">{eyebrow}</p> : null}
-        <h1 className="text-h1 text-paper">{title}</h1>
-        {subtitle ? <p className="mt-3 text-paper-muted">{subtitle}</p> : null}
+        {eyebrow ? <Eyebrow className="mb-4">{eyebrow}</Eyebrow> : null}
+        <h1 className="text-h1 text-fg">{title}</h1>
+        {subtitle ? <p className="text-fg-muted mt-3">{subtitle}</p> : null}
       </div>
       {actions ? <div className="flex shrink-0 gap-3">{actions}</div> : null}
     </div>

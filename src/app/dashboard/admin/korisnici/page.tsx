@@ -18,10 +18,7 @@ export default async function AdminUsersPage() {
 
   return (
     <>
-      <PageHeader
-        eyebrow={COPY.dashboard.nav.adminSection}
-        title={COPY.dashboard.users.title}
-      />
+      <PageHeader eyebrow={COPY.dashboard.nav.adminSection} title={COPY.dashboard.users.title} />
 
       <div className="mt-8">
         <CreateUserForm />
@@ -31,10 +28,10 @@ export default async function AdminUsersPage() {
         {users.length === 0 ? (
           <EmptyState title={COPY.dashboard.users.empty} />
         ) : (
-          <div className="overflow-x-auto rounded-md border border-border">
+          <div className="border-line overflow-x-auto rounded-md border">
             <table className="w-full min-w-[44rem] border-collapse text-sm">
               <thead>
-                <tr className="border-b border-border bg-surface text-left">
+                <tr className="border-line bg-panel border-b text-left">
                   <Th>{COPY.dashboard.users.colName}</Th>
                   <Th>{COPY.dashboard.users.colEmail}</Th>
                   <Th>{COPY.dashboard.users.colRole}</Th>
@@ -45,14 +42,14 @@ export default async function AdminUsersPage() {
               </thead>
               <tbody>
                 {users.map((user) => (
-                  <tr key={user.id} className="border-b border-border last:border-0">
-                    <Td className="font-medium text-paper">
+                  <tr key={user.id} className="border-line border-b last:border-0">
+                    <Td className="text-fg font-medium">
                       {user.fullName || "—"}
                       {user.id === admin.id ? (
-                        <span className="ml-2 text-xs text-paper-faint">(vi)</span>
+                        <span className="text-fg-faint ml-2 text-xs">(vi)</span>
                       ) : null}
                     </Td>
-                    <Td className="u-numeric text-paper-muted">{user.email}</Td>
+                    <Td className="u-numeric text-fg-muted">{user.email}</Td>
                     <Td>
                       <Badge tone={user.role === "admin" ? "accent" : "neutral"}>
                         {ROLE_LABELS[user.role]}
@@ -65,9 +62,7 @@ export default async function AdminUsersPage() {
                           : COPY.dashboard.users.inactive}
                       </Badge>
                     </Td>
-                    <Td className="u-numeric text-paper-muted">
-                      {formatDate(user.createdAt)}
-                    </Td>
+                    <Td className="u-numeric text-fg-muted">{formatDate(user.createdAt)}</Td>
                     <Td>
                       <UserRowActions user={user} isSelf={user.id === admin.id} />
                     </Td>
@@ -84,7 +79,7 @@ export default async function AdminUsersPage() {
 
 function Th({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <th scope="col" className={cn("u-eyebrow px-4 py-3 text-paper-faint", className)}>
+    <th scope="col" className={cn("u-eyebrow text-fg-faint px-4 py-3", className)}>
       {children}
     </th>
   );

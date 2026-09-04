@@ -9,9 +9,13 @@ import {
 
 export type BadgeTone = "neutral" | "accent" | "success" | "danger" | "warning" | "paper";
 
+/**
+ * A mono tag with a hairline border. Every tone except `paper` reads the
+ * ground, so the same badge is correct on dark and on beige.
+ */
 const TONES: Record<BadgeTone, string> = {
-  neutral: "border-border-strong text-paper-muted",
-  accent: "border-accent/50 text-accent",
+  neutral: "border-line-strong text-fg-muted",
+  accent: "border-accent text-accent-text",
   success: "border-success/50 text-success",
   danger: "border-danger/50 text-danger",
   warning: "border-warning/50 text-warning",
@@ -21,20 +25,24 @@ const TONES: Record<BadgeTone, string> = {
 export function Badge({
   children,
   tone = "neutral",
+  dot = false,
   className,
 }: {
   children: ReactNode;
   tone?: BadgeTone;
+  /** Leading square in the tone colour — a status lamp. */
+  dot?: boolean;
   className?: string;
 }) {
   return (
     <span
       className={cn(
-        "u-eyebrow inline-flex items-center rounded-xs border px-2 py-1",
+        "u-eyebrow inline-flex items-center gap-2 border px-2.5 py-1.5 text-[0.625rem]",
         TONES[tone],
         className,
       )}
     >
+      {dot ? <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 bg-current" /> : null}
       {children}
     </span>
   );
@@ -71,15 +79,9 @@ const STATUS_TONES: Record<ListingStatus, BadgeTone> = {
   prodato: "danger",
 };
 
-export function StatusBadge({
-  status,
-  className,
-}: {
-  status: ListingStatus;
-  className?: string;
-}) {
+export function StatusBadge({ status, className }: { status: ListingStatus; className?: string }) {
   return (
-    <Badge tone={STATUS_TONES[status]} className={className}>
+    <Badge tone={STATUS_TONES[status]} dot className={className}>
       {STATUS_LABELS[status]}
     </Badge>
   );

@@ -15,17 +15,11 @@ export const dynamic = "force-dynamic";
  * this is safe without a database round trip.
  */
 export default async function NewListingPage() {
-  const [profile, categories] = await Promise.all([
-    requireProfile(),
-    getAllCategories(),
-  ]);
+  const [profile, categories] = await Promise.all([requireProfile(), getAllCategories()]);
 
   return (
     <>
-      <PageHeader
-        eyebrow={COPY.dashboard.nav.listings}
-        title={COPY.dashboard.form.createTitle}
-      />
+      <PageHeader eyebrow={COPY.dashboard.nav.listings} title={COPY.dashboard.form.createTitle} />
       <div className="mt-8">
         <ListingForm
           action={createListingAction}

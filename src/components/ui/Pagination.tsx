@@ -7,6 +7,9 @@ import type { ListingFilters } from "@/types/domain";
 /**
  * Server-rendered pagination. Real <a> links, so crawlers can follow
  * them and users can open pages in a new tab.
+ *
+ * A row of 44px squares in the mono face. The current page is the one
+ * "active marker" the accent is allowed to fill.
  */
 export function Pagination({
   page,
@@ -25,15 +28,15 @@ export function Pagination({
 
   const linkClass = (active: boolean) =>
     cn(
-      "u-numeric inline-flex h-10 min-w-10 items-center justify-center rounded-sm border px-3 text-sm transition-colors",
+      "u-numeric inline-flex h-11 w-11 items-center justify-center border text-sm font-medium transition-colors duration-200",
       active
-        ? "border-accent bg-accent text-bg"
-        : "border-border text-paper-muted hover:border-border-strong hover:text-paper",
+        ? "border-accent bg-accent text-on-accent"
+        : "border-line bg-panel text-fg hover:border-fg",
     );
 
   return (
-    <nav aria-label={COPY.listings.page} className="mt-12 flex justify-center">
-      <ul className="flex flex-wrap items-center gap-1.5">
+    <nav aria-label={COPY.listings.page} className="mt-14 flex justify-center">
+      <ul className="flex flex-wrap items-center justify-center gap-2">
         <li>
           {page > 1 ? (
             <Link
@@ -52,7 +55,7 @@ export function Pagination({
 
         {pages.map((p, i) =>
           p === null ? (
-            <li key={`gap-${i}`} aria-hidden="true" className="px-1 text-paper-faint">
+            <li key={`gap-${i}`} aria-hidden="true" className="u-numeric text-fg-faint px-1">
               &hellip;
             </li>
           ) : (

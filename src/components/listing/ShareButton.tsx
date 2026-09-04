@@ -35,7 +35,7 @@ export function ShareButton({ title }: { title: string }) {
     <button
       type="button"
       onClick={share}
-      className="inline-flex h-10 items-center gap-2 rounded-sm border border-border px-4 text-sm text-paper-muted transition-colors hover:border-border-strong hover:text-paper"
+      className="border-line-strong text-fg-muted hover:border-fg hover:text-fg inline-flex h-10 items-center gap-2 border px-4 font-[family-name:var(--font-ui)] text-[0.6875rem] font-semibold tracking-[0.12em] uppercase transition-colors duration-200"
     >
       <svg
         aria-hidden="true"

@@ -12,13 +12,7 @@ import type { ListingImage } from "@/types/domain";
  * lightbox. The first image is `priority` — it is the LCP element on
  * this route.
  */
-export function ListingGallery({
-  images,
-  title,
-}: {
-  images: ListingImage[];
-  title: string;
-}) {
+export function ListingGallery({ images, title }: { images: ListingImage[]; title: string }) {
   const [index, setIndex] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   const touchStartX = useRef<number | null>(null);
@@ -54,8 +48,8 @@ export function ListingGallery({
 
   if (count === 0) {
     return (
-      <div className="grid aspect-4/3 place-items-center rounded-md border border-border bg-surface">
-        <span className="u-eyebrow text-paper-faint">{COPY.listing.noImage}</span>
+      <div className="border-line bg-panel-2 grid aspect-4/3 place-items-center border">
+        <span className="u-eyebrow text-fg-faint">{COPY.listing.noImage}</span>
       </div>
     );
   }
@@ -65,7 +59,7 @@ export function ListingGallery({
   return (
     <div>
       <div
-        className="group relative aspect-4/3 overflow-hidden rounded-md border border-border bg-surface"
+        className="group border-line bg-panel-2 relative aspect-4/3 overflow-hidden border"
         onTouchStart={(e) => {
           touchStartX.current = e.touches[0]?.clientX ?? null;
         }}
@@ -101,15 +95,15 @@ export function ListingGallery({
           <>
             <GalleryArrow direction="prev" onClick={() => go(-1)} />
             <GalleryArrow direction="next" onClick={() => go(1)} />
-            <p className="u-numeric pointer-events-none absolute right-3 bottom-3 rounded-xs bg-bg/85 px-2 py-1 text-xs text-paper">
-              {index + 1}/{count}
+            <p className="u-eyebrow bg-ink text-paper pointer-events-none absolute right-3 bottom-3 px-2.5 py-1.5 text-[0.625rem]">
+              {index + 1} / {count}
             </p>
           </>
         ) : null}
       </div>
 
       {count > 1 ? (
-        <ul className="mt-3 grid grid-cols-5 gap-2 sm:grid-cols-6">
+        <ul className="mt-2.5 grid grid-cols-5 gap-2.5 sm:grid-cols-6">
           {images.map((img, i) => (
             <li key={img.id}>
               <button
@@ -118,10 +112,8 @@ export function ListingGallery({
                 aria-label={`${COPY.listing.galleryCounter} ${i + 1}`}
                 aria-current={i === index}
                 className={cn(
-                  "relative block aspect-square w-full overflow-hidden rounded-sm border transition-colors",
-                  i === index
-                    ? "border-accent"
-                    : "border-border hover:border-border-strong",
+                  "relative block aspect-square w-full overflow-hidden border transition-colors",
+                  i === index ? "border-fg" : "border-line hover:border-line-strong",
                 )}
               >
                 <Image
@@ -129,7 +121,7 @@ export function ListingGallery({
                   alt=""
                   fill
                   sizes="120px"
-                  className={cn("object-cover", i !== index && "opacity-65")}
+                  className={cn("object-cover", i !== index && "opacity-60")}
                 />
               </button>
             </li>
@@ -138,11 +130,12 @@ export function ListingGallery({
       ) : null}
 
       {lightbox ? (
+        /* Pinned to the dark ground whatever section the gallery sits in. */
         <div
           role="dialog"
           aria-modal="true"
           aria-label={title}
-          className="fixed inset-0 z-100 flex items-center justify-center bg-bg/96 p-4"
+          className="theme-dark bg-dark/96 fixed inset-0 z-100 flex items-center justify-center p-4"
           onClick={() => setLightbox(false)}
         >
           <div
@@ -168,7 +161,7 @@ export function ListingGallery({
             type="button"
             onClick={() => setLightbox(false)}
             aria-label={COPY.common.close}
-            className="absolute top-4 right-4 grid h-11 w-11 place-items-center rounded-sm border border-border-strong text-paper transition-colors hover:border-accent hover:text-accent"
+            className="border-line-strong text-fg hover:border-fg absolute top-4 right-4 grid h-11 w-11 place-items-center border transition-colors"
           >
             <svg viewBox="0 0 14 14" className="h-4 w-4" stroke="currentColor" strokeWidth="1.8">
               <path d="M1 1l12 12M13 1L1 13" strokeLinecap="round" />
@@ -180,13 +173,7 @@ export function ListingGallery({
   );
 }
 
-function GalleryArrow({
-  direction,
-  onClick,
-}: {
-  direction: "prev" | "next";
-  onClick: () => void;
-}) {
+function GalleryArrow({ direction, onClick }: { direction: "prev" | "next"; onClick: () => void }) {
   const isPrev = direction === "prev";
   return (
     <button
@@ -194,12 +181,22 @@ function GalleryArrow({
       onClick={onClick}
       aria-label={isPrev ? COPY.listing.galleryPrevious : COPY.listing.galleryNext}
       className={cn(
-        "absolute top-1/2 z-10 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-sm border border-border-strong bg-bg/85 text-paper transition-colors hover:border-accent hover:text-accent",
+        "border-line-strong bg-ground/90 text-fg hover:border-fg absolute top-1/2 z-10 grid h-11 w-11 -translate-y-1/2 place-items-center border transition-colors",
         isPrev ? "left-3" : "right-3",
       )}
     >
-      <svg viewBox="0 0 12 12" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d={isPrev ? "M8 1 3 6l5 5" : "M4 1l5 5-5 5"} strokeLinecap="round" strokeLinejoin="round" />
+      <svg
+        viewBox="0 0 12 12"
+        className="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      >
+        <path
+          d={isPrev ? "M8 1 3 6l5 5" : "M4 1l5 5-5 5"}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
     </button>
   );
