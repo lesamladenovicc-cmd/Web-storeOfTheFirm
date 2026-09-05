@@ -5,11 +5,17 @@
    Re-theming the entire store = editing this file.
    No component may hardcode a hex value.
 
-   Aesthetic direction: "tehnicki list" — a machine's spec sheet. Two
-   grounds: workshop-dark (header, hero, trust, footer) and beige paper
-   stock (listings, detail, content). Hairline rules instead of shadows,
-   register marks on the corners of plates, monospace for anything
-   numeric, a brick accent used only as a stamp on primary actions.
+   Aesthetic direction: "tehnicki list" — a spec sheet. Two grounds:
+   navy (header, hero, trust, footer) and warm paper stock (listings,
+   detail, content). Hairline rules instead of shadows, register marks on
+   the corners of plates, monospace for anything numeric, a gold accent
+   used only as a stamp on primary actions.
+
+   PALETTE SOURCE — the BG Building emblem (Slike/, cut into
+   src/assets/brand/logo-badge.png). Its navy #2C4877 is the dark
+   ground's strongest panel; the darker navies step down from it. Its
+   gold lettering #EEC492 is accent-text on dark, its gold tower #C09060
+   is the accent fill, and the white it sits on is the light panel.
 
    TWO GROUNDS, ONE SET OF CLASS NAMES
    Every ground-dependent token (fg, panel, line, accent-text, danger…)
@@ -22,12 +28,20 @@
    CONTRAST (verified by axe-core in e2e/a11y.spec.ts, not by eye).
    Every text token below clears 4.5:1 on its ground AND on `panel`.
    Known limits, do not regress:
-     fg-faint on panel-3 (dark) ......... 4.70   OK, the floor
-     fg-faint on panel-2 (light) ........ 4.25   FAIL — never faint on
-                                                 panel-2 in a beige section
-     accent (fill) as TEXT on dark ...... 3.45   FAIL — use accent-text
-     accent-text on panel-2 (light) ..... 4.39   FAIL — never on panel-2
-     on-accent over accent .............. 5.00   OK
+     fg-faint on panel-3 (dark) ......... 4.66   OK, the floor
+     fg-faint on panel-2 (light) ........ 4.72   OK
+     fg-faint on panel-3 (light) ........ 4.07   FAIL — never faint on
+                                                 panel-3 in a paper section
+     accent-text on panel-2 (light) ..... 4.88   OK
+     accent-text on panel-3 (light) ..... 4.21   FAIL — never on panel-3
+     accent (fill) as TEXT on light ..... 2.26   FAIL — use accent-text
+     on-accent over accent .............. 5.87   OK
+     on-accent over accent-hover ........ 4.75   OK
+     accent fill against paper ground ... 2.26   non-text: the fill must
+                                                 always carry on-accent
+                                                 text, never stand alone
+                                                 as an outline on paper
+   White over the gold fill is 2.8:1 — on-accent is navy, never paper.
    Never put opacity on text over the accent fill; use `on-accent`.
    ================================================================== */
 
@@ -37,50 +51,54 @@
 .theme-dark {
   color-scheme: dark;
 
-  --t-ground: #141414;
-  --t-panel: #1c1b19;
-  --t-panel-2: #242320;
-  --t-panel-3: #2c2a26;
+  --t-ground: #182742;
+  --t-panel: #1e2f4d;
+  --t-panel-2: #243858;
+  /* The emblem's own navy. */
+  --t-panel-3: #2c4877;
 
-  --t-fg: #f4efe3;
-  --t-fg-muted: #a8a296;
-  --t-fg-faint: #9a9386;
+  --t-fg: #f6f2ea;
+  --t-fg-muted: #b7c2d4;
+  --t-fg-faint: #afbacc;
 
-  --t-line: #2e2c28;
-  --t-line-strong: #4a463f;
+  --t-line: #293d5e;
+  --t-line-strong: #3e547a;
 
-  /* The accent lightened until it clears 4.5:1 as text on this ground. */
-  --t-accent-text: #ec6d3e;
+  /* The emblem's gold lettering: clears 4.5:1 as text on every dark surface. */
+  --t-accent-text: #ebc38f;
 
-  --t-danger: #ea6450;
-  --t-success: #4a9e68;
-  --t-warning: #d9a441;
+  --t-danger: #f07a68;
+  --t-success: #5fb57e;
+  /* Pushed towards orange so a warning never reads as the gold accent. */
+  --t-warning: #f0a047;
 
-  --t-grid: rgb(244 239 227 / 0.05);
+  --t-grid: rgb(246 242 234 / 0.05);
 }
 
 .theme-light {
   color-scheme: light;
 
-  --t-ground: #e7decb;
-  --t-panel: #f3eee2;
-  --t-panel-2: #ddd3bd;
-  --t-panel-3: #d3c7ae;
+  --t-ground: #efe9dd;
+  --t-panel: #f8f5ee;
+  --t-panel-2: #e3dbc9;
+  --t-panel-3: #d6ccb5;
 
-  --t-fg: #1a1a1a;
-  --t-fg-muted: #5a544a;
-  --t-fg-faint: #665f52;
+  /* Ink is the navy, not black, so paper sections stay on-brand. */
+  --t-fg: #14213a;
+  --t-fg-muted: #4b5568;
+  --t-fg-faint: #565e70;
 
-  --t-line: #cfc4aa;
-  --t-line-strong: #a99c80;
+  --t-line: #d3c9b3;
+  --t-line-strong: #a69c86;
 
-  --t-accent-text: #a83708;
+  /* The gold darkened to bronze until it clears 4.5:1 as text on paper. */
+  --t-accent-text: #7f521c;
 
   --t-danger: #a8321b;
   --t-success: #2a6640;
   --t-warning: #7a4f00;
 
-  --t-grid: rgb(26 26 26 / 0.07);
+  --t-grid: rgb(20 33 58 / 0.07);
 }
 
 /* Applying a ground paints it. Layered under `base` so a utility on the
@@ -121,24 +139,25 @@
 
 @theme {
   /* Raw stock — for elements that pin a ground regardless of context. */
-  --color-dark: #141414;
-  --color-dark-2: #1c1b19;
-  --color-beige: #e7decb;
-  --color-beige-muted: #d3c7ae;
-  --color-beige-deep: #c4b696;
-  --color-paper: #f4efe3;
-  --color-ink: #1a1a1a;
-  --color-ink-muted: #5a544a;
-  --color-ink-faint: #665f52;
+  --color-dark: #182742;
+  --color-dark-2: #1e2f4d;
+  --color-beige: #efe9dd;
+  --color-beige-muted: #d6ccb5;
+  --color-beige-deep: #c9bda2;
+  --color-paper: #f6f2ea;
+  --color-ink: #14213a;
+  --color-ink-muted: #4b5568;
+  --color-ink-faint: #565e70;
 
-  /* Accent — brick. Primary actions and the active marker ONLY.
-     As a FILL it is the same on both grounds; as TEXT use `accent-text`. */
-  --color-accent: #bf3f0c;
-  --color-accent-hover: #a83708;
-  --color-on-accent: #fbf7ee;
-  --color-accent-soft: #bf3f0c1f;
-  /* Optional second highlight, unused by default. */
-  --color-accent-2: #c6ff3d;
+  /* Accent — the emblem's gold. Primary actions and the active marker ONLY.
+     As a FILL it is the same on both grounds; as TEXT use `accent-text`.
+     Text over the fill is navy: white on this gold is only 2.8:1. */
+  --color-accent: #c4935f;
+  --color-accent-hover: #b5814d;
+  --color-on-accent: #14213a;
+  --color-accent-soft: #c4935f1f;
+  /* The emblem's navy, kept as an optional second highlight. Unused. */
+  --color-accent-2: #2c4877;
 
   /* --- Typography ----------------------------------------------------
      display  Archivo — headings and UI labels, 600 and tight

@@ -1,9 +1,19 @@
 import { ImageResponse } from "next/og";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { SITE } from "@/config/site";
 
 export const alt = SITE.name;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
+
+/**
+ * The emblem, read once at module scope: this card has no request data,
+ * so it is rendered at build time and the file is never read per hit.
+ * Path is relative to the project root, as next/og documents.
+ */
+const emblem = await readFile(join(process.cwd(), "src/assets/brand/logo-badge.png"), "base64");
+const emblemSrc = `data:image/png;base64,${emblem}`;
 
 /**
  * Site-level OG card.
@@ -30,29 +40,16 @@ export default function OpengraphImage() {
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        background: "#141414",
+        background: "#182742",
         padding: 72,
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- next/og renders plain elements */}
+        <img src={emblemSrc} width={96} height={96} alt="" />
         <div
           style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 64,
-            height: 64,
-            border: "3px solid #BF3F0C",
-            color: "#EC6D3E",
-            fontSize: 34,
-            fontWeight: 700,
-          }}
-        >
-          {SITE.name.charAt(0)}
-        </div>
-        <div
-          style={{
-            color: "#F4EFE3",
+            color: "#F6F2EA",
             fontSize: 30,
             fontWeight: 700,
             letterSpacing: 6,
@@ -66,7 +63,7 @@ export default function OpengraphImage() {
       <div style={{ display: "flex", flexDirection: "column" }}>
         <div
           style={{
-            color: "#F4EFE3",
+            color: "#F6F2EA",
             fontSize: 76,
             fontWeight: 700,
             lineHeight: 1.02,
@@ -75,14 +72,14 @@ export default function OpengraphImage() {
         >
           Polovna i nova oprema
         </div>
-        <div style={{ color: "#A8A296", fontSize: 32, marginTop: 20 }}>
+        <div style={{ color: "#B7C2D4", fontSize: 32, marginTop: 20 }}>
           Bez posrednika. Direktan kontakt sa prodavcem.
         </div>
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-        <div style={{ width: 12, height: 12, background: "#BF3F0C" }} />
-        <div style={{ color: "#9A9386", fontSize: 22, letterSpacing: 4 }}>SR-RS / RSD</div>
+        <div style={{ width: 12, height: 12, background: "#C4935F" }} />
+        <div style={{ color: "#AFBACC", fontSize: 22, letterSpacing: 4 }}>SR-RS / RSD</div>
       </div>
     </div>,
     size,

@@ -50,28 +50,34 @@ Always request the `latin-ext` subset — Serbian č ć š ž đ live there.
 - `"use server"` modules may only export async functions.
 
 ## Design system
-"Tehnički list" — a machine's spec sheet. Two grounds that alternate down every page
-(dark header/hero/footer, beige body), hairline rules instead of shadows, mono for anything
-numeric, register marks on plates, one brick accent used as a stamp. All tokens live in
+"Tehnički list" — a spec sheet. Two grounds that alternate down every page
+(navy header/hero/footer, warm paper body), hairline rules instead of shadows, mono for anything
+numeric, register marks on plates, one gold accent used as a stamp. All tokens live in
 `src/app/globals.css`; re-theming = editing that file.
+
+The palette is lifted from the **BG Building emblem** (source JPEG in `Slike/`; variants generated
+by `npm run brand:logo` into `src/assets/brand/logo-badge.png`, `src/app/icon.png`,
+`src/app/apple-icon.png`, `public/logo.png`). Its navy is the dark ground's strongest panel, its
+gold lettering is the accent, its white is the light panel. `Logo.tsx` renders the emblem.
 
 ```
 /* Grounds (per-section, set by .theme-dark / .theme-light) */
-dark:  ground #141414  panel #1C1B19  fg #F4EFE3  fg-muted #A8A296  line #2E2C28
-light: ground #E7DECB  panel #F3EEE2  fg #1A1A1A  fg-muted #5A544A  line #CFC4AA
-/* Accent — brick, same on both grounds */
---accent:      #BF3F0C   /* FILL only: primary buttons, active page, eyebrow square */
---on-accent:   #FBF7EE   /* text over the accent fill                              */
-accent-text:   #EC6D3E (dark) / #A83708 (light)  /* accent usable as TEXT          */
---accent-2:    #C6FF3D   /* optional highlight, unused                             */
+dark:  ground #182742  panel #1E2F4D  panel-3 #2C4877 (emblem navy)  fg #F6F2EA  fg-muted #B7C2D4  line #293D5E
+light: ground #EFE9DD  panel #F8F5EE  fg #14213A (navy ink)  fg-muted #4B5568  line #D3C9B3
+/* Accent — emblem gold, same on both grounds */
+--accent:      #C4935F   /* FILL only: primary buttons, active page, eyebrow square */
+--on-accent:   #14213A   /* text over the accent fill — navy; white is only 2.8:1   */
+accent-text:   #EBC38F (dark) / #7F521C (light)  /* accent usable as TEXT          */
+--accent-2:    #2C4877   /* the emblem navy, optional highlight, unused            */
 ```
 Rules:
 - Components use the **contextual** classes (`text-fg`, `text-fg-muted`, `bg-panel`, `border-line`,
   `text-accent-text`) and never a ground-specific colour, so the same component is correct on
-  dark and on beige. Wrap a beige section in `theme-light`; the root is dark.
-- Accent as **text** only via `accent-text`; the fill (`bg-accent`) never carries body text on dark
-  (3.45:1). Every text token clears AA on its ground and on `panel` — see the contrast table
-  in globals.css before adding a colour.
+  navy and on paper. Wrap a paper section in `theme-light`; the root is navy.
+- Accent as **text** only via `accent-text`; the fill (`bg-accent`) only ever carries `on-accent`
+  (navy) and is 2.3:1 against paper, so it never stands alone as an outline there. Every text
+  token clears AA on its ground and on `panel` — see the contrast table in globals.css before
+  adding a colour.
 - Accent ONLY on primary actions and the active marker. Generous whitespace. Strong type
   hierarchy. Square corners. No decorative gradients, no clutter. Must not look templated — lean
   on the `frontend-design` skill.

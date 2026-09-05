@@ -168,7 +168,7 @@ export function organizationJsonLd(): JsonLdObject {
     name: SITE.name,
     legalName: SITE.legalName,
     url: absoluteUrl("/"),
-    logo: absoluteUrl("/logo.svg"),
+    logo: absoluteUrl("/logo.png"),
     description: SITE.description,
     address: {
       "@type": "PostalAddress",

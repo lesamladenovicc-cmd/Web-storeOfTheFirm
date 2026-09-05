@@ -9,6 +9,14 @@ The niche is not final. Copy, taxonomy and brand live in `src/config/`
 and the category list lives in the database, so re-niching the store is
 a config edit plus a few rows — not a rewrite.
 
+**Logo.** The BG Building emblem is supplied as a JPEG in `Slike/`.
+`npm run brand:logo` cuts it to a transparent circle and writes every
+variant the app uses: `src/assets/brand/logo-badge.png` (header, footer,
+login, OG card), `src/app/icon.png` (favicon), `src/app/apple-icon.png`
+and `public/logo.png` (Organization JSON-LD). The colour tokens in
+`src/app/globals.css` are derived from the emblem — navy `#2C4877`,
+gold `#C09060` / `#EEC492`.
+
 ---
 
 ## Stack
@@ -38,7 +46,7 @@ npm run dev:preview
 Open <http://localhost:3000>. No Supabase project, no `.env.local`, no
 setup at all.
 
-This boots a mock backend (`scripts/mock-supabase.mjs`) with ten
+This boots a mock backend (`scripts/mock-supabase.mjs`) with fourteen
 realistic Serbian listings and generated placeholder photos, then starts
 the dev server against it. Everything public works: homepage, search
 (including diacritic-free — try `masina`), filters, sorting, categories,
@@ -134,7 +142,7 @@ npm run build        # production build (needs a reachable Supabase)
 npm run typecheck    # tsc --noEmit
 npm run lint         # eslint
 npm run test         # vitest — formatting, plurals, transliteration
-npm run verify:db    # migrations + 75 RLS assertions in PGlite (no Docker)
+npm run verify:db    # migrations + 105 RLS assertions in PGlite (no Docker)
 npm run test:e2e     # playwright
 npm run seed:users   # create the seed staff accounts
 ```

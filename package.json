@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:preview": "node scripts/dev-preview.mjs",
+    "brand:logo": "node scripts/make-logo.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
