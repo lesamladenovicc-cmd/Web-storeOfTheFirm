@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { COPY } from "@/config/copy";
 import { MAIN_NAV, SITE } from "@/config/site";
@@ -11,6 +12,24 @@ import { cn } from "@/lib/cn";
 
 /**
  * Off-canvas panel sliding in from the right, pinned to the dark ground.
+ *
+ * ─────────────────────────────────────────────────────────────────────
+ * THE OVERLAY IS PORTALLED TO <body>, AND MUST STAY THAT WAY.
+ *
+ * SiteHeader carries `backdrop-blur-md`. A backdrop-filter — like
+ * filter, transform, perspective and contain — makes its element a
+ * CONTAINING BLOCK for `position: fixed` descendants. Rendered in place,
+ * the backdrop (`fixed inset-0`) and the drawer (`fixed inset-y-0`)
+ * therefore resolved against the header's own 64px box instead of the
+ * viewport: the menu opened, aria-expanded flipped, and the panel was a
+ * 64px sliver at the top of the screen with every link unreachable.
+ *
+ * The portal takes both out of that subtree, so `fixed` means the
+ * viewport again. Moving them back — or wrapping this component in any
+ * new filter/transform ancestor — brings the bug straight back.
+ * e2e/mobile-nav.spec.ts measures the drawer against the viewport to
+ * catch exactly that.
+ * ─────────────────────────────────────────────────────────────────────
  */
 export function MobileNav({ isAuthed = false }: { isAuthed?: boolean }) {
   const pathname = usePathname();
@@ -75,61 +94,71 @@ export function MobileNav({ isAuthed = false }: { isAuthed?: boolean }) {
         </span>
       </button>
 
-      {open ? (
-        <>
-          <button
-            type="button"
-            aria-label={COPY.nav.closeMenu}
-            onClick={() => setOpenedOn(null)}
-            className="bg-dark/80 fixed inset-0 z-40 md:hidden"
-          />
+      {/* No mount guard is needed, and a `mounted` flag would only add a
+          setState-in-effect the React compiler rejects: `openedOn` starts
+          null, so `open` is false on the server render AND on hydration.
+          By the time this is true a click has happened, which means a
+          browser, which means `document.body`. */}
+      {open
+        ? createPortal(
+            <>
+              <button
+                type="button"
+                aria-label={COPY.nav.closeMenu}
+                onClick={() => setOpenedOn(null)}
+                className="bg-dark/80 fixed inset-0 z-40 md:hidden"
+              />
 
-          <div
-            id="mobile-nav"
-            className="theme-dark border-line fixed inset-y-0 right-0 z-50 flex w-full max-w-[340px] flex-col overflow-y-auto border-l px-7 py-8 md:hidden"
-          >
-            <Eyebrow>{SITE.name}</Eyebrow>
-            <p className="text-fg-muted mt-3 text-sm leading-relaxed">{SITE.tagline}</p>
-
-            <nav className="mt-9 flex flex-col" aria-label={COPY.nav.menu}>
-              {MAIN_NAV.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setOpenedOn(null)}
-                  className={cn(
-                    "border-line font-display border-b py-4 text-2xl font-semibold tracking-tight transition-colors",
-                    pathname === item.href ? "text-accent-text" : "text-fg hover:text-accent-text",
-                  )}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-
-            <ButtonLink
-              href={isAuthed ? "/dashboard" : "/prijava"}
-              onClick={() => setOpenedOn(null)}
-              size="lg"
-              className="mt-8 w-full"
-            >
-              {isAuthed ? COPY.nav.dashboard : COPY.nav.login}
-            </ButtonLink>
-
-            <div className="mt-auto pt-10">
-              <a
-                href={SITE.contact.phoneHref}
-                className="u-numeric text-fg hover:text-accent-text block text-sm transition-colors"
+              <div
+                id="mobile-nav"
+                className="theme-dark border-line fixed inset-y-0 right-0 z-50 flex w-full max-w-[340px] flex-col overflow-y-auto border-l px-7 py-8 md:hidden"
               >
-                {SITE.contact.phone}
-              </a>
-              <p className="text-fg-muted mt-1.5 text-sm">
-                {SITE.contact.address}, {SITE.contact.city}
-              </p>
-            </div>
-          </div>
-        </>
-      ) : null}
+                <Eyebrow>{SITE.name}</Eyebrow>
+                <p className="text-fg-muted mt-3 text-sm leading-relaxed">{SITE.tagline}</p>
+
+                <nav className="mt-9 flex flex-col" aria-label={COPY.nav.menu}>
+                  {MAIN_NAV.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setOpenedOn(null)}
+                      className={cn(
+                        "border-line font-display border-b py-4 text-2xl font-semibold tracking-tight transition-colors",
+                        pathname === item.href
+                          ? "text-accent-text"
+                          : "text-fg hover:text-accent-text",
+                      )}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </nav>
+
+                <ButtonLink
+                  href={isAuthed ? "/dashboard" : "/prijava"}
+                  onClick={() => setOpenedOn(null)}
+                  size="lg"
+                  className="mt-8 w-full"
+                >
+                  {isAuthed ? COPY.nav.dashboard : COPY.nav.login}
+                </ButtonLink>
+
+                <div className="mt-auto pt-10">
+                  <a
+                    href={SITE.contact.phoneHref}
+                    className="u-numeric text-fg hover:text-accent-text block text-sm transition-colors"
+                  >
+                    {SITE.contact.phone}
+                  </a>
+                  <p className="text-fg-muted mt-1.5 text-sm">
+                    {SITE.contact.address}, {SITE.contact.city}
+                  </p>
+                </div>
+              </div>
+            </>,
+            document.body,
+          )
+        : null}
     </>
   );
 }
