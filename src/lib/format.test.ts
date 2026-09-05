@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   countWithNoun,
+  formatCompactRsd,
   formatDate,
   formatDateTime,
+  formatMonthLabel,
   formatPhone,
   formatPrice,
   formatRelativeDate,
@@ -147,5 +149,42 @@ describe("truncate", () => {
     expect(out.endsWith("…")).toBe(true);
     expect(out.length).toBeLessThanOrEqual(31);
     expect(out).not.toContain("  ");
+  });
+});
+
+describe("formatCompactRsd", () => {
+  it("leaves amounts under a thousand grouped and unabbreviated", () => {
+    expect(formatCompactRsd(0)).toBe("0");
+    expect(formatCompactRsd(950)).toBe("950");
+  });
+
+  it("abbreviates thousands and millions with a decimal comma", () => {
+    expect(formatCompactRsd(1000)).toBe("1 hilj");
+    expect(formatCompactRsd(18500)).toBe("18,5 hilj");
+    expect(formatCompactRsd(450000)).toBe("450 hilj");
+    expect(formatCompactRsd(1_450_000)).toBe("1,5 mil");
+    expect(formatCompactRsd(8_450_000)).toBe("8,5 mil");
+  });
+
+  it("drops a trailing zero decimal", () => {
+    expect(formatCompactRsd(2_000_000)).toBe("2 mil");
+    expect(formatCompactRsd(11_000)).toBe("11 hilj");
+  });
+
+  it("keeps the minus sign on a negative amount", () => {
+    expect(formatCompactRsd(-40_000)).toBe("-40 hilj");
+  });
+});
+
+describe("formatMonthLabel", () => {
+  it("gives a short axis label with a two-digit year", () => {
+    expect(formatMonthLabel(2026, 0)).toBe("jan 26");
+    expect(formatMonthLabel(2026, 8)).toBe("sep 26");
+    expect(formatMonthLabel(2025, 11)).toBe("dec 25");
+  });
+
+  it("gives the full Latin-script Serbian month when asked", () => {
+    expect(formatMonthLabel(2026, 8, { short: false })).toBe("septembar 2026.");
+    expect(formatMonthLabel(2026, 7, { short: false })).toBe("avgust 2026.");
   });
 });

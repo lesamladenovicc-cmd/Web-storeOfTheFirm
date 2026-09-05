@@ -108,7 +108,7 @@ Enums (Serbian, user-facing):
 - lint: `npm run lint`
 - typecheck: `npm run typecheck`
 - unit tests: `npm run test`
-- **db + RLS verification: `npm run verify:db`** — runs every migration and 75
+- **db + RLS verification: `npm run verify:db`** — runs every migration and 105
   assertions in PGlite (real Postgres in WASM). No Docker needed. Run this after
   ANY change under `supabase/migrations/`.
 - e2e: `npm run test:e2e`

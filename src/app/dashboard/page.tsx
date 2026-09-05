@@ -5,13 +5,20 @@ import { ButtonLink } from "@/components/ui/Button";
 import { requireProfile } from "@/lib/auth";
 import { getDashboardStats } from "@/lib/data/listings";
 import { getUnreadInquiryCount } from "@/lib/data/inquiries";
-import { formatNumber } from "@/lib/format";
+import { getRevenueOverview } from "@/lib/data/revenue";
+import { countWithNoun, formatNumber, formatRsd } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const profile = await requireProfile();
-  const [stats, unread] = await Promise.all([getDashboardStats(), getUnreadInquiryCount()]);
+  const [stats, unread, revenue] = await Promise.all([
+    getDashboardStats(),
+    getUnreadInquiryCount(),
+    getRevenueOverview(profile),
+  ]);
+
+  const isAdmin = revenue.scope === "all";
 
   const cards = [
     { label: COPY.dashboard.stats.total, value: stats.total, href: "/dashboard/oglasi" },
@@ -48,7 +55,38 @@ export default async function DashboardPage() {
         }
       />
 
-      <ul className="mt-9 grid grid-cols-2 gap-4 lg:grid-cols-5">
+      {/* The turnover plate leads: it is the figure both roles open the
+          dashboard for. Its scope follows the role — a seller's own
+          sales, an admin's whole store. */}
+      <Link
+        href="/dashboard/prihod"
+        className="u-marks border-line bg-panel hover:border-line-strong group mt-9 flex flex-col gap-6 border px-6 py-7 transition-colors sm:flex-row sm:items-end sm:justify-between sm:px-8"
+      >
+        <div>
+          <span className="u-eyebrow text-fg-faint">
+            {COPY.dashboard.revenue.totalLabel}
+            {isAdmin ? " · " + COPY.dashboard.revenue.allSellers : ""}
+          </span>
+          <p className="u-numeric text-fg mt-4 text-[clamp(1.875rem,1.2rem+2.4vw,3rem)] leading-none font-semibold tracking-tight">
+            {formatRsd(revenue.total)}
+          </p>
+          <p className="text-fg-muted mt-3 text-sm">
+            {countWithNoun(revenue.count, "oglas")} {COPY.dashboard.revenue.soldSuffix}
+          </p>
+        </div>
+
+        <div className="sm:text-right">
+          <span className="u-eyebrow text-fg-faint">{COPY.dashboard.revenue.thisMonth}</span>
+          <p className="u-numeric text-fg mt-3 text-xl font-semibold">
+            {formatRsd(revenue.thisMonth.total)}
+          </p>
+          <span className="u-eyebrow text-accent-text mt-4 inline-block">
+            {COPY.dashboard.revenue.openReport} →
+          </span>
+        </div>
+      </Link>
+
+      <ul className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-5">
         {cards.map((card) => (
           <li key={card.label}>
             <Link

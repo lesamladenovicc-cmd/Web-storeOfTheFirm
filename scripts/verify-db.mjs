@@ -186,6 +186,17 @@ async function createFlowSection(db) {
 
   await allow(db, "seller marks it sold",
     `update public.listings set status = 'prodato' where id = '${NEW_ID}'`);
+
+  // sold_at is the time axis of the revenue report (0010). It must be
+  // stamped by the trigger, survive an unrelated edit, and be cleared
+  // again when the listing goes back on sale.
+  await expectValue(db, "sold_at was stamped on the sale",
+    `select sold_at is not null from public.listings where id = '${NEW_ID}'`, true);
+  await allow(db, "seller corrects the price of the sold listing",
+    `update public.listings set price_rsd = 1150000 where id = '${NEW_ID}'`);
+  await expectValue(db, "an edit that does not touch status keeps sold_at",
+    `select sold_at is not null from public.listings where id = '${NEW_ID}'`, true);
+
   await asRole(db, "anon", null);
   await expectValue(db, "a sold listing drops out of public SEARCH",
     "select count(*) from public.search_listings('bager za test')", 0);
@@ -200,6 +211,8 @@ async function createFlowSection(db) {
   await asRole(db, "authenticated", SELLER);
   await allow(db, "seller puts it back on sale",
     `update public.listings set status = 'aktivan' where id = '${NEW_ID}'`);
+  await expectValue(db, "sold_at is cleared — a relisted item is not revenue",
+    `select sold_at is null from public.listings where id = '${NEW_ID}'`, true);
 
   await allow(db, "seller deletes the listing",
     `delete from public.listings where id = '${NEW_ID}'`);
@@ -459,6 +472,38 @@ async function main() {
     `update public.profiles set is_active = true where id = '${INACTIVE}'`);
   await deny(db, "CANNOT escalate itself to admin",
     `update public.profiles set role = 'admin' where id = '${INACTIVE}'`);
+
+  // =================================================================
+  // REVENUE SCOPING — the trap behind /dashboard/prihod.
+  //
+  // A sold listing stays publicly readable (0007), so RLS does NOT
+  // scope the revenue query the way it scopes drafts and inquiries.
+  // If lib/data/revenue.ts ever drops its explicit seller_id filter,
+  // every seller starts seeing every seller's turnover. These two
+  // assertions pin that fact down so the filter is never "simplified"
+  // away as redundant.
+  await asRole(db, null, null);
+  await db.query(
+    `update public.listings set status = 'prodato', price_rsd = 45000
+      where id = $1`,
+    [L_ACTIVE_B],
+  );
+
+  await asRole(db, "authenticated", SELLER_A);
+  await expectValue(db,
+    "revenue: RLS alone lets seller A read seller B's SOLD row",
+    `select count(*) from public.listings
+      where status = 'prodato' and seller_id = '${SELLER_B}'`, 1);
+  await expectValue(db,
+    "revenue: so the report must filter by seller_id — scoped sum is 0",
+    `select coalesce(sum(price_rsd), 0) from public.listings
+      where status = 'prodato' and seller_id = '${SELLER_A}'`, 0);
+
+  await asRole(db, null, null);
+  await db.query(
+    "update public.listings set status = 'aktivan' where id = $1",
+    [L_ACTIVE_B],
+  );
 
   // =================================================================
   console.log("\n[1mADMIN[0m");

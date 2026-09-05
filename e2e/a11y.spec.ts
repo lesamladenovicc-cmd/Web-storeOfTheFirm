@@ -36,9 +36,7 @@ test.use({ reducedMotion: "reduce" });
 async function settle(page: import("@playwright/test").Page) {
   await page.waitForLoadState("networkidle");
   await page.evaluate(async () => {
-    await Promise.all(
-      document.getAnimations().map((a) => a.finished.catch(() => undefined)),
-    );
+    await Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined)));
   });
 }
 
@@ -77,6 +75,79 @@ for (const route of PUBLIC_ROUTES) {
   });
 }
 
+/**
+ * The revenue report is the densest screen in the product — a data
+ * plate, a bar chart, three share tables — and the first one built
+ * almost entirely out of `fg-faint` and `u-numeric` on `panel`. Those
+ * are exactly the tokens the contrast table in globals.css warns about,
+ * so it gets its own axe pass rather than riding on the public sweep.
+ */
+test("revenue report has no WCAG A/AA violations", async ({ page }) => {
+  await page.goto("/prijava");
+  await page.getByLabel(/e-mail/i).fill(process.env.E2E_ADMIN_EMAIL ?? "admin@jadranko.rs");
+  await page.getByLabel(/lozinka/i).fill(process.env.E2E_ADMIN_PASSWORD ?? "AdminLozinka2026!");
+  await page.getByRole("button", { name: /prijavi se/i }).click();
+  await expect(page).toHaveURL(/\/dashboard/);
+
+  await page.goto("/dashboard/prihod");
+  await settle(page);
+
+  const results = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .analyze();
+
+  if (results.violations.length > 0) {
+    console.error(
+      results.violations
+        .map(
+          (v) =>
+            `${v.id} (${v.impact}): ${v.help}\n  ` +
+            v.nodes.map((n) => n.target.join(" ")).join("\n  "),
+        )
+        .join("\n"),
+    );
+  }
+
+  expect(results.violations).toEqual([]);
+
+  // The chart and its three tables are the widest things in the app;
+  // each must scroll inside its own panel, not drag the page with it.
+  //
+  // Asserted by SCROLLING rather than by documentElement.scrollWidth,
+  // which the other overflow specs use. Chrome folds the content of a
+  // descendant `overflow-x: auto` box into the root's scrollWidth even
+  // though that content is clipped and the viewport cannot reach it —
+  // so on this page alone the proxy reports ~507px while the page does
+  // not move a pixel. What matters to a phone user is whether the page
+  // slides sideways under their thumb, so that is what is measured.
+  await page.setViewportSize(NARROW);
+  const scroll = await page.evaluate(() => {
+    window.scrollTo(9999, 0);
+    const reached = window.scrollX;
+    window.scrollTo(0, 0);
+    return {
+      reached,
+      bodyScrollWidth: document.body.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+    };
+  });
+
+  expect(scroll.reached).toBe(0);
+  expect(scroll.bodyScrollWidth).toBeLessThanOrEqual(scroll.clientWidth + 1);
+
+  // ...and the chart really is scrollable inside its own panel, rather
+  // than silently cutting the last months off.
+  const chartViewport = page
+    .getByRole("region", { name: /prihod po mesecima/i })
+    .locator("div")
+    .first();
+  const inner = await chartViewport.evaluate((el) => ({
+    visible: el.clientWidth,
+    content: el.scrollWidth,
+  }));
+  expect(inner.content).toBeGreaterThan(inner.visible);
+});
+
 test("listing detail has no WCAG A/AA violations", async ({ page }) => {
   await page.goto("/oglasi");
 
@@ -108,16 +179,12 @@ test("accent colour passes contrast where it is used as text", async ({ page }) 
   await page.goto("/");
   await settle(page);
 
-  const results = await new AxeBuilder({ page })
-    .withRules(["color-contrast"])
-    .analyze();
+  const results = await new AxeBuilder({ page }).withRules(["color-contrast"]).analyze();
 
   expect(results.violations).toEqual([]);
 });
 
-test("skip link is reachable by keyboard and targets the main content", async ({
-  page,
-}) => {
+test("skip link is reachable by keyboard and targets the main content", async ({ page }) => {
   await page.goto("/");
   await page.keyboard.press("Tab");
 

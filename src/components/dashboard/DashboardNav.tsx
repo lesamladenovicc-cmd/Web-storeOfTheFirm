@@ -11,6 +11,7 @@ type NavItem = { href: string; label: string; exact?: boolean };
 const NAV: NavItem[] = [
   { href: "/dashboard", label: COPY.dashboard.nav.overview, exact: true },
   { href: "/dashboard/oglasi", label: COPY.dashboard.nav.listings },
+  { href: "/dashboard/prihod", label: COPY.dashboard.nav.revenue },
   { href: "/dashboard/upiti", label: COPY.dashboard.nav.inquiries },
   { href: "/dashboard/podesavanja", label: COPY.dashboard.nav.settings },
 ];

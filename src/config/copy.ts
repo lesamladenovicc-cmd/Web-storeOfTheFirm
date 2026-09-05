@@ -256,6 +256,7 @@ export const COPY = {
     nav: {
       overview: "Pregled",
       listings: "Moji oglasi",
+      revenue: "Prihod",
       inquiries: "Upiti",
       settings: "Podešavanja",
       users: "Korisnici",
@@ -269,6 +270,57 @@ export const COPY = {
       drafts: "Nacrti",
       sold: "Prodato",
       unreadInquiries: "Novi upiti",
+    },
+
+    revenue: {
+      title: "Prihod od prodaje",
+      titleAll: "Prihod od prodaje",
+      subtitleOwn: "Zbir cena vaših oglasa koji su označeni kao prodati.",
+      subtitleAll: "Zbir cena svih oglasa koji su označeni kao prodati, po prodavcima.",
+
+      internalOnly: "Interni podatak",
+      internalNote: "Ova stranica je vidljiva samo prijavljenim internim korisnicima.",
+
+      // Overview plate.
+      allSellers: "svi prodavci",
+      soldSuffix: "označeno kao prodato",
+      openReport: "Detaljan pregled",
+
+      totalLabel: "Ukupan prihod",
+      countLabel: "Prodatih oglasa",
+      averageLabel: "Prosečna prodaja",
+      bestLabel: "Najveća prodaja",
+      thisMonth: "Ovaj mesec",
+      previousMonth: "Prošli mesec",
+      thisYear: "Ova godina",
+
+      chartTitle: "Prihod po mesecima",
+      chartHint: "Poslednjih 12 meseci.",
+      chartTableCaption: "Prihod po mesecima, poslednjih 12 meseci",
+
+      sellersTitle: "Po prodavcu",
+      categoriesTitle: "Po kategoriji",
+      recentTitle: "Poslednje prodaje",
+
+      colSeller: "Prodavac",
+      colCategory: "Kategorija",
+      colMonth: "Mesec",
+      colSales: "Prodaja",
+      colRevenue: "Prihod",
+      colShare: "Udeo",
+      colListing: "Oglas",
+      colPrice: "Cena",
+      colSoldAt: "Prodato",
+
+      // Sales with no price ("Po dogovoru") are counted but cannot be
+      // summed — saying so keeps the total honest.
+      unpricedNote: "bez iskazane cene („Po dogovoru”) — ulazi u broj prodaja, ne u zbir.",
+      basisNote:
+        "Iznosi se čitaju iz trenutne cene oglasa. Oglas vraćen u prodaju izlazi iz obračuna.",
+
+      empty: "Još nema evidentiranih prodaja.",
+      emptyBody: "Kada oglas označite kao prodat, iznos će se pojaviti ovde.",
+      emptyCta: "Pogledaj oglase",
     },
 
     listings: {

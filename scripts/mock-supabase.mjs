@@ -188,12 +188,15 @@ const USERS = [
 function seedListing(n, o) {
   const id = `${String(n).padStart(8, "0")}-0000-4000-8000-000000000000`;
   const count = o.imageCount ?? 3;
+  // Most fixtures belong to the seller; a couple are the admin's own,
+  // so the per-seller revenue table has more than one row to split.
+  const owner = o.seller ?? SELLER_ID;
 
   for (let i = 0; i < count; i++) {
     db.listing_images.push({
       id: randomUUID(),
       listing_id: id,
-      storage_path: `${SELLER_ID}/${id}/foto-${i + 1}.png`,
+      storage_path: `${owner}/${id}/foto-${i + 1}.png`,
       alt: o.title,
       width: 800,
       height: 600,
@@ -213,14 +216,18 @@ function seedListing(n, o) {
     status: o.status ?? "aktivan",
     location: o.location,
     category_id: o.category,
-    seller_id: SELLER_ID,
-    contact_name: "Marko Petrović",
-    contact_phone: "+381641110002",
-    contact_email: "prodavac@jadranko.rs",
-    cover_image_path: count > 0 ? `${SELLER_ID}/${id}/foto-1.png` : null,
+    seller_id: owner,
+    contact_name: owner === ADMIN_ID ? "Administrator" : "Marko Petrović",
+    contact_phone: owner === ADMIN_ID ? "+381641110001" : "+381641110002",
+    contact_email: owner === ADMIN_ID ? "admin@jadranko.rs" : "prodavac@jadranko.rs",
+    cover_image_path: count > 0 ? `${owner}/${id}/foto-1.png` : null,
     attributes: {},
     view_count: o.views ?? 0,
     published_at: o.status === "nacrt" ? null : ago(o.days),
+    // Mirrors the stamp_sold_at trigger (0010): set only while sold.
+    // `soldDays` back-dates the sale so /dashboard/prihod has a real
+    // twelve-month curve to draw instead of a single spike.
+    sold_at: o.status === "prodato" ? ago(o.soldDays ?? o.days) : null,
     created_at: ago(o.days),
     updated_at: ago(o.days),
   });
@@ -305,7 +312,8 @@ export function reset() {
     // Sold: badge, struck price, SoldOut availability, still reachable.
     description: "Jednoosovinska kiper prikolica nosivosti 3,5 t. Hidraulično kipovanje na tri strane.",
     condition: "korisceno", price: 320000, status: "prodato",
-    location: "Novi Sad", category: "c0000001-0000-4000-8000-000000000002", days: 16, views: 187, imageCount: 2,
+    location: "Novi Sad", category: "c0000001-0000-4000-8000-000000000002",
+    days: 16, soldDays: 2, views: 187, imageCount: 2,
   });
   seedListing(8, {
     slug: "agregat-honda-ex7-za-delove-v4w5x6",
@@ -320,6 +328,54 @@ export function reset() {
     description: "Vidljiv samo vlasniku i administratoru; ne pojavljuje se u javnoj pretrazi.",
     condition: "korisceno", price: 125000, status: "nacrt",
     location: "Novi Sad", category: "c0000001-0000-4000-8000-000000000006", days: 4, views: 0, imageCount: 1,
+  });
+
+  // --- Sales history -------------------------------------------------
+  // Spread across the last ten months and over both accounts, so
+  // /dashboard/prihod renders a real curve, a per-seller split and the
+  // "sold without a price" footnote instead of a single bar.
+  seedListing(10, {
+    slug: "utovarivac-jcb-3cx-2015-b2c3d4",
+    title: "Utovarivač JCB 3CX, 2015. godište",
+    description: "JCB 3CX, 2015, oko 7.400 radnih sati. Prodat kupcu iz Šapca.",
+    condition: "korisceno", price: 5300000, status: "prodato",
+    location: "Šabac", category: "c0000001-0000-4000-8000-000000000001",
+    days: 78, soldDays: 62, views: 341, imageCount: 3,
+  });
+  seedListing(11, {
+    slug: "kombajn-zmaj-142-e5f6g7",
+    title: "Kombajn Zmaj 142, sa hederom",
+    description: "Zmaj 142 sa hederom od 4,2 m. Prodat pred sezonu.",
+    condition: "korisceno", price: 1450000, status: "prodato",
+    location: "Sombor", category: "c0000001-0000-4000-8000-000000000002",
+    days: 150, soldDays: 132, views: 210, imageCount: 2,
+  });
+  seedListing(12, {
+    slug: "presa-za-lim-hidraulicna-h8i9j1",
+    title: "Hidraulična presa za lim, 60 t",
+    description: "Hidraulična presa 60 t, trofazna. Prodata radionici iz Kruševca.",
+    condition: "korisceno", price: 890000, status: "prodato",
+    location: "Kruševac", category: "c0000001-0000-4000-8000-000000000003",
+    days: 240, soldDays: 226, views: 128, imageCount: 2,
+    seller: ADMIN_ID,
+  });
+  seedListing(13, {
+    slug: "set-rezervnih-delova-hidraulika-k2l3m4",
+    title: "Set rezervnih delova za hidrauliku",
+    // Sold with no price: counts as a sale, cannot enter the sum.
+    description: "Mešoviti set zaptivki, creva i pumpi. Cena je dogovorena telefonom.",
+    condition: "novo", price: null, status: "prodato",
+    location: "Novi Sad", category: "c0000001-0000-4000-8000-000000000006",
+    days: 40, soldDays: 33, views: 64, imageCount: 1,
+  });
+  seedListing(14, {
+    slug: "agregat-dizel-15-kva-n5o6p7",
+    title: "Dizel agregat 15 kVA, sa kućištem",
+    description: "Agregat 15 kVA u zvučno izolovanom kućištu. Prodat prošlog meseca.",
+    condition: "kao_novo", price: 640000, status: "prodato",
+    location: "Beograd", category: "c0000001-0000-4000-8000-000000000005",
+    days: 34, soldDays: 21, views: 97, imageCount: 2,
+    seller: ADMIN_ID,
   });
 
   db.inquiries = [
@@ -764,6 +820,23 @@ export function start(port = DEFAULT_PORT) {
 
         if (req.method === "GET" || req.method === "HEAD") {
           let rows = applyFilters(db[table], searchParams);
+
+          // The ONE policy this mock implements: drafts are not public.
+          //
+          // Everything else here is deliberately unauthorized (see the
+          // header). This rule is different because the public detail
+          // page depends on the backend hiding a draft in order to 404
+          // it, so leaving it out did not just weaken a test — it made
+          // `npm run dev:preview` serve every draft to anonymous
+          // visitors, complete with the seller's phone number and the
+          // inquiry form. It mirrors `listings_select_public` in 0007.
+          //
+          // Still NOT RLS: a signed-in seller sees every other seller's
+          // drafts here. Authorization is verified by `npm run verify:db`.
+          if (table === "listings" && !userFromRequest(req)) {
+            rows = rows.filter((l) => l.status === "aktivan" || l.status === "prodato");
+          }
+
           rows = applyOrder(rows, searchParams);
 
           const limit = Number(searchParams.get("limit") ?? 0);
@@ -801,6 +874,8 @@ export function start(port = DEFAULT_PORT) {
               // Mirrors the stamp_published_at trigger.
               row.published_at =
                 row.status === "aktivan" && !row.published_at ? now : row.published_at ?? null;
+              // ...and stamp_sold_at (0010).
+              row.sold_at = row.status === "prodato" ? (row.sold_at ?? now) : null;
             }
             db[table].push(row);
             return row;
@@ -820,6 +895,14 @@ export function start(port = DEFAULT_PORT) {
             if (table === "listings") {
               if (row.status === "aktivan" && !row.published_at) {
                 row.published_at = new Date().toISOString();
+              }
+              // stamp_sold_at: only when the PATCH actually names status,
+              // exactly like the trigger's `before update of status`.
+              if ("status" in payload) {
+                row.sold_at =
+                  row.status === "prodato"
+                    ? (row.sold_at ?? new Date().toISOString())
+                    : null;
               }
               touch(row);
             } else if ("updated_at" in row) {

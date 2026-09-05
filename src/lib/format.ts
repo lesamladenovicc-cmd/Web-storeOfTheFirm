@@ -54,6 +54,29 @@ export function formatNumber(value: number): string {
   return groupDigits(value);
 }
 
+/**
+ * Abbreviated RSD for axis labels, where a full "8.450.000 din" would
+ * not fit in a 70px column: 8450000 → "8,4 mil" · 450000 → "450 hilj".
+ * Decimal comma, one place, trailing ",0" dropped — Serbian convention.
+ *
+ * Display only. Never use it where the exact figure matters; the tables
+ * and the totals always show `formatRsd`.
+ */
+export function formatCompactRsd(amount: number): string {
+  const abs = Math.abs(amount);
+  if (abs < 1000) return groupDigits(amount);
+
+  const [divisor, unit] = abs >= 1_000_000 ? [1_000_000, "mil"] : [1000, "hilj"];
+  // Built from the absolute value, then re-signed: Math.trunc(-0.4) is
+  // -0, and -0 formats as "0", which would silently drop the minus.
+  const tenths = Math.round((abs / divisor) * 10);
+  const whole = Math.floor(tenths / 10);
+  const decimal = tenths % 10;
+
+  const digits = decimal === 0 ? groupDigits(whole) : `${groupDigits(whole)},${decimal}`;
+  return `${amount < 0 ? "-" : ""}${digits} ${unit}`;
+}
+
 /* ------------------------------------------------------------------ */
 /* Plurals                                                             */
 /* ------------------------------------------------------------------ */
@@ -135,6 +158,57 @@ export function formatDateTime(value: string | Date): string {
   const d = toDate(value);
   if (Number.isNaN(d.getTime())) return "";
   return `${formatDate(d)} u ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+/**
+ * Serbian month names. Hand-rolled for the same reason as everything
+ * else here — and because Node's sr-RS data returns "септембар" in
+ * Cyrillic unless the locale is spelled sr-Latn-RS, which is exactly
+ * the kind of environment-dependent surprise this module exists to
+ * avoid. The store is Latin script throughout.
+ */
+const MONTHS = [
+  "januar",
+  "februar",
+  "mart",
+  "april",
+  "maj",
+  "jun",
+  "jul",
+  "avgust",
+  "septembar",
+  "oktobar",
+  "novembar",
+  "decembar",
+] as const;
+
+const MONTHS_SHORT = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "maj",
+  "jun",
+  "jul",
+  "avg",
+  "sep",
+  "okt",
+  "nov",
+  "dec",
+] as const;
+
+/**
+ * Month label for the revenue chart and its table fallback.
+ * (2026, 8) → "sep 26" · short:false → "septembar 2026."
+ */
+export function formatMonthLabel(
+  year: number,
+  monthIndex: number,
+  options?: { short?: boolean },
+): string {
+  const i = ((monthIndex % 12) + 12) % 12;
+  if (options?.short === false) return `${MONTHS[i]} ${year}.`;
+  return `${MONTHS_SHORT[i]} ${String(year).slice(-2)}`;
 }
 
 /** ISO date (YYYY-MM-DD) for <time dateTime> and JSON-LD. */

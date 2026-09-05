@@ -233,9 +233,27 @@ function toListing(row: DetailRow): Listing {
 }
 
 /**
+ * Publicly visible statuses, mirroring the `listings_select_public`
+ * policy in migration 0007. A draft is never one of them.
+ *
+ * Sold stays public on purpose: a shared or indexed link must not turn
+ * into a 404 the moment the seller marks the item sold. The page shows
+ * a "Prodato" notice and drops the contact panel instead.
+ */
+const PUBLIC_STATUSES: ListingStatus[] = ["aktivan", "prodato"];
+
+/**
  * Listing by slug. Returns null both when the row is missing and when
- * RLS hides it, so an unpublished listing 404s exactly like a
+ * it is not public, so an unpublished listing 404s exactly like a
  * non-existent one — its existence is never confirmed.
+ *
+ * The status filter is deliberately redundant with RLS. CLAUDE.md
+ * requires visibility to be enforced at BOTH the database and the
+ * route, and this is the route half: without it the whole public detail
+ * page — title, price, description, seller name, phone reveal and the
+ * inquiry form — depends on one policy in one migration being right.
+ * It is also what the mock backend (which has no RLS at all) has to
+ * lean on, so `npm run dev:preview` behaves like production.
  */
 export const getListingBySlug = cache(async (slug: string): Promise<Listing | null> => {
   const supabase = createPublicClient();
@@ -243,6 +261,7 @@ export const getListingBySlug = cache(async (slug: string): Promise<Listing | nu
     .from("listings")
     .select(DETAIL_SELECT)
     .eq("slug", slug)
+    .in("status", PUBLIC_STATUSES)
     .maybeSingle();
 
   if (error || !data) return null;

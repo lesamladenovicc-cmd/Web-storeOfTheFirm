@@ -13,6 +13,7 @@ const PROTECTED = [
   "/dashboard",
   "/dashboard/oglasi",
   "/dashboard/oglasi/novi",
+  "/dashboard/prihod",
   "/dashboard/upiti",
   "/dashboard/podesavanja",
   "/dashboard/admin/korisnici",
