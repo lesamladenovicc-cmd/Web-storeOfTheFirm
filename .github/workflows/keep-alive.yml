@@ -1,0 +1,22 @@
+name: Supabase keep-alive
+
+# Supabase pauzira besplatan projekat posle 7 dana bez ijednog API zahteva.
+# Ovaj cron jednom nedeljno pošalje jedno lagano čitanje da projekat ostane
+# aktivan i kad na sajtu privremeno nema pravog saobraćaja.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # svakog ponedeljka u 06:00 UTC
+  workflow_dispatch: {} # dozvoljava i ručno pokretanje iz Actions taba
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase
+        run: |
+          curl -sf "$SUPABASE_URL/rest/v1/categories?select=id&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
