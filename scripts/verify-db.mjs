@@ -248,41 +248,20 @@ async function createFlowSection(db) {
   await asRole(db, null, null);
 }
 
-/** seed.sql is 150 lines of untested SQL; execute it for real. */
+/** seed.sql now only seeds category taxonomy — no demo listings. */
 async function seedSection(db) {
   console.log("\nseed.sql");
   await asRole(db, null, null);
-
-  // It resolves sellers by e-mail and must no-op when they are absent.
-  await allowScript(
-    db,
-    "no-ops safely when the seed accounts do not exist",
-    await readFile(path.join(ROOT, "supabase", "seed.sql"), "utf8"),
-  );
-  await expectValue(
-    db,
-    "inserted no listings on that first pass",
-    "select count(*) from public.listings where slug like 'bager-gusenicar-cat%'",
-    0,
-  );
-
-  await db.exec(`
-    insert into auth.users (id, email, raw_user_meta_data) values
-      ('55555555-5555-4555-8555-555555555555', 'admin@bgbuilding.rs',    '{}'),
-      ('66666666-6666-4666-8666-666666666666', 'prodaja@bgbuilding.rs', '{}');
-  `);
 
   const before = await db.query("select count(*)::int as n from public.listings");
 
   await allowScript(
     db,
-    "executes cleanly once the accounts exist",
+    "runs cleanly with no accounts and no listings involved",
     await readFile(path.join(ROOT, "supabase", "seed.sql"), "utf8"),
   );
-  await expectValue(db, "added 12 mock listings",
-    `select count(*)::int - ${before.rows[0].n} from public.listings`, 12);
-  await expectValue(db, "one of them is an unpublished draft",
-    "select count(*) from public.listings where slug like 'primer-nacrta%'", 1);
+  await expectValue(db, "inserts zero listings",
+    `select count(*)::int - ${before.rows[0].n} from public.listings`, 0);
   await expectValue(db, "seeded all 6 property categories",
     "select count(*) from public.categories where slug in " +
       "('stanovi','lokali','poslovni-prostor','garaze-i-parking','kuce','ostalo')", 6);
@@ -297,24 +276,17 @@ async function seedSection(db) {
     "select count(*) from public.categories where is_active and slug in " +
       "('gradjevinske-masine','poljoprivredne-masine','industrijske-masine'," +
       "'viljuskari-i-transport','alati-i-oprema','rezervni-delovi')", 0);
-  // The spec sheet, the feed and the JSON-LD all read this column.
-  await expectValue(db, "stored the property specification as jsonb",
-    "select (attributes->>'kvadratura')::numeric from public.listings " +
-      "where slug like 'dvoiposoban-stan-62m2-vracar%'", 62);
 
-  const after = await db.query("select count(*)::int as n from public.listings");
   await allowScript(
     db,
     "is idempotent — a second run is safe",
     await readFile(path.join(ROOT, "supabase", "seed.sql"), "utf8"),
   );
-  await expectValue(db, "listing count unchanged after the re-run",
-    "select count(*)::int from public.listings", after.rows[0].n);
-
-  // A null price must survive as NULL, not collapse to 0.
-  await expectValue(db, "'Po dogovoru' listing stored price as NULL",
-    "select price_eur is null from public.listings where slug like 'dvosoban-stan-54m2-vozdovac%'",
-    true);
+  await expectValue(db, "category count unchanged after the re-run",
+    "select count(*) from public.categories where slug in " +
+      "('stanovi','lokali','poslovni-prostor','garaze-i-parking','kuce','ostalo')", 6);
+  await expectValue(db, "listing count still untouched after the re-run",
+    `select count(*)::int - ${before.rows[0].n} from public.listings`, 0);
 }
 
 async function main() {

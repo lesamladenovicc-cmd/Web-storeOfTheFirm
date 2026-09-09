@@ -114,8 +114,10 @@ idempotent and safe to re-run.
 npm run seed:users     # creates admin@bgbuilding.rs + prodaja@bgbuilding.rs
 ```
 
-Then run `supabase/seed.sql` in the SQL editor. It resolves sellers by
-e-mail and no-ops cleanly if the accounts do not exist yet.
+Then run `supabase/seed.sql` in the SQL editor. It seeds the category
+taxonomy only — no demo listings, no demo inquiries. Production starts
+with an empty catalogue; real units are added through `/dashboard` once
+the company is actually operating.
 
 ### 4. Generate database types (optional but recommended)
 
