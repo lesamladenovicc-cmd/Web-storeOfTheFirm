@@ -9,11 +9,11 @@ import { getRevenueOverview } from "@/lib/data/revenue";
 import type { RevenueBucket } from "@/lib/revenue";
 import {
   countWithNoun,
-  formatCompactRsd,
+  formatCompactMoney,
   formatDate,
   formatNumber,
   formatPrice,
-  formatRsd,
+  formatMoney,
 } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
@@ -70,20 +70,20 @@ export default async function RevenuePage() {
             <div className="flex flex-col gap-6 px-6 py-8 sm:px-8 sm:py-10">
               <p className="u-eyebrow text-fg-faint">{R.totalLabel}</p>
               <p className="u-numeric text-fg text-[clamp(2.25rem,1.4rem+3.4vw,4rem)] leading-none font-semibold tracking-tight">
-                {formatRsd(revenue.total)}
+                {formatMoney(revenue.total)}
               </p>
             </div>
 
             <dl className="border-line grid grid-cols-1 border-t sm:grid-cols-3">
               <StripCell label={R.countLabel} value={formatNumber(revenue.count)} />
-              <StripCell label={R.averageLabel} value={formatRsd(revenue.average)} bordered />
-              <StripCell label={R.bestLabel} value={formatRsd(revenue.best)} bordered />
+              <StripCell label={R.averageLabel} value={formatMoney(revenue.average)} bordered />
+              <StripCell label={R.bestLabel} value={formatMoney(revenue.best)} bordered />
             </dl>
           </section>
 
           {revenue.unpriced > 0 ? (
             <p className="text-fg-muted mt-3 text-sm">
-              <span className="u-numeric text-fg">{countWithNoun(revenue.unpriced, "oglas")}</span>{" "}
+              <span className="u-numeric text-fg">{countWithNoun(revenue.unpriced, "jedinica")}</span>{" "}
               {R.unpricedNote}
             </p>
           ) : null}
@@ -168,7 +168,7 @@ export default async function RevenuePage() {
                       {sale.soldAt ? formatDate(sale.soldAt) : "—"}
                     </Td>
                     <Td className="u-numeric text-fg text-right whitespace-nowrap">
-                      {formatPrice(sale.priceRsd)}
+                      {formatPrice(sale.priceEur)}
                     </Td>
                   </tr>
                 ))}
@@ -230,7 +230,7 @@ function MonthChart({ months, currentKey }: { months: RevenueBucket[]; currentKe
                     month.total > 0 ? "text-fg-muted" : "text-transparent",
                   )}
                 >
-                  {month.total > 0 ? formatCompactRsd(month.total) : "·"}
+                  {month.total > 0 ? formatCompactMoney(month.total) : "·"}
                 </p>
 
                 <div className="flex h-40 items-end" aria-hidden="true">
@@ -250,7 +250,7 @@ function MonthChart({ months, currentKey }: { months: RevenueBucket[]; currentKe
                   )}
                 >
                   <span className="sr-only">
-                    {month.label} — {formatRsd(month.total)}, {countWithNoun(month.count, "oglas")}
+                    {month.label} — {formatMoney(month.total)}, {countWithNoun(month.count, "jedinica")}
                     .{" "}
                   </span>
                   <span aria-hidden="true">{month.label}</span>
@@ -270,13 +270,13 @@ function MonthChart({ months, currentKey }: { months: RevenueBucket[]; currentKe
 
 /**
  * A slice that holds sales but no recorded amount — every one of them
- * went out "Po dogovoru". "0 din" would read as "sold for nothing";
+ * went out "Po dogovoru". "0 €" would read as "sold for nothing";
  * an em dash reads as "amount not stated", which is what happened.
- * A genuinely empty slice still shows 0 din.
+ * A genuinely empty slice still shows 0 €.
  */
 function amountLabel(total: number, count: number): string {
   if (total === 0 && count > 0) return "—";
-  return formatRsd(total);
+  return formatMoney(total);
 }
 
 function StripCell({
@@ -324,7 +324,7 @@ function PeriodCard({
       >
         {amountLabel(bucket.total, bucket.count)}
       </p>
-      <p className="text-fg-muted mt-1 text-xs">{countWithNoun(bucket.count, "oglas")}</p>
+      <p className="text-fg-muted mt-1 text-xs">{countWithNoun(bucket.count, "jedinica")}</p>
     </li>
   );
 }

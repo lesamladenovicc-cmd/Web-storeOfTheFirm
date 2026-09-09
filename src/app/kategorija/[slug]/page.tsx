@@ -14,10 +14,10 @@ import { getActiveCategories, getCategoryBySlug } from "@/lib/data/categories";
 import { searchListings } from "@/lib/data/listings";
 import { countWithNoun } from "@/lib/format";
 import { hasActiveFilters, parseFilters, type RawSearchParams } from "@/lib/filters";
-import { breadcrumbJsonLd, buildMetadata } from "@/lib/seo";
+import { breadcrumbJsonLd, buildMetadata, itemListJsonLd } from "@/lib/seo";
 
 /**
- * The money keyword pages ("polovne građevinske mašine"): indexable and
+ * The money keyword pages ("stanovi u novogradnji Vračar"): indexable and
  * canonical to themselves, unlike the equivalent /oglasi?kategorija=…
  * URL, which is noindex.
  *
@@ -93,7 +93,7 @@ export default async function CategoryPage({
           crumbs={crumbs}
           meta={
             <p className="u-eyebrow text-fg-muted">
-              {COPY.listings.resultsPrefix} {countWithNoun(result.total, "oglas")}
+              {COPY.listings.resultsPrefix} {countWithNoun(result.total, "nekretnina")}
             </p>
           }
         />
@@ -124,7 +124,25 @@ export default async function CategoryPage({
       </main>
 
       <SiteFooter />
-      <JsonLd data={breadcrumbJsonLd(crumbs)} />
+      {/* The category pages are the money keywords, so the catalogue
+          listing matters most here. Suppressed once the visitor has
+          narrowed or paged, exactly as on /oglasi. */}
+      <JsonLd
+        data={[
+          ...(!filtered && result.page === 1
+            ? [
+                itemListJsonLd({
+                  listings: result.items,
+                  path: basePath,
+                  name: category.name,
+                  description: category.description || undefined,
+                  total: result.total,
+                }),
+              ]
+            : []),
+          breadcrumbJsonLd(crumbs),
+        ]}
+      />
     </>
   );
 }

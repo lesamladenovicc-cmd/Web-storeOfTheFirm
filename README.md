@@ -1,13 +1,24 @@
-# Jadranko — interna prodavnica oglasa
+# BG Building — ponuda nekretnina
 
-Internal listings web store. Approved staff post products; the public
-browses and contacts the seller directly. **Listing-only: no cart, no
-checkout, no on-site payment.** Language Serbian (sr-RS, Latin script),
-currency RSD.
+Property catalogue for BG Building, a Belgrade developer and general
+contractor that sells units in the buildings it puts up itself.
+Approved staff publish units; the public browses and contacts sales
+directly. **Listing-only: no cart, no checkout, no on-site payment.**
+Language Serbian (sr-RS, Latin script), prices in EUR — the currency Serbian property is actually quoted in.
 
-The niche is not final. Copy, taxonomy and brand live in `src/config/`
-and the category list lives in the database, so re-niching the store is
-a config edit plus a few rows — not a rewrite.
+Copy, taxonomy and brand live in `src/config/` and the category list
+lives in the database, so re-niching the store is a config edit plus a
+few rows — not a rewrite. It has been done once already: the store was
+built for second-hand machines, and `supabase/migrations/0011` renamed
+the four `listing_condition` values from wear (`novo` … `neispravno`) to
+build phase (`u_pripremi` … `useljivo`) in place.
+
+**Still to supply.** `SITE.contact` and `SITE.registration` in
+`src/config/site.ts` are `null`, not placeholders, and every consumer —
+the footer, `/kontakt`, the Organization JSON-LD — omits the row rather
+than printing a made-up phone number or PIB. Fill them in and they
+appear everywhere at once. `NEXT_PUBLIC_SITE_URL` must also point at the
+real domain before launch; canonicals and the sitemap are built from it.
 
 **Logo.** The BG Building emblem is supplied as a JPEG in `Slike/`.
 `npm run brand:logo` cuts it to a transparent circle and writes every
@@ -100,7 +111,7 @@ idempotent and safe to re-run.
 ### 3. Seed
 
 ```bash
-npm run seed:users     # creates admin@jadranko.rs + prodavac@jadranko.rs
+npm run seed:users     # creates admin@bgbuilding.rs + prodaja@bgbuilding.rs
 ```
 
 Then run `supabase/seed.sql` in the SQL editor. It resolves sellers by
@@ -142,7 +153,7 @@ npm run build        # production build (needs a reachable Supabase)
 npm run typecheck    # tsc --noEmit
 npm run lint         # eslint
 npm run test         # vitest — formatting, plurals, transliteration
-npm run verify:db    # migrations + 105 RLS assertions in PGlite (no Docker)
+npm run verify:db    # migrations + 114 RLS assertions in PGlite (no Docker)
 npm run test:e2e     # playwright
 npm run seed:users   # create the seed staff accounts
 ```
@@ -182,6 +193,37 @@ the page. Plurals use the real three-form Slavic rule.
 
 ---
 
+## SEO and AI search
+
+Search-engine surface, all generated — nothing here is a static file to
+keep in sync by hand:
+
+| URL | What it is |
+|---|---|
+| `/sitemap.xml` | Indexable URLs only. Drafts, sold units, `/prijava` and `/dashboard/**` are excluded. Revalidated on publish. |
+| `/robots.txt` | Faceted `/oglasi?…` URLs are crawl-**allowed** and meta-noindex — a blocked URL never gets its `noindex` read. AI agents are named explicitly. |
+| `/opengraph-image` | Fallback social card. ASCII-only: `next/og` has no glyphs for `č ć š ž đ`. |
+| `/llms.txt` | The company, the categories, the build phases and the FAQ as one plain-text document for answer engines. |
+| `/ponuda.json` | Every active unit with price, area, rooms, floor and phase — the whole catalogue in one fetch. |
+
+Structured data is a linked graph, not a pile of independent blocks.
+`GeneralContractor` and `WebSite` carry stable `@id`s emitted once from
+the root layout; a listing's `Product`, its `Offer.seller` and its
+`Accommodation` all point back at the same organization node. Category
+and index pages emit `CollectionPage` + `ItemList` so a crawler can
+enumerate the catalogue without scraping cards, and `/o-nama` emits
+`FAQPage` from the same `COPY` entries the page renders — marking up
+text a visitor cannot see is a violation, so the two cannot drift.
+
+Build phase is **not** forced into `itemCondition`. Every new-build unit
+is `NewCondition`; the phase rides along as a `PropertyValue` in
+`additionalProperty`, which is honest and still machine-readable.
+
+Before launch: set `NEXT_PUBLIC_SITE_URL`, fill in `SITE.contact` and
+`SITE.registration`, then verify a listing URL in the Rich Results Test.
+
+---
+
 ## Deploying to Vercel
 
 1. Push to GitHub, import the repo in Vercel.
@@ -199,8 +241,8 @@ preview writes hit live data. Create a second project if that matters.
 - **Supabase free tier pauses a project after 7 days idle.** Upgrade
   before real traffic, or the site goes down.
 - **Search has no stemming.** Postgres ships no Serbian dictionary;
-  `simple` + `unaccent` handles diacritic-free queries ("masina" finds
-  "mašina") but not morphology ("mašinama").
+  `simple` + `unaccent` handles diacritic-free queries ("Vracar" finds
+  "Vračar") but not morphology ("Vračaru").
 - **Abandoned draft images are not reaped.** Deleting a listing cleans
   up its objects; abandoning a draft leaves them. A `pg_cron` sweep is
   the fix when it matters.

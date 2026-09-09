@@ -24,14 +24,16 @@ export default function GlobalError({
   return (
     <main className="grid min-h-dvh place-items-center">
       <Container className="text-center">
-        <Eyebrow className="justify-center">Greška</Eyebrow>
+        <Eyebrow className="justify-center">{COPY.states.errorEyebrow}</Eyebrow>
         <h1 className="text-h1 text-fg mt-4">{COPY.states.errorTitle}</h1>
         <p className="text-fg-muted mx-auto mt-3 max-w-md">{COPY.states.errorBody}</p>
         <Button onClick={reset} size="lg" className="mt-8">
           {COPY.states.errorRetry}
         </Button>
         {error.digest ? (
-          <p className="u-numeric text-fg-faint mt-6 text-xs">Ref: {error.digest}</p>
+          <p className="u-numeric text-fg-faint mt-6 text-xs">
+            {COPY.states.errorRef} {error.digest}
+          </p>
         ) : null}
       </Container>
     </main>

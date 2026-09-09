@@ -1,5 +1,5 @@
 -- =====================================================================
--- seed.sql — categories and Serbian mock listings
+-- seed.sql — categories and Serbian mock listings (BG Building)
 -- =====================================================================
 -- Run AFTER the migrations, and AFTER creating the staff accounts.
 --
@@ -11,6 +11,10 @@
 -- re-run and will simply skip if the accounts are missing.
 --
 -- Idempotent: every insert is guarded by ON CONFLICT.
+--
+-- The addresses and buildings below are INVENTED demo data. They are
+-- plausible Belgrade streets so the layout can be judged with realistic
+-- text lengths, but no unit here is a real BG Building property.
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
@@ -18,24 +22,32 @@
 -- ---------------------------------------------------------------------
 
 insert into public.categories (slug, name, description, sort_order) values
-  ('gradjevinske-masine',   'Građevinske mašine',
-   'Bageri, utovarivači, valjci, mešalice i prateća oprema.', 10),
-  ('poljoprivredne-masine', 'Poljoprivredne mašine',
-   'Traktori, priključne mašine, kombajni i oprema za ratarstvo.', 20),
-  ('industrijske-masine',   'Industrijske mašine',
-   'Mašine za proizvodnju, obradu metala i drveta.', 30),
-  ('viljuskari-i-transport','Viljuškari i transport',
-   'Viljuškari, paletari, dizalice i transportna sredstva.', 40),
-  ('alati-i-oprema',        'Alati i oprema',
-   'Ručni i električni alati, kompresori, agregati.', 50),
-  ('rezervni-delovi',       'Rezervni delovi',
-   'Delovi, potrošni materijal i dodatna oprema.', 60),
-  ('ostalo',                'Ostalo',
-   'Sve što ne spada u prethodne kategorije.', 99)
+  ('stanovi',          'Stanovi',
+   'Garsonjere, jednosobni i višesobni stanovi u zgradama koje BG Building gradi u Beogradu.', 10),
+  ('lokali',           'Lokali',
+   'Ulični lokali u prizemlju novogradnje, sa izlogom i sopstvenim ulazom.', 20),
+  ('poslovni-prostor', 'Poslovni prostor',
+   'Kancelarije i poslovne jedinice na višim etažama naših objekata.', 30),
+  ('garaze-i-parking', 'Garaže i parking',
+   'Garažna i parking mesta u podzemnim etažama, uz stanove ili zasebno.', 40),
+  ('kuce',             'Kuće',
+   'Samostojeći objekti i kuće u nizu iz naše gradnje.', 50),
+  ('ostalo',           'Ostalo',
+   'Ostave, magacinski prostor i ostale jedinice u objektima.', 99)
 on conflict (slug) do update set
   name        = excluded.name,
   description = excluded.description,
   sort_order  = excluded.sort_order;
+
+-- Retire the machine-era categories. Deactivated rather than deleted:
+-- listings_category_id_fkey is ON DELETE RESTRICT, and a hard delete
+-- would fail on any database that still holds old rows.
+update public.categories
+   set is_active = false
+ where slug in (
+   'gradjevinske-masine', 'poljoprivredne-masine', 'industrijske-masine',
+   'viljuskari-i-transport', 'alati-i-oprema', 'rezervni-delovi'
+ );
 
 -- ---------------------------------------------------------------------
 -- Mock listings
@@ -48,120 +60,162 @@ declare
   v_admin  uuid;
   v_seller uuid;
 begin
-  select id into v_admin  from public.profiles where email = 'admin@jadranko.rs';
-  select id into v_seller from public.profiles where email = 'prodavac@jadranko.rs';
+  select id into v_admin  from public.profiles where email = 'admin@bgbuilding.rs';
+  select id into v_seller from public.profiles where email = 'prodaja@bgbuilding.rs';
 
   if v_admin is null or v_seller is null then
     raise notice
-      'Seed accounts not found — skipping listings. Create admin@jadranko.rs and prodavac@jadranko.rs first (npm run seed:users).';
+      'Seed accounts not found — skipping listings. Create admin@bgbuilding.rs and prodaja@bgbuilding.rs first (npm run seed:users).';
     return;
   end if;
 
   -- Give the seed profiles sensible defaults for contact prefill.
   update public.profiles
      set full_name = 'Administrator', phone = '+381641110001',
-         location = 'Novi Sad', role = 'admin', must_change_password = false
+         location = 'Beograd', role = 'admin', must_change_password = false
    where id = v_admin;
 
   update public.profiles
      set full_name = 'Marko Petrović', phone = '+381641110002',
-         location = 'Novi Sad', role = 'seller', must_change_password = false
+         location = 'Beograd', role = 'seller', must_change_password = false
    where id = v_seller;
 
   insert into public.listings (
-    slug, title, description, condition, price_rsd, is_negotiable,
+    slug, title, description, condition, price_eur, is_negotiable,
     status, location, category_id, seller_id,
-    contact_name, contact_phone, contact_email, published_at
+    contact_name, contact_phone, contact_email, attributes, published_at
   )
   values
   (
-    'bager-gusenicar-cat-320d-2018-a1b2c3',
-    'Bager guseničar CAT 320D, 2018. god, 4.200 radnih sati',
-    E'Bager guseničar Caterpillar 320D, godište 2018, 4.200 radnih sati.\n\nRedovno servisiran u ovlašćenom servisu, kompletna servisna dokumentacija dostupna na uvid. Gusenice na oko 70%, hidraulika bez curenja, klima ispravna.\n\nMašina je u svakodnevnoj upotrebi i može se pogledati i isprobati uz prethodni dogovor. Moguć dogovor oko cene za ozbiljne kupce.',
-    'korisceno', 8450000, true,
-    'aktivan', 'Novi Sad',
-    (select id from public.categories where slug = 'gradjevinske-masine'),
-    v_seller, 'Marko Petrović', '+381641110002', 'prodavac@jadranko.rs',
+    'dvoiposoban-stan-62m2-vracar-a1b2c3',
+    'Dvoiposoban stan 62 m², Vračar — Njegoševa',
+    E'Dvoiposoban stan na četvrtom spratu novog objekta u Njegoševoj, sa liftom i podzemnom garažom.\n\nRaspored: dnevni boravak sa trpezarijom i izlazom na terasu, odvojena kuhinja, dve spavaće sobe i kupatilo sa prozorom. Orijentacija jugoistok, stan je svetao tokom celog dana.\n\nObjekat je završen i tehnički primljen, uknjižba je u toku. Useljenje odmah po overi ugovora. Garažno mesto se kupuje odvojeno.',
+    'useljivo', 242000, true,
+    'aktivan', 'Vračar, Beograd',
+    (select id from public.categories where slug = 'stanovi'),
+    v_seller, 'Marko Petrović', '+381641110002', 'prodaja@bgbuilding.rs',
+    '{"kvadratura": 62, "brojSoba": 2.5, "sprat": "4/6", "brojKupatila": 1, "grejanje": "etažno gasno", "orijentacija": "jugoistok", "terasaM2": 6, "lift": true, "garaznoMesto": false, "uknjizen": true, "rokUseljenja": "odmah", "energetskiRazred": "B"}'::jsonb,
     now() - interval '1 day'
   ),
   (
-    'traktor-imt-539-servisiran-d4e5f6',
-    'Traktor IMT 539, kompletno servisiran',
-    E'IMT 539, kompletno servisiran prošle sezone. Zamenjena kvačila, novi akumulator, nove gume napred.\n\nMotor bez dima, ne troši ulje. Hidraulika ispravna. Registrovan do kraja godine.\n\nTraktor je čuvan pod nadstrešnicom. Vlasnik od 2011. godine.',
-    'korisceno', 1950000, false,
-    'aktivan', 'Kragujevac',
-    (select id from public.categories where slug = 'poljoprivredne-masine'),
-    v_seller, 'Marko Petrović', '+381641110002', null,
+    'trosoban-stan-78m2-vozdovac-d4e5f6',
+    'Trosoban stan 78 m², Voždovac — Vojvode Stepe',
+    E'Trosoban stan na šestom spratu, u objektu koji je u završnoj fazi radova.\n\nDnevni boravak sa kuhinjom u otvorenom planu, tri spavaće sobe, dva kupatila i prostrana terasa od 9 m². Pogled na Banjicu, orijentacija jugozapad.\n\nRadovi su u završnoj fazi — postavljaju se podovi i sanitarija. Useljenje se očekuje u trećem kvartalu 2026. Plaćanje u ratama koje prate dinamiku radova.',
+    'pred_useljenje', 210000, false,
+    'aktivan', 'Voždovac, Beograd',
+    (select id from public.categories where slug = 'stanovi'),
+    v_seller, 'Marko Petrović', '+381641110002', 'prodaja@bgbuilding.rs',
+    '{"kvadratura": 78, "brojSoba": 3, "sprat": "6/8", "brojKupatila": 2, "grejanje": "toplotna pumpa", "orijentacija": "jugozapad", "terasaM2": 9, "lift": true, "garaznoMesto": true, "uknjizen": false, "rokUseljenja": "Q3 2026", "energetskiRazred": "A"}'::jsonb,
     now() - interval '2 days'
   ),
   (
-    'viljuskar-linde-h25-dizel-g7h8i9',
-    'Viljuškar Linde H25, dizel, nosivost 2,5 t',
-    E'Linde H25, dizel, nosivost 2.500 kg, visina dizanja 3,3 m.\n\nSati rada oko 6.800. Motor i hidraulika ispravni, bez curenja. Gume zadovoljavajuće, prednje nedavno menjane.\n\nMašina radi u zatvorenom magacinu, uredno održavana.',
-    'kao_novo', 3200000, false,
-    'aktivan', 'Beograd',
-    (select id from public.categories where slug = 'viljuskari-i-transport'),
-    v_admin, 'Administrator', '+381641110001', 'admin@jadranko.rs',
-    now() - interval '3 days'
-  ),
-  (
-    'kompresor-atlas-copco-ga11-j1k2l3',
-    'Vijčani kompresor Atlas Copco GA11',
-    E'Vijčani kompresor Atlas Copco GA11, 11 kW, radni pritisak 8 bara.\n\nSa ugrađenim rezervoarom i sušačem vazduha. Sati rada oko 12.000. Redovno menjano ulje i filteri.\n\nDemontiran iz pogona zbog prelaska na veći kapacitet. Može se videti u radu.',
-    'korisceno', 480000, true,
-    'aktivan', 'Niš',
-    (select id from public.categories where slug = 'alati-i-oprema'),
-    v_seller, 'Marko Petrović', '+381641110002', 'prodavac@jadranko.rs',
-    now() - interval '5 days'
-  ),
-  (
-    'cirkular-za-drvo-industrijski-m4n5o6',
-    'Industrijski cirkular za drvo sa pomičnim stolom',
-    E'Industrijski cirkular sa pomičnim stolom, dužina reza 3.200 mm.\n\nTrofazni motor 5,5 kW, list 400 mm. Sto klizi bez zazora, vođice ispravne.\n\nCena po dogovoru — zavisi od načina preuzimanja i eventualnog transporta. Utovar obezbeđen.',
-    'korisceno', null, true,
-    'aktivan', 'Subotica',
-    (select id from public.categories where slug = 'industrijske-masine'),
+    'jednosoban-stan-38m2-zvezdara-g7h8i9',
+    'Jednosoban stan 38 m², Zvezdara — Bulevar kralja Aleksandra',
+    E'Jednosoban stan na drugom spratu, idealan za izdavanje ili prvu nekretninu.\n\nDnevni boravak sa kuhinjskim delom, spavaća soba, kupatilo i francuski balkon. Orijentacija istok, mirno dvorišno krilo bez buke sa bulevara.\n\nObjekat je u izgradnji, grubi radovi su završeni. Kupovina u ovoj fazi je po najpovoljnijoj ceni kvadrata u objektu.',
+    'u_izgradnji', 95000, true,
+    'aktivan', 'Zvezdara, Beograd',
+    (select id from public.categories where slug = 'stanovi'),
     v_seller, 'Marko Petrović', '+381641110002', null,
+    '{"kvadratura": 38, "brojSoba": 1, "sprat": "2/7", "brojKupatila": 1, "grejanje": "centralno", "orijentacija": "istok", "lift": true, "garaznoMesto": false, "uknjizen": false, "rokUseljenja": "Q2 2027", "energetskiRazred": "B"}'::jsonb,
+    now() - interval '4 days'
+  ),
+  (
+    'cetvorosoban-stan-104m2-novi-beograd-j1k2l3',
+    'Četvorosoban stan 104 m², Novi Beograd — Blok 63',
+    E'Četvorosoban stan na osmom spratu, sa pogledom na Ušće i dve terase.\n\nVeliki dnevni boravak sa trpezarijom, odvojena kuhinja sa ostavom, tri spavaće sobe, dva kupatila i toalet. Dupla orijentacija, istok i zapad.\n\nStan se predaje u standardu opisanom u specifikaciji radova: obrađeni zidovi, parket u sobama, keramika u kupatilima, ALU stolarija sa troslojnim staklom.',
+    'useljivo', 333000, false,
+    'aktivan', 'Novi Beograd, Beograd',
+    (select id from public.categories where slug = 'stanovi'),
+    v_seller, 'Marko Petrović', '+381641110002', 'prodaja@bgbuilding.rs',
+    '{"kvadratura": 104, "brojSoba": 4, "sprat": "8/12", "brojKupatila": 2, "grejanje": "daljinsko", "orijentacija": "istok-zapad", "terasaM2": 14, "lift": true, "garaznoMesto": true, "uknjizen": true, "rokUseljenja": "odmah", "energetskiRazred": "A"}'::jsonb,
+    now() - interval '6 days'
+  ),
+  (
+    'garsonjera-27m2-zemun-m4n5o6',
+    'Garsonjera 27 m², Zemun — Gornji grad',
+    E'Garsonjera na trećem spratu manjeg objekta sa osam stanova.\n\nJedinstven prostor sa kuhinjskim delom, kupatilo i francuski balkon. Kompaktan raspored bez izgubljenih kvadrata.\n\nProjekat je u pripremi, ugovaranje ide po sistemu rezervacije. Cena važi za kupce koji rezervišu pre početka radova.',
+    'u_pripremi', 65000, true,
+    'aktivan', 'Zemun, Beograd',
+    (select id from public.categories where slug = 'stanovi'),
+    v_seller, 'Marko Petrović', '+381641110002', null,
+    '{"kvadratura": 27, "brojSoba": 1, "sprat": "3/4", "brojKupatila": 1, "grejanje": "etažno gasno", "orijentacija": "jug", "lift": false, "garaznoMesto": false, "uknjizen": false, "rokUseljenja": "Q4 2027"}'::jsonb,
     now() - interval '8 days'
   ),
   (
-    'mini-bager-kubota-u17-nov-p7q8r9',
-    'Mini bager Kubota U17-3, nov, nekorišćen',
-    E'Kubota U17-3, potpuno nov, nekorišćen. Isporučen prošlog meseca, nije uvođen u rad.\n\nRadna masa 1.720 kg, dubina kopanja 2,3 m. Garancija proizvođača prenosiva na kupca.\n\nProdaje se zbog promene plana nabavke. Račun i garantni list uredni.',
-    'novo', 4990000, false,
-    'aktivan', 'Beograd',
-    (select id from public.categories where slug = 'gradjevinske-masine'),
-    v_admin, 'Administrator', '+381641110001', 'admin@jadranko.rs',
+    'lokal-45m2-vracar-njegoseva-p7q8r9',
+    'Lokal 45 m², Vračar — ulični, sa izlogom',
+    E'Ulični lokal u prizemlju stambenog objekta, sa velikim izlogom prema Njegoševoj i sopstvenim ulazom.\n\nJedinstven prostor sa mokrim čvorom i ostavom. Struja, voda i kanalizacija su izvedeni do priključaka. Prostor je pogodan za uslužnu delatnost, kancelariju ili manji ugostiteljski objekat.\n\nObjekat je završen i tehnički primljen.',
+    'useljivo', 180000, true,
+    'aktivan', 'Vračar, Beograd',
+    (select id from public.categories where slug = 'lokali'),
+    v_admin, 'Administrator', '+381641110001', 'prodaja@bgbuilding.rs',
+    '{"kvadratura": 45, "sprat": "PR", "brojKupatila": 1, "grejanje": "etažno gasno", "orijentacija": "sever", "lift": false, "uknjizen": true, "rokUseljenja": "odmah", "energetskiRazred": "B"}'::jsonb,
     now() - interval '10 days'
   ),
   (
-    'prikolica-kiper-jednoosovinska-s1t2u3',
-    'Kiper prikolica jednoosovinska, 3,5 t',
-    E'Jednoosovinska kiper prikolica nosivosti 3,5 t. Hidraulično kipovanje na tri strane.\n\nSanduk u dobrom stanju, bez propadanja. Gume dobre. Registrovana.\n\nProdato — oglas ostaje radi evidencije.',
-    'korisceno', 320000, false,
-    'prodato', 'Novi Sad',
-    (select id from public.categories where slug = 'poljoprivredne-masine'),
+    'poslovni-prostor-88m2-novi-beograd-s1t2u3',
+    'Poslovni prostor 88 m², Novi Beograd — Blok 63',
+    E'Kancelarijski prostor na drugom spratu poslovno-stambenog objekta, sa zasebnim ulazom iz zajedničkog hola.\n\nOtvoreni plan sa mogućnošću pregrađivanja, čajna kuhinja i dva toaleta. Instalacije za klimatizaciju i strukturno kabliranje su izvedene.\n\nUz prostor se mogu kupiti do tri parking mesta u podzemnoj garaži.',
+    'pred_useljenje', 255000, false,
+    'aktivan', 'Novi Beograd, Beograd',
+    (select id from public.categories where slug = 'poslovni-prostor'),
+    v_admin, 'Administrator', '+381641110001', 'prodaja@bgbuilding.rs',
+    '{"kvadratura": 88, "sprat": "2/12", "brojKupatila": 2, "grejanje": "toplotna pumpa", "lift": true, "garaznoMesto": true, "uknjizen": false, "rokUseljenja": "Q3 2026", "energetskiRazred": "A"}'::jsonb,
+    now() - interval '12 days'
+  ),
+  (
+    'garazno-mesto-vracar-v4w5x6',
+    'Garažno mesto, Vračar — podzemna garaža',
+    E'Garažno mesto u podzemnoj etaži objekta u Njegoševoj, dimenzija 2,5 × 5,0 m.\n\nPristup preko automatske rampe sa daljinskim upravljačem. Garaža je pod video nadzorom i ima protivpožarnu instalaciju.\n\nProdaje se zasebno, ne mora uz stan.',
+    'useljivo', 22000, false,
+    'aktivan', 'Vračar, Beograd',
+    (select id from public.categories where slug = 'garaze-i-parking'),
     v_seller, 'Marko Petrović', '+381641110002', null,
+    '{"kvadratura": 12.5, "sprat": "-1", "uknjizen": true, "rokUseljenja": "odmah"}'::jsonb,
+    now() - interval '14 days'
+  ),
+  (
+    'dvosoban-stan-54m2-vozdovac-y7z8a9',
+    'Dvosoban stan 54 m², Voždovac — Vojvode Stepe',
+    E'Dvosoban stan na trećem spratu, sa terasom orijentisanom ka mirnoj strani.\n\nDnevni boravak sa kuhinjskim delom, dve spavaće sobe i kupatilo. Praktičan raspored bez hodnika koji troše kvadraturu.\n\nCena po dogovoru — u zavisnosti od dinamike plaćanja i eventualnih izmena u standardu opreme.',
+    'pred_useljenje', null, true,
+    'aktivan', 'Voždovac, Beograd',
+    (select id from public.categories where slug = 'stanovi'),
+    v_seller, 'Marko Petrović', '+381641110002', 'prodaja@bgbuilding.rs',
+    '{"kvadratura": 54, "brojSoba": 2, "sprat": "3/8", "brojKupatila": 1, "grejanje": "toplotna pumpa", "orijentacija": "zapad", "terasaM2": 5, "lift": true, "garaznoMesto": true, "uknjizen": false, "rokUseljenja": "Q3 2026"}'::jsonb,
     now() - interval '16 days'
   ),
   (
-    'agregat-honda-ex7-za-delove-v4w5x6',
-    'Agregat Honda EX7 — ne pali, za delove',
-    E'Honda EX7, ne pali. Verovatno problem sa paljenjem ili karburatorom, nije detaljno dijagnostikovano.\n\nKućište i alternator izgledaju ispravno. Prodaje se isključivo za delove ili popravku, bez garancije na ispravnost.\n\nCena je simbolična i podložna dogovoru.',
-    'neispravno', 18500, true,
-    'aktivan', 'Čačak',
-    (select id from public.categories where slug = 'alati-i-oprema'),
-    v_seller, 'Marko Petrović', '+381641110002', null,
-    now() - interval '22 days'
+    'trosoban-stan-81m2-zvezdara-prodato-b1c2d3',
+    'Trosoban stan 81 m², Zvezdara — Mali Mokri Lug',
+    E'Trosoban stan na petom spratu, sa dve terase i pogledom na park.\n\nProdato. Oglas je zadržan kao referenca o ostvarenim cenama u objektu.',
+    'useljivo', 205000, false,
+    'prodato', 'Zvezdara, Beograd',
+    (select id from public.categories where slug = 'stanovi'),
+    v_seller, 'Marko Petrović', '+381641110002', 'prodaja@bgbuilding.rs',
+    '{"kvadratura": 81, "brojSoba": 3, "sprat": "5/7", "brojKupatila": 2, "grejanje": "centralno", "orijentacija": "jug", "terasaM2": 11, "lift": true, "garaznoMesto": true, "uknjizen": true, "rokUseljenja": "odmah", "energetskiRazred": "B"}'::jsonb,
+    now() - interval '40 days'
   ),
   (
-    'nacrt-primer-neobjavljenog-oglasa-y7z8a9',
-    'Primer nacrta — nije javno vidljiv',
-    E'Ovo je primer oglasa u statusu „nacrt”. Vidljiv je samo vlasniku oglasa i administratoru, i ne pojavljuje se u javnoj pretrazi ni u sitemap fajlu.',
-    'korisceno', 125000, false,
-    'nacrt', 'Novi Sad',
-    (select id from public.categories where slug = 'rezervni-delovi'),
+    'lokal-62m2-zemun-prodato-e4f5g6',
+    'Lokal 62 m², Zemun — Glavna ulica',
+    E'Ulični lokal sa dvostrukim izlogom u pešačkoj zoni.\n\nProdato.',
+    'useljivo', 235000, false,
+    'prodato', 'Zemun, Beograd',
+    (select id from public.categories where slug = 'lokali'),
+    v_admin, 'Administrator', '+381641110001', null,
+    '{"kvadratura": 62, "sprat": "PR", "brojKupatila": 1, "uknjizen": true, "rokUseljenja": "odmah"}'::jsonb,
+    now() - interval '75 days'
+  ),
+  (
+    'primer-nacrta-h7i8j9',
+    'Primer nacrta — jedinica u pripremi',
+    E'Ovo je primer jedinice u statusu „nacrt”. Vidljiva je samo vlasniku i administratoru, i ne pojavljuje se u javnoj pretrazi ni u sitemap fajlu.',
+    'u_pripremi', 88000, false,
+    'nacrt', 'Beograd',
+    (select id from public.categories where slug = 'stanovi'),
     v_seller, 'Marko Petrović', '+381641110002', null,
+    '{}'::jsonb,
     null
   )
   on conflict (slug) do nothing;

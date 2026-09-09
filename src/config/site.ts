@@ -17,54 +17,102 @@ export const SITE_URL: string = (() => {
   return "http://localhost:3000";
 })();
 
+/**
+ * UNKNOWN DETAILS ARE `null`, NEVER A PLACEHOLDER STRING.
+ *
+ * The previous build shipped a fabricated address, phone and PIB, and
+ * those flowed straight into the footer and the Organization JSON-LD —
+ * i.e. we were publishing a false registered identity to search engines.
+ * Every consumer must therefore treat `null` as "omit this row / omit
+ * this JSON-LD key", never as an empty string.
+ *
+ * `city` and `country` are NOT null: BG Building demonstrably builds in
+ * Belgrade, so that much is a fact and it is what `areaServed` needs.
+ */
+type SiteContact = {
+  email: string | null;
+  phone: string | null;
+  /** Pre-built `tel:` href — null whenever `phone` is null. */
+  phoneHref: string | null;
+  address: string | null;
+  city: string;
+  postalCode: string | null;
+  country: string;
+};
+
+/** TODO(BG Building): fill in once the client supplies the details. */
+const CONTACT: SiteContact = {
+  email: null,
+  phone: null,
+  phoneHref: null,
+  address: null,
+  city: "Beograd",
+  postalCode: null,
+  country: "Srbija",
+};
+
+type SiteRegistration = {
+  pib: string | null;
+  maticniBroj: string | null;
+};
+
+/** TODO(BG Building): fill in from the APR extract. */
+const REGISTRATION: SiteRegistration = {
+  pib: null,
+  maticniBroj: null,
+};
+
 export const SITE = {
-  /** Placeholder brand — swap here when the real name is decided. */
-  name: "Jadranko",
+  name: "BG Building",
   /** Used in <title> templates and JSON-LD Organization. */
-  legalName: "Jadranko d.o.o.",
+  legalName: "BG Building d.o.o. Beograd",
   /** One-line positioning, shown in the hero and meta description. */
-  tagline: "Polovne i nove mašine iz proverenih ruku",
+  tagline: "Stanovi u novogradnji, direktno od investitora",
   description:
-    "Oglasi za polovne i nove mašine, alate i opremu. Proverena ponuda, direktan kontakt sa prodavcem, bez posrednika.",
+    "BG Building gradi i prodaje stanove, lokale i poslovni prostor u novogradnji u Beogradu. Kupovina direktno od investitora — bez agencijske provizije, uz uvid u projekat i dinamiku radova.",
   url: SITE_URL,
   locale: "sr-RS",
   /** OpenGraph locale uses an underscore, not a hyphen. */
   ogLocale: "sr_RS",
-  currency: "RSD",
-  currencySuffix: "din",
+  /**
+   * Property in Serbia is priced in euros — every portal, every bank
+   * loan, every notary contract. A dinar figure on a listing would have
+   * to be converted in the buyer's head.
+   *
+   * `currency` is the ISO code and goes into JSON-LD `priceCurrency`;
+   * `currencySuffix` is what the page shows. Serbian convention puts the
+   * symbol after the amount: "242.000 €".
+   */
+  currency: "EUR",
+  currencySuffix: "€",
 
-  /** Company contact — placeholder until real details are supplied. */
-  contact: {
-    email: "kontakt@jadranko.rs",
-    phone: "+381 11 000 0000",
-    phoneHref: "tel:+381110000000",
-    address: "Bulevar oslobođenja 1",
-    city: "Novi Sad",
-    postalCode: "21000",
-    country: "Srbija",
-  },
-
-  /** Registration identifiers — placeholder, shown in the footer. */
-  registration: {
-    pib: "000000000",
-    maticniBroj: "00000000",
-  },
+  contact: CONTACT,
+  registration: REGISTRATION,
 } as const;
 
 /** Primary navigation, rendered by SiteHeader and MobileNav. */
 export const MAIN_NAV = [
-  { href: "/oglasi", label: "Svi oglasi" },
+  { href: "/oglasi", label: "Ponuda" },
   { href: "/o-nama", label: "O nama" },
   { href: "/kontakt", label: "Kontakt" },
 ] as const;
 
-/** Footer link groups. */
+/**
+ * Footer link groups.
+ *
+ * The category links are hardcoded to the seeded slugs rather than read
+ * from the database: the footer renders on every route, including the
+ * fully static legal pages, and a query here would opt them all out of
+ * static generation for three links that never change.
+ */
 export const FOOTER_NAV = [
   {
     title: "Ponuda",
     links: [
-      { href: "/oglasi", label: "Svi oglasi" },
-      { href: "/oglasi?sort=najnovije", label: "Najnoviji oglasi" },
+      { href: "/kategorija/stanovi", label: "Stanovi" },
+      { href: "/kategorija/lokali", label: "Lokali" },
+      { href: "/kategorija/garaze-i-parking", label: "Garaže i parking" },
+      { href: "/oglasi", label: "Cela ponuda" },
     ],
   },
   {
@@ -72,6 +120,7 @@ export const FOOTER_NAV = [
     links: [
       { href: "/o-nama", label: "O nama" },
       { href: "/kontakt", label: "Kontakt" },
+      { href: "/o-nama#pitanja", label: "Česta pitanja" },
     ],
   },
   {
@@ -111,7 +160,22 @@ export const LIMITS = {
   descriptionMax: 5000,
   locationMin: 2,
   locationMax: 80,
-  priceMax: 2_000_000_000,
+  /**
+   * Euros, not dinars — mirrors the CHECK in migration 0012. Far above
+   * anything we will list, low enough to catch a stray extra zero.
+   */
+  priceMax: 100_000_000,
+
+  /* Property attribute bounds — mirrored by listingAttributesSchema.
+     Deliberately generous: these exist to reject typos and nonsense
+     (a 4-digit room count, a negative area), not to encode what we
+     think we will ever build. */
+  kvadraturaMax: 10_000,
+  brojSobaMax: 20,
+  brojKupatilaMax: 20,
+  terasaMax: 1_000,
+  /** Free-text attributes: sprat, grejanje, orijentacija, rok useljenja. */
+  attrTextMax: 60,
 
   /** Inquiry anti-spam. */
   inquiriesPerHourPerIp: 5,
@@ -133,6 +197,8 @@ export const LIMITS = {
  *   /kategorija/[slug]         –   — SSR (reads searchParams for filters)
  *   /oglas/[slug]           3600   — 1 h, plus on-demand revalidatePath
  *   /sitemap.xml            3600   — 1 h
+ *   /llms.txt               3600   — 1 h, summary for answer engines
+ *   /ponuda.json            3600   — 1 h, full machine-readable catalogue
  *   /oglasi                    –   — SSR per request (reads searchParams)
  *   /dashboard/**              –   — force-dynamic
  */

@@ -9,15 +9,20 @@ import type { ListingCard as ListingCardType } from "@/types/domain";
 import { PriceTag } from "./PriceTag";
 
 /**
- * The condition lamp at the head of the data strip — the one coloured
- * pixel on a resting card. `korisceno` is the unmarked default, so it
- * stays in the strip's own grey.
+ * The build-phase lamp at the head of the data strip — the one coloured
+ * pixel on a resting card. It warms up with readiness, so scanning down
+ * the grid reads as "how soon can I move in". The two early phases are
+ * the commonest, so they stay in the strip's own grey and only a unit
+ * you can actually take keys to lights up.
+ *
+ * No phase is red: red would read as a fault, and a building that is
+ * still going up is not a fault. Red stays with the `prodato` status.
  */
 const CONDITION_LAMP: Record<ListingCondition, string> = {
-  novo: "bg-signal-green",
-  kao_novo: "bg-signal-blue",
-  korisceno: "bg-fg-faint",
-  neispravno: "bg-signal-red",
+  u_pripremi: "bg-fg-faint",
+  u_izgradnji: "bg-fg-faint",
+  pred_useljenje: "bg-signal-blue",
+  useljivo: "bg-signal-green",
 };
 
 /**
@@ -110,7 +115,7 @@ export function ListingCard({
         </h3>
 
         <div className="mt-auto flex items-end justify-between gap-4 pt-6">
-          <PriceTag price={listing.priceRsd} isNegotiable={listing.isNegotiable} size="md" />
+          <PriceTag price={listing.priceEur} isNegotiable={listing.isNegotiable} size="md" />
           <span
             aria-hidden="true"
             className="border-line text-fg-muted group-hover:border-signal group-hover:bg-signal group-hover:text-on-signal grid h-8 w-8 shrink-0 place-items-center border transition-colors duration-200"

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { COPY } from "@/config/copy";
+import { SITE } from "@/config/site";
 import { CONDITION_LABELS } from "@/config/taxonomy";
 import { Container } from "@/components/layout/Container";
 import { SiteHeader } from "@/components/layout/SiteHeader";
@@ -17,9 +18,21 @@ import { Badge, ConditionBadge } from "@/components/ui/Badge";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getActiveListingSlugs, getListingBySlug, getRelatedListings } from "@/lib/data/listings";
-import { formatDate, formatNumber, truncate } from "@/lib/format";
+import {
+  formatArea,
+  formatDate,
+  formatNumber,
+  formatPricePerSquare,
+  formatRooms,
+  truncate,
+} from "@/lib/format";
 import { publicImageUrl } from "@/lib/images";
-import { breadcrumbJsonLd, buildMetadata, productJsonLd } from "@/lib/seo";
+import {
+  accommodationJsonLd,
+  breadcrumbJsonLd,
+  buildMetadata,
+  productJsonLd,
+} from "@/lib/seo";
 
 /**
  * The SEO-critical route.
@@ -72,9 +85,9 @@ export async function generateMetadata({
 
   const images = listing.images.slice(0, 4).map((i) => publicImageUrl(i.storagePath));
   const priceLabel =
-    listing.priceRsd === null
+    listing.priceEur === null
       ? COPY.listing.priceOnRequest
-      : `${formatNumber(listing.priceRsd)} din`;
+      : `${formatNumber(listing.priceEur)} ${SITE.currencySuffix}`;
 
   return buildMetadata({
     title: `${listing.title} — ${priceLabel}`,
@@ -83,11 +96,11 @@ export async function generateMetadata({
     images,
     // A sold listing stays reachable but stops competing in search.
     noIndex: listing.status !== "aktivan",
-    ...(listing.priceRsd !== null
+    ...(listing.priceEur !== null
       ? {
           other: {
-            "product:price:amount": String(listing.priceRsd),
-            "product:price:currency": "RSD",
+            "product:price:amount": String(listing.priceEur),
+            "product:price:currency": SITE.currency,
           },
         }
       : {}),
@@ -113,20 +126,48 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
     { name: truncate(listing.title, 40), path: `/oglas/${listing.slug}` },
   ];
 
-  // The spec sheet: label / dotted leader / value.
+  const a = listing.attributes;
+  const pricePerSquare = formatPricePerSquare(listing.priceEur, a.kvadratura);
+  const accommodation = accommodationJsonLd(listing);
+
+  /**
+   * The spec sheet: label / dotted leader / value.
+   *
+   * Rows are pushed only when the value exists, so a garage listing
+   * simply has no "Struktura" row rather than an empty one. The order is
+   * the order a buyer reads in: size and layout first, then the
+   * building, then the paperwork, then our own reference numbers.
+   *
+   * This <dl> is also the block LLMs lift facts from, so every value is
+   * written out with its unit rather than left as a bare numeral.
+   */
+  const row = (label: string, value: string | null | undefined): [string, string][] =>
+    value ? [[label, value]] : [];
+
+  const yesNo = (v: boolean | undefined): string | null =>
+    v === undefined ? null : v ? COPY.common.yes : COPY.common.no;
+
   const specs: [string, string][] = [
-    ...(listing.condition
-      ? [[COPY.listing.conditionLabel, CONDITION_LABELS[listing.condition]] as [string, string]]
-      : []),
-    ...(listing.categoryName
-      ? [[COPY.listing.categoryLabel, listing.categoryName] as [string, string]]
-      : []),
-    ...(listing.location
-      ? [[COPY.listing.locationLabel, listing.location] as [string, string]]
-      : []),
-    ...(listing.publishedAt
-      ? [[COPY.listing.publishedOn, formatDate(listing.publishedAt)] as [string, string]]
-      : []),
+    ...row(COPY.listing.attrKvadratura, a.kvadratura ? formatArea(a.kvadratura) : null),
+    ...row(COPY.listing.attrBrojSoba, a.brojSoba ? formatRooms(a.brojSoba) : null),
+    ...row(COPY.listing.pricePerSquare, pricePerSquare),
+    ...row(COPY.listing.attrSprat, a.sprat),
+    ...row(COPY.listing.attrBrojKupatila, a.brojKupatila ? String(a.brojKupatila) : null),
+    ...row(COPY.listing.attrTerasa, a.terasaM2 ? formatArea(a.terasaM2) : null),
+    ...row(COPY.listing.attrOrijentacija, a.orijentacija),
+    ...row(COPY.listing.attrGrejanje, a.grejanje),
+    ...row(COPY.listing.attrLift, yesNo(a.lift)),
+    ...row(COPY.listing.attrGaraznoMesto, yesNo(a.garaznoMesto)),
+    ...row(COPY.listing.attrEnergetskiRazred, a.energetskiRazred),
+    ...row(
+      COPY.listing.conditionLabel,
+      listing.condition ? CONDITION_LABELS[listing.condition] : null,
+    ),
+    ...row(COPY.listing.attrRokUseljenja, a.rokUseljenja),
+    ...row(COPY.listing.attrUknjizen, yesNo(a.uknjizen)),
+    ...row(COPY.listing.categoryLabel, listing.categoryName),
+    ...row(COPY.listing.locationLabel, listing.location),
+    ...row(COPY.listing.publishedOn, listing.publishedAt ? formatDate(listing.publishedAt) : null),
     [COPY.listing.referenceLabel, listing.id.slice(0, 8).toUpperCase()],
   ];
 
@@ -168,7 +209,7 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
 
               <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4 lg:flex-col lg:items-end">
                 <PriceTag
-                  price={listing.priceRsd}
+                  price={listing.priceEur}
                   isNegotiable={listing.isNegotiable}
                   size="lg"
                   className={isSold ? "line-through opacity-60" : undefined}
@@ -236,7 +277,16 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
 
       <SiteFooter />
 
-      <JsonLd data={[productJsonLd(listing), breadcrumbJsonLd(crumbs)]} />
+      {/* Product carries the price and earns the rich result; Accommodation
+          describes the property itself. Both are emitted, and the
+          Accommodation node is dropped when no specification was entered. */}
+      <JsonLd
+        data={[
+          productJsonLd(listing),
+          ...(accommodation ? [accommodation] : []),
+          breadcrumbJsonLd(crumbs),
+        ]}
+      />
       {/* Counts one view per visitor; the page body is ISR-cached. */}
       <ViewTracker listingId={listing.id} />
     </>

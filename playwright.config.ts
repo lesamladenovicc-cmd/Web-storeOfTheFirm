@@ -19,7 +19,22 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+
+  /**
+   * ONE WORKER, ALWAYS — the backend is a single shared database.
+   *
+   * seller.spec and revenue.spec both POST /__reset in beforeEach to
+   * restore fixtures, and scripts/mock-supabase.mjs holds one in-memory
+   * store for the whole process. Run in parallel, one file's reset wipes
+   * the state another file is mid-assertion on, and the failures land on
+   * whichever spec happened to lose the race — they look like real
+   * regressions and are not.
+   *
+   * Each suite passes on its own; only the sharing is broken. Isolating
+   * per worker would mean a database per connection in the mock, which
+   * is a lot of machinery to buy back roughly thirty seconds.
+   */
+  workers: 1,
   reporter: process.env.CI ? "github" : "list",
 
   use: {

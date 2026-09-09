@@ -11,8 +11,14 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default function ContactPage() {
-  const rows: { label: string; value: React.ReactNode; numeric?: boolean }[] = [
-    {
+  // Every row is conditional. Until the client supplies the details the
+  // fields are null (see SITE.contact), and a row is dropped rather than
+  // rendered empty — a "Telefon —" line reads as a broken page, and a
+  // made-up number would be worse.
+  const rows: { label: string; value: React.ReactNode; numeric?: boolean }[] = [];
+
+  if (SITE.contact.phoneHref && SITE.contact.phone) {
+    rows.push({
       label: COPY.contact.phone,
       numeric: true,
       value: (
@@ -20,8 +26,11 @@ export default function ContactPage() {
           {SITE.contact.phone}
         </a>
       ),
-    },
-    {
+    });
+  }
+
+  if (SITE.contact.email) {
+    rows.push({
       label: COPY.contact.email,
       value: (
         <a
@@ -31,18 +40,22 @@ export default function ContactPage() {
           {SITE.contact.email}
         </a>
       ),
-    },
-    {
-      label: "Adresa",
-      value: (
-        <>
-          {SITE.contact.address}
-          <br />
-          {SITE.contact.postalCode} {SITE.contact.city}, {SITE.contact.country}
-        </>
-      ),
-    },
-  ];
+    });
+  }
+
+  rows.push({
+    label: COPY.pages.contact.addressLabel,
+    value: SITE.contact.address ? (
+      <>
+        {SITE.contact.address}
+        <br />
+        {[SITE.contact.postalCode, SITE.contact.city].filter(Boolean).join(" ")},{" "}
+        {SITE.contact.country}
+      </>
+    ) : (
+      `${SITE.contact.city}, ${SITE.contact.country}`
+    ),
+  });
 
   return (
     <ProsePage title={COPY.pages.contact.title} lead={COPY.pages.contact.lead}>
@@ -61,6 +74,15 @@ export default function ContactPage() {
               </div>
             ))}
           </dl>
+
+          {/* Shown only while phone and e-mail are still null: without it
+              the panel would be a single "Adresa" row with no explanation
+              of how to actually reach anyone. */}
+          {!SITE.contact.phone && !SITE.contact.email ? (
+            <p className="border-line text-fg-muted mt-2 border-t pt-4 text-sm leading-relaxed">
+              {COPY.pages.contact.pending}
+            </p>
+          ) : null}
         </div>
 
         <p className="text-fg-muted max-w-[60ch] text-[1.0625rem] leading-relaxed">

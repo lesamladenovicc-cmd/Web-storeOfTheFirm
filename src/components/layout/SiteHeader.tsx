@@ -34,13 +34,15 @@ export function SiteHeader({ isAuthed = false }: { isAuthed?: boolean }) {
         </nav>
 
         <div className="flex items-center gap-5">
-          <a
-            href={SITE.contact.phoneHref}
-            className="u-numeric text-fg hover:text-signal-text hidden items-center gap-2.5 text-sm transition-colors xl:flex"
-          >
-            <PhoneIcon />
-            {SITE.contact.phone}
-          </a>
+          {SITE.contact.phoneHref ? (
+            <a
+              href={SITE.contact.phoneHref}
+              className="u-numeric text-fg hover:text-signal-text hidden items-center gap-2.5 text-sm transition-colors xl:flex"
+            >
+              <PhoneIcon />
+              {SITE.contact.phone}
+            </a>
+          ) : null}
 
           <ButtonLink
             href={isAuthed ? "/dashboard" : "/prijava"}

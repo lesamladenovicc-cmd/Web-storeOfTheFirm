@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { COPY } from "@/config/copy";
 import { SITE } from "@/config/site";
 import { cn } from "@/lib/cn";
 import emblem from "@/assets/brand/logo-badge.png";
@@ -20,7 +21,7 @@ export function Logo({ className }: { className?: string }) {
   return (
     <Link
       href="/"
-      aria-label={`${SITE.name} — početna`}
+      aria-label={`${SITE.name} — ${COPY.nav.homeAria}`}
       className={cn("group inline-flex items-center gap-3", className)}
     >
       <Image

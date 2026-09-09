@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { SITE } from "../src/config/site";
 
 /**
  * Public storefront. These specs assert the things that would quietly
@@ -17,11 +18,11 @@ test("homepage renders the Serbian storefront", async ({ page }) => {
 test("search navigates to /oglasi and keeps the query in the URL", async ({ page }) => {
   await page.goto("/");
 
-  await page.getByRole("searchbox").fill("masina");
+  await page.getByRole("searchbox").fill("vracar");
   await page.getByRole("button", { name: /pretraži/i }).click();
 
-  await expect(page).toHaveURL(/\/oglasi\?.*q=masina/);
-  // Diacritic-insensitive: "masina" must match "mašina".
+  await expect(page).toHaveURL(/\/oglasi\?.*q=vracar/);
+  // Diacritic-insensitive: "vracar" must match "Vračar".
   await expect(page.getByText(/Pronađeno/)).toBeVisible();
 });
 
@@ -32,7 +33,7 @@ test("filtered listing pages are noindex, the bare index is not", async ({ page 
     /index/,
   );
 
-  await page.goto("/oglasi?q=bager");
+  await page.goto("/oglasi?q=stan");
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
     "content",
     /noindex/,
@@ -64,7 +65,7 @@ test("listing detail carries valid Product JSON-LD", async ({ page }) => {
   // absent the listing must be showing "Po dogovoru" — emitting an
   // offers block with a null price is invalid markup.
   if (product.offers) {
-    expect(product.offers.priceCurrency).toBe("RSD");
+    expect(product.offers.priceCurrency).toBe(SITE.currency);
     expect(String(product.offers.price)).toMatch(/^\d+$/);
   } else {
     await expect(page.getByText("Po dogovoru").first()).toBeVisible();
@@ -79,8 +80,10 @@ test("prices render in Serbian format", async ({ page }) => {
   await page.goto("/oglasi");
 
   const priceText = await page.locator("article").first().innerText();
-  // Either "1.950.000 din" grouping or the negotiable fallback.
-  expect(priceText).toMatch(/(\d{1,3}(\.\d{3})*\s*din)|Po dogovoru/);
+  // Either "242.000 €" grouping or the negotiable fallback. The suffix is
+  // read from SITE so a currency change stays a config edit.
+  const suffix = SITE.currencySuffix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  expect(priceText).toMatch(new RegExp(`(\\d{1,3}(\\.\\d{3})*\\s*${suffix})|Po dogovoru`));
 });
 
 /**

@@ -25,7 +25,7 @@ const description = z
   .trim()
   .max(LIMITS.descriptionMax, { message: COPY.validation.descriptionTooLong });
 
-const priceRsd = z
+const priceEur = z
   .number()
   .int({ message: COPY.validation.invalidPrice })
   .min(0, { message: COPY.validation.invalidPrice })
@@ -53,15 +53,71 @@ const imagePaths = z
   .array(z.string().min(3).max(400))
   .max(LIMITS.maxImages, { message: COPY.validation.tooManyImages });
 
+/**
+ * Property specification (listings.attributes jsonb).
+ *
+ * Every field is optional AND every empty-ish value is stripped to
+ * `undefined`, so a blank form field never writes `""` or `0` into the
+ * document. That matters downstream: the spec sheet and the JSON-LD both
+ * decide whether to render a row by presence, and a zero area would
+ * otherwise reach schema.org `floorSize` as a factual claim.
+ *
+ * `.strip()` (the zod default) drops unknown keys rather than throwing,
+ * so an older client posting a field we have since removed still saves.
+ */
+const emptyToUndefined = (v: unknown) => (v === "" || v === null ? undefined : v);
+
+const attrNumber = (max: number) =>
+  z.preprocess(
+    emptyToUndefined,
+    z.coerce
+      .number({ message: COPY.validation.invalidNumber })
+      .positive({ message: COPY.validation.invalidNumber })
+      .max(max, { message: COPY.validation.invalidNumber })
+      .optional(),
+  );
+
+const attrText = z.preprocess(
+  emptyToUndefined,
+  z.string().trim().max(LIMITS.attrTextMax).optional(),
+);
+
+/** Unchecked boxes are simply absent from FormData, hence the coercion. */
+const attrBool = z.preprocess(
+  (v) => (v === undefined || v === null || v === "" ? undefined : v === "on" || v === "true" || v === true),
+  z.boolean().optional(),
+);
+
+export const listingAttributesSchema = z
+  .object({
+    kvadratura: attrNumber(LIMITS.kvadraturaMax),
+    brojSoba: attrNumber(LIMITS.brojSobaMax),
+    sprat: attrText,
+    brojKupatila: attrNumber(LIMITS.brojKupatilaMax),
+    grejanje: attrText,
+    orijentacija: attrText,
+    terasaM2: attrNumber(LIMITS.terasaMax),
+    lift: attrBool,
+    garaznoMesto: attrBool,
+    uknjizen: attrBool,
+    rokUseljenja: attrText,
+    energetskiRazred: attrText,
+  })
+  // Defaulted, so a caller that has no specification to send — a draft
+  // saved from an older client, a test fixture — is still valid. Every
+  // field inside is optional, but the KEY would otherwise be required.
+  .default({});
+
 const base = {
   title,
   description,
+  attributes: listingAttributesSchema,
   // Optional in the base, required by the publish schema below — the
   // same shape as categoryId and contact. A draft exists to hold
   // half-finished work, so nothing that only a buyer needs may block
   // saving one. Mirrors listings_active_needs_condition.
   condition: z.enum(LISTING_CONDITIONS, { message: COPY.validation.invalidCondition }).nullable(),
-  priceRsd,
+  priceEur,
   isNegotiable: z.boolean(),
   location,
   categoryId: z.uuid({ message: COPY.validation.invalidCategory }).nullable(),

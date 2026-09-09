@@ -15,17 +15,17 @@ import { expect, test, type Page } from "@playwright/test";
 const MOCK_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321";
 
 const SELLER = {
-  email: process.env.E2E_SELLER_EMAIL ?? "prodavac@jadranko.rs",
-  password: process.env.E2E_SELLER_PASSWORD ?? "ProdavacLozinka2026!",
+  email: process.env.E2E_SELLER_EMAIL ?? "prodaja@bgbuilding.rs",
+  password: process.env.E2E_SELLER_PASSWORD ?? "ProdajaLozinka2026!",
 };
 const ADMIN = {
-  email: process.env.E2E_ADMIN_EMAIL ?? "admin@jadranko.rs",
+  email: process.env.E2E_ADMIN_EMAIL ?? "admin@bgbuilding.rs",
   password: process.env.E2E_ADMIN_PASSWORD ?? "AdminLozinka2026!",
 };
 
 /** Fixtures owned by the admin account — a seller must never see these. */
-const ADMIN_SALE = /Hidraulična presa za lim/i;
-const SELLER_SALE = /Kiper prikolica/i;
+const ADMIN_SALE = /Poslovni prostor 88 m², Novi Beograd/i;
+const SELLER_SALE = /Garsonjera 27 m², Zemun/i;
 
 test.beforeEach(async ({ request }) => {
   if (process.env.E2E_RUN_SELLER) return;

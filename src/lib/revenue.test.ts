@@ -15,7 +15,7 @@ function sale(over: Partial<SaleRecord> & { soldAt: string }): SaleRecord {
     id: over.soldAt + (over.title ?? ""),
     slug: "oglas",
     title: "Oglas",
-    priceRsd: 100_000,
+    priceEur: 100_000,
     sellerId: "seller-a",
     sellerName: "Prodavac A",
     categoryName: "Mašine",
@@ -32,8 +32,8 @@ describe("summarizeRevenue — totals", () => {
   it("sums prices and counts sales", () => {
     const r = summarizeRevenue(
       [
-        sale({ soldAt: localIso(2026, 9, 10), priceRsd: 1_500_000 }),
-        sale({ soldAt: localIso(2026, 9, 2), priceRsd: 320_000 }),
+        sale({ soldAt: localIso(2026, 9, 10), priceEur: 1_500_000 }),
+        sale({ soldAt: localIso(2026, 9, 2), priceEur: 320_000 }),
       ],
       "own",
       NOW,
@@ -48,8 +48,8 @@ describe("summarizeRevenue — totals", () => {
   it("counts an unpriced sale but keeps it out of every sum", () => {
     const r = summarizeRevenue(
       [
-        sale({ soldAt: localIso(2026, 9, 10), priceRsd: 1_000_000 }),
-        sale({ soldAt: localIso(2026, 9, 9), priceRsd: null }),
+        sale({ soldAt: localIso(2026, 9, 10), priceEur: 1_000_000 }),
+        sale({ soldAt: localIso(2026, 9, 9), priceEur: null }),
       ],
       "own",
       NOW,
@@ -64,7 +64,7 @@ describe("summarizeRevenue — totals", () => {
 
   it("returns zeroes, not NaN, when every sale is unpriced", () => {
     const r = summarizeRevenue(
-      [sale({ soldAt: localIso(2026, 9, 1), priceRsd: null })],
+      [sale({ soldAt: localIso(2026, 9, 1), priceEur: null })],
       "own",
       NOW,
     );
@@ -88,11 +88,11 @@ describe("summarizeRevenue — totals", () => {
 
 describe("summarizeRevenue — periods", () => {
   const sales = [
-    sale({ soldAt: localIso(2026, 9, 12), priceRsd: 500_000 }), // this month
-    sale({ soldAt: localIso(2026, 9, 1), priceRsd: 100_000 }), // this month
-    sale({ soldAt: localIso(2026, 8, 20), priceRsd: 900_000 }), // last month
-    sale({ soldAt: localIso(2026, 1, 5), priceRsd: 40_000 }), // this year
-    sale({ soldAt: localIso(2025, 11, 3), priceRsd: 7_000 }), // last year
+    sale({ soldAt: localIso(2026, 9, 12), priceEur: 500_000 }), // this month
+    sale({ soldAt: localIso(2026, 9, 1), priceEur: 100_000 }), // this month
+    sale({ soldAt: localIso(2026, 8, 20), priceEur: 900_000 }), // last month
+    sale({ soldAt: localIso(2026, 1, 5), priceEur: 40_000 }), // this year
+    sale({ soldAt: localIso(2025, 11, 3), priceEur: 7_000 }), // last year
   ];
 
   it("splits this month, last month and this year", () => {
@@ -116,7 +116,7 @@ describe("summarizeRevenue — periods", () => {
   it("rolls the previous month back across a year boundary", () => {
     const january = new Date(2026, 0, 20, 12, 0, 0);
     const r = summarizeRevenue(
-      [sale({ soldAt: localIso(2025, 12, 28), priceRsd: 250_000 })],
+      [sale({ soldAt: localIso(2025, 12, 28), priceEur: 250_000 })],
       "own",
       january,
     );
@@ -141,7 +141,7 @@ describe("summarizeRevenue — the chart window", () => {
 
   it("keeps empty months as zero buckets rather than dropping them", () => {
     const r = summarizeRevenue(
-      [sale({ soldAt: localIso(2026, 9, 3), priceRsd: 80_000 })],
+      [sale({ soldAt: localIso(2026, 9, 3), priceEur: 80_000 })],
       "own",
       NOW,
     );
@@ -153,8 +153,8 @@ describe("summarizeRevenue — the chart window", () => {
   it("ignores sales older than the window without losing them from the total", () => {
     const r = summarizeRevenue(
       [
-        sale({ soldAt: localIso(2026, 9, 3), priceRsd: 80_000 }),
-        sale({ soldAt: localIso(2023, 4, 3), priceRsd: 5_000_000 }),
+        sale({ soldAt: localIso(2026, 9, 3), priceEur: 80_000 }),
+        sale({ soldAt: localIso(2023, 4, 3), priceEur: 5_000_000 }),
       ],
       "own",
       NOW,
@@ -169,21 +169,21 @@ describe("summarizeRevenue — breakdowns", () => {
   const mixed = [
     sale({
       soldAt: localIso(2026, 9, 12),
-      priceRsd: 500_000,
+      priceEur: 500_000,
       sellerId: "a",
       sellerName: "Prodavac A",
       categoryName: "Mašine",
     }),
     sale({
       soldAt: localIso(2026, 9, 11),
-      priceRsd: 2_000_000,
+      priceEur: 2_000_000,
       sellerId: "b",
       sellerName: "Prodavac B",
       categoryName: "Alati",
     }),
     sale({
       soldAt: localIso(2026, 9, 10),
-      priceRsd: 300_000,
+      priceEur: 300_000,
       sellerId: "a",
       sellerName: "Prodavac A",
       categoryName: "Mašine",
@@ -211,7 +211,7 @@ describe("summarizeRevenue — breakdowns", () => {
 
   it("labels a sale with no category rather than dropping it", () => {
     const r = summarizeRevenue(
-      [sale({ soldAt: localIso(2026, 9, 4), priceRsd: 1000, categoryName: null })],
+      [sale({ soldAt: localIso(2026, 9, 4), priceEur: 1000, categoryName: null })],
       "own",
       NOW,
     );
@@ -234,7 +234,7 @@ describe("summarizeRevenue — recent list", () => {
   });
 
   it("survives an unparseable sale date", () => {
-    const r = summarizeRevenue([sale({ soldAt: "not-a-date", priceRsd: 250_000 })], "own", NOW);
+    const r = summarizeRevenue([sale({ soldAt: "not-a-date", priceEur: 250_000 })], "own", NOW);
 
     // Counted in the totals, absent from every calendar bucket.
     expect(r.total).toBe(250_000);

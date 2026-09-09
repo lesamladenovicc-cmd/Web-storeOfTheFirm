@@ -9,7 +9,7 @@ export type Crumb = { name: string; path: string };
  */
 export function Breadcrumbs({ items, className }: { items: Crumb[]; className?: string }) {
   return (
-    <nav aria-label="Navigacija" className={className}>
+    <nav aria-label="Putanja" className={className}>
       <ol className="u-eyebrow text-fg-muted flex flex-wrap items-center gap-y-1.5">
         {items.map((item, i) => {
           const isLast = i === items.length - 1;

@@ -7,6 +7,7 @@ import { LIMITS } from "@/config/site";
 import { DEFAULT_SORT, type ListingCondition, type ListingStatus } from "@/config/taxonomy";
 import type {
   Listing,
+  ListingAttributes,
   ListingCard,
   ListingFilters,
   ListingImage,
@@ -32,7 +33,7 @@ type SearchRow = {
   slug: string;
   title: string;
   condition: ListingCondition;
-  price_rsd: number | null;
+  price_eur: number | null;
   is_negotiable: boolean;
   status: ListingStatus;
   location: string;
@@ -50,7 +51,7 @@ function toCard(row: SearchRow): ListingCard {
     slug: row.slug,
     title: row.title,
     condition: row.condition,
-    priceRsd: row.price_rsd,
+    priceEur: row.price_eur,
     isNegotiable: row.is_negotiable,
     status: row.status,
     location: row.location,
@@ -165,7 +166,7 @@ type DetailRow = {
   title: string;
   description: string;
   condition: ListingCondition;
-  price_rsd: number | null;
+  price_eur: number | null;
   is_negotiable: boolean;
   status: ListingStatus;
   location: string;
@@ -175,7 +176,7 @@ type DetailRow = {
   contact_phone: string | null;
   contact_email: string | null;
   cover_image_path: string | null;
-  attributes: Record<string, unknown> | null;
+  attributes: ListingAttributes | null;
   view_count: number;
   published_at: string | null;
   created_at: string;
@@ -185,7 +186,7 @@ type DetailRow = {
 };
 
 const DETAIL_SELECT =
-  "id, slug, title, description, condition, price_rsd, is_negotiable, status, " +
+  "id, slug, title, description, condition, price_eur, is_negotiable, status, " +
   "location, category_id, seller_id, contact_name, contact_phone, contact_email, " +
   "cover_image_path, attributes, view_count, published_at, created_at, updated_at, " +
   "categories ( name, slug ), " +
@@ -211,7 +212,7 @@ function toListing(row: DetailRow): Listing {
     title: row.title,
     description: row.description,
     condition: row.condition,
-    priceRsd: row.price_rsd,
+    priceEur: row.price_eur,
     isNegotiable: row.is_negotiable,
     status: row.status,
     location: row.location,
@@ -349,6 +350,73 @@ export async function getListingsForSitemap(): Promise<{ slug: string; updatedAt
   }));
 }
 
+/** One row of /ponuda.json — the public feed for crawlers and AI agents. */
+export type FeedListing = {
+  id: string;
+  slug: string;
+  title: string;
+  condition: ListingCondition | null;
+  priceEur: number | null;
+  location: string;
+  categoryName: string | null;
+  attributes: ListingAttributes;
+  publishedAt: string | null;
+  updatedAt: string;
+};
+
+/**
+ * Every active listing with its specification, for /ponuda.json.
+ *
+ * Goes direct to the table rather than through search_listings: the RPC
+ * paginates and does not return `attributes`, and the feed wants the
+ * whole catalogue with the spec attached. Session-less client, because
+ * the route is ISR-cached and must not read cookies.
+ *
+ * Capped at 5000. The feed is one JSON response with no pagination, so
+ * the ceiling is about response size, not about how much we own.
+ */
+export async function getFeedListings(limit = 5000): Promise<FeedListing[]> {
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from("listings")
+    .select(
+      "id, slug, title, condition, price_eur, location, attributes, published_at, updated_at, categories ( name )",
+    )
+    .eq("status", "aktivan")
+    .order("published_at", { ascending: false })
+    .limit(limit);
+
+  if (error || !data) return [];
+
+  type Row = {
+    id: string;
+    slug: string;
+    title: string;
+    condition: ListingCondition | null;
+    price_eur: number | null;
+    location: string | null;
+    attributes: ListingAttributes | null;
+    published_at: string | null;
+    updated_at: string;
+    categories: { name: string } | { name: string }[] | null;
+  };
+
+  return (data as Row[]).map((r) => ({
+    id: r.id,
+    slug: r.slug,
+    title: r.title,
+    condition: r.condition,
+    priceEur: r.price_eur,
+    location: r.location ?? "",
+    categoryName: Array.isArray(r.categories)
+      ? (r.categories[0]?.name ?? null)
+      : (r.categories?.name ?? null),
+    attributes: r.attributes ?? {},
+    publishedAt: r.published_at,
+    updatedAt: r.updated_at,
+  }));
+}
+
 export async function getActiveListingSlugs(limit = 1000): Promise<string[]> {
   const supabase = createPublicClient();
   const { data, error } = await supabase
@@ -371,7 +439,7 @@ type DashboardRow = {
   slug: string;
   title: string;
   condition: ListingCondition;
-  price_rsd: number | null;
+  price_eur: number | null;
   is_negotiable: boolean;
   status: ListingStatus;
   location: string;
@@ -386,7 +454,7 @@ type DashboardRow = {
 };
 
 const DASHBOARD_SELECT =
-  "id, slug, title, condition, price_rsd, is_negotiable, status, location, " +
+  "id, slug, title, condition, price_eur, is_negotiable, status, location, " +
   "cover_image_path, published_at, updated_at, created_at, view_count, seller_id, " +
   "categories ( name, slug ), profiles ( full_name )";
 
@@ -414,7 +482,7 @@ export async function getDashboardListings(status?: ListingStatus): Promise<List
     slug: row.slug,
     title: row.title,
     condition: row.condition,
-    priceRsd: row.price_rsd,
+    priceEur: row.price_eur,
     isNegotiable: row.is_negotiable,
     status: row.status,
     location: row.location,

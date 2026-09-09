@@ -41,20 +41,20 @@ async function loadEnv() {
 
 const SEED_USERS = [
   {
-    email: "admin@jadranko.rs",
+    email: "admin@bgbuilding.rs",
     password: "AdminLozinka2026!",
     fullName: "Administrator",
     role: "admin",
     phone: "+381641110001",
-    location: "Novi Sad",
+    location: "Beograd",
   },
   {
-    email: "prodavac@jadranko.rs",
-    password: "ProdavacLozinka2026!",
+    email: "prodaja@bgbuilding.rs",
+    password: "ProdajaLozinka2026!",
     fullName: "Marko Petrović",
     role: "seller",
     phone: "+381641110002",
-    location: "Novi Sad",
+    location: "Beograd",
   },
 ];
 

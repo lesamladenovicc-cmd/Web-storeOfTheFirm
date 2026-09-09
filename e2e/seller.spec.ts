@@ -1,5 +1,30 @@
 import { deflateSync } from "node:zlib";
 import { expect, test, type Page } from "@playwright/test";
+import { COPY } from "../src/config/copy";
+import { formatMoney } from "../src/lib/format";
+
+/**
+ * LABELS AND NOTICES COME FROM COPY, NOT FROM STRING LITERALS.
+ *
+ * This suite used to hard-code the Serbian wording, so the re-copy from
+ * machines to property broke eleven specs that had nothing wrong with
+ * them. Reading the same config the components read means a wording
+ * change is a wording change, and a real regression is still a failure.
+ *
+ * Fixture TITLES stay literal on purpose — they are data from
+ * scripts/mock-supabase.mjs, not copy, and a spec that fetched them
+ * dynamically would no longer assert anything specific.
+ */
+const FIXTURE = {
+  /** Seller-owned, priced, four photos — the edit target. */
+  priced: /Dvoiposoban stan 62 m²/i,
+  /** Seller-owned and active — the "mark sold" target. */
+  toSell: /Lokal 45 m², Vračar/i,
+  toSellSlug: "lokal-45m2-vracar-njegoseva-g7h8i9",
+  /** Seller-owned — the delete target. Exact title for the confirm box. */
+  toDelete: /Jednosoban stan 38 m², Zvezdara/i,
+  toDeleteTitle: "Jednosoban stan 38 m², Zvezdara — Bulevar kralja Aleksandra",
+} as const;
 
 /**
  * Seller CRUD, driven through the real UI.
@@ -28,8 +53,8 @@ test.beforeEach(async ({ request }) => {
   await request.post(`${MOCK_URL}/__reset`).catch(() => {});
 });
 
-const EMAIL = process.env.E2E_SELLER_EMAIL ?? "prodavac@jadranko.rs";
-const PASSWORD = process.env.E2E_SELLER_PASSWORD ?? "ProdavacLozinka2026!";
+const EMAIL = process.env.E2E_SELLER_EMAIL ?? "prodaja@bgbuilding.rs";
+const PASSWORD = process.env.E2E_SELLER_PASSWORD ?? "ProdajaLozinka2026!";
 
 /** Minimal valid PNG, so the uploader gets a real decodable image. */
 function pngFixture(): Buffer {
@@ -88,7 +113,7 @@ async function login(page: Page) {
   await expect(page).toHaveURL(/\/dashboard/);
 }
 
-async function attachPhoto(page: Page, name = "masina.png") {
+async function attachPhoto(page: Page, name = "stan.png") {
   await page.locator('input[type="file"]').setInputFiles({
     name,
     mimeType: "image/png",
@@ -104,27 +129,27 @@ async function attachPhoto(page: Page, name = "masina.png") {
 test("seller can sign in and reach their listings", async ({ page }) => {
   await login(page);
 
-  await page.getByRole("link", { name: /moji oglasi/i }).click();
+  await page.getByRole("link", { name: COPY.dashboard.nav.listings }).click();
   await expect(page).toHaveURL(/\/dashboard\/oglasi/);
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   // The seeded listings are present.
-  await expect(page.getByRole("link", { name: /Bager guseničar/i }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: FIXTURE.priced }).first()).toBeVisible();
 });
 
 test("CREATE — a new listing is published and goes live publicly", async ({ page }) => {
   await login(page);
   await page.goto("/dashboard/oglasi/novi");
 
-  const title = `Bušilica stubna test ${Date.now()}`;
+  const title = `Trosoban stan test ${Date.now()}`;
 
-  await page.getByLabel(/naziv oglasa/i).fill(title);
+  await page.getByLabel(COPY.dashboard.form.title, { exact: true }).fill(title);
   await page
     .getByLabel(/^opis/i)
-    .fill("Stubna bušilica u ispravnom stanju, trofazni motor, malo korišćena.");
-  await page.getByLabel(/^stanje/i).selectOption("korisceno");
-  await page.getByLabel(/kategorija/i).selectOption({ index: 1 });
-  await page.getByLabel("Cena (RSD)").fill("145000");
-  await page.getByLabel(/lokacija/i).fill("Zrenjanin");
+    .fill("Trosoban stan na petom spratu, sa terasom i garažnim mestom. Useljivo odmah.");
+  await page.getByLabel(COPY.dashboard.form.condition, { exact: true }).selectOption("u_izgradnji");
+  await page.getByLabel(COPY.dashboard.form.category, { exact: true }).selectOption({ index: 1 });
+  await page.getByLabel(COPY.dashboard.form.price, { exact: true }).fill("145000");
+  await page.getByLabel(COPY.dashboard.form.location, { exact: true }).fill("Vračar, Beograd");
 
   await attachPhoto(page);
 
@@ -136,12 +161,12 @@ test("CREATE — a new listing is published and goes live publicly", async ({ pa
   await expect(page).toHaveURL(/\/dashboard\/oglasi\?sacuvano=aktivan/, {
     timeout: 15_000,
   });
-  await expect(page.getByText(/oglas je objavljen/i)).toBeVisible();
-  await expect(page.getByText(/sačuvan kao nacrt/i)).toHaveCount(0);
+  await expect(page.getByText(COPY.dashboard.form.published)).toBeVisible();
+  await expect(page.getByText(COPY.dashboard.form.savedDraft)).toHaveCount(0);
   await expect(page.getByRole("cell", { name: title })).toBeVisible();
 
   // And it is genuinely on the public storefront.
-  await page.goto(`/oglasi?q=${encodeURIComponent("Busilica stubna")}`);
+  await page.goto(`/oglasi?q=${encodeURIComponent("Trosoban stan test")}`);
   await expect(page.getByText(title)).toBeVisible();
 
   /**
@@ -167,13 +192,13 @@ test("CREATE — publishing without a photo is rejected", async ({ page }) => {
   await login(page);
   await page.goto("/dashboard/oglasi/novi");
 
-  await page.getByLabel(/naziv oglasa/i).fill("Oglas bez fotografije");
+  await page.getByLabel(COPY.dashboard.form.title, { exact: true }).fill("Oglas bez fotografije");
   await page
     .getByLabel(/^opis/i)
     .fill("Ovaj oglas namerno nema fotografiju, pa objava mora da bude odbijena.");
-  await page.getByLabel(/^stanje/i).selectOption("novo");
-  await page.getByLabel(/kategorija/i).selectOption({ index: 1 });
-  await page.getByLabel(/lokacija/i).fill("Novi Sad");
+  await page.getByLabel(COPY.dashboard.form.condition, { exact: true }).selectOption("useljivo");
+  await page.getByLabel(COPY.dashboard.form.category, { exact: true }).selectOption({ index: 1 });
+  await page.getByLabel(COPY.dashboard.form.location, { exact: true }).fill("Novi Sad");
 
   await page.getByRole("button", { name: /^objavi$/i }).click();
 
@@ -187,12 +212,12 @@ test("CREATE — a draft saves and stays out of the public index", async ({ page
   await page.goto("/dashboard/oglasi/novi");
 
   const title = `Nacrt test ${Date.now()}`;
-  await page.getByLabel(/naziv oglasa/i).fill(title);
-  await page.getByRole("button", { name: /sačuvaj kao nacrt/i }).click();
+  await page.getByLabel(COPY.dashboard.form.title, { exact: true }).fill(title);
+  await page.getByRole("button", { name: COPY.dashboard.form.saveDraft }).click();
 
   await expect(page).toHaveURL(/\/dashboard\/oglasi\?sacuvano=nacrt/, { timeout: 15_000 });
-  await expect(page.getByText(/sačuvan kao nacrt/i)).toBeVisible();
-  await expect(page.getByText(/oglas je objavljen/i)).toHaveCount(0);
+  await expect(page.getByText(COPY.dashboard.form.savedDraft)).toBeVisible();
+  await expect(page.getByText(COPY.dashboard.form.published)).toHaveCount(0);
 
   // A draft must not be publicly searchable. Scoped to listing cards:
   // the page also echoes the search term in the active-filter chip, so a
@@ -205,10 +230,10 @@ test("UPDATE — editing the price is persisted and shown publicly", async ({ pa
   await login(page);
   await page.goto("/dashboard/oglasi");
 
-  await page.getByRole("link", { name: /Vijčani kompresor/i }).first().click();
+  await page.getByRole("link", { name: FIXTURE.priced }).first().click();
   await expect(page).toHaveURL(/\/izmena/);
 
-  await page.getByLabel("Cena (RSD)").fill("399000");
+  await page.getByLabel(COPY.dashboard.form.price, { exact: true }).fill("399000");
   await page.getByRole("button", { name: /sačuvaj izmene|^objavi$/i }).click();
 
   await expect(page.getByRole("status").or(page.getByRole("alert")).first()).toBeVisible({
@@ -217,11 +242,11 @@ test("UPDATE — editing the price is persisted and shown publicly", async ({ pa
 
   // Reload the edit form: the new value came back from the database.
   await page.reload();
-  await expect(page.getByLabel("Cena (RSD)")).toHaveValue("399000");
+  await expect(page.getByLabel(COPY.dashboard.form.price, { exact: true })).toHaveValue("399000");
 
   // And the public page shows the formatted Serbian price.
-  await page.goto("/oglas/kompresor-atlas-copco-ga11-j1k2l3");
-  await expect(page.getByText("399.000 din").first()).toBeVisible();
+  await page.goto("/oglas/dvoiposoban-stan-62m2-vracar-a1b2c3");
+  await expect(page.getByText(formatMoney(399_000)).first()).toBeVisible();
 });
 
 test("UPDATE — marking a listing sold removes it from search but keeps the page", async ({
@@ -230,33 +255,48 @@ test("UPDATE — marking a listing sold removes it from search but keeps the pag
   await login(page);
   await page.goto("/dashboard/oglasi");
 
-  await page.getByRole("link", { name: /Viljuškar Linde/i }).first().click();
+  await page.getByRole("link", { name: FIXTURE.toSell }).first().click();
   await expect(page).toHaveURL(/\/izmena/);
 
-  await page.getByRole("button", { name: /označi kao prodato/i }).click();
-  await expect(page.getByText(/prodato/i).first()).toBeVisible({ timeout: 15_000 });
+  await page.getByRole("button", { name: COPY.dashboard.form.markSold }).click();
+
+  /**
+   * Wait for the SAVED NOTICE, not for text matching /prodato/i.
+   *
+   * That was the old gate and it was a false one: the button the test
+   * had just clicked reads "Označi kao prodato", so the assertion
+   * matched it instantly and the spec navigated away while the Server
+   * Action was still in flight. The search below then legitimately
+   * still found the listing, and the failure pointed at the app rather
+   * than at the race in the test.
+   *
+   * An edit does not redirect — it stays on the form and returns this
+   * notice — so the notice is the first thing that cannot appear until
+   * the write has landed.
+   */
+  await expect(page.getByText(COPY.dashboard.form.updated)).toBeVisible({ timeout: 15_000 });
 
   // Gone from browsing...
-  await page.goto("/oglasi?q=Viljuskar");
-  await expect(page.getByText(/Viljuškar Linde H25/)).toHaveCount(0);
+  await page.goto("/oglasi?q=Lokal");
+  await expect(page.getByText(FIXTURE.toSell)).toHaveCount(0);
 
   // ...but the page itself still resolves, with the sold treatment.
-  const response = await page.goto("/oglas/viljuskar-linde-h25-dizel-g7h8i9");
+  const response = await page.goto(`/oglas/${FIXTURE.toSellSlug}`);
   expect(response?.status()).toBe(200);
-  await expect(page.getByText("Prodato").first()).toBeVisible();
+  await expect(page.getByText(COPY.listing.soldRibbon).first()).toBeVisible();
 });
 
 test("DELETE — requires the exact title, then removes the listing", async ({ page }) => {
   await login(page);
   await page.goto("/dashboard/oglasi");
 
-  await page.getByRole("link", { name: /Agregat Honda/i }).first().click();
+  await page.getByRole("link", { name: FIXTURE.toDelete }).first().click();
   await expect(page).toHaveURL(/\/izmena/);
 
   await page.getByRole("button", { name: /^obriši$/i }).click();
 
   // A wrong confirmation must not delete anything.
-  await page.getByLabel(/za potvrdu upišite naziv/i).fill("pogrešan naziv");
+  await page.getByLabel(COPY.dashboard.delete.confirmLabel).fill("pogrešan naziv");
   await page.getByRole("button", { name: /obriši trajno/i }).click();
   await expect(page.getByText(/ne podudara/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(page).toHaveURL(/\/izmena/);
@@ -264,11 +304,11 @@ test("DELETE — requires the exact title, then removes the listing", async ({ p
   // The exact title does.
   await page
     .getByLabel(/za potvrdu upišite naziv/i)
-    .fill("Agregat Honda EX7 — ne pali, za delove");
+    .fill(FIXTURE.toDeleteTitle);
   await page.getByRole("button", { name: /obriši trajno/i }).click();
 
   await expect(page).toHaveURL(/\/dashboard\/oglasi/, { timeout: 15_000 });
-  await expect(page.getByRole("link", { name: /Agregat Honda/i })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: FIXTURE.toDelete })).toHaveCount(0);
 
   /**
    * And it goes away on the public site.

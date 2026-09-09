@@ -152,19 +152,19 @@ export function ListingForm({
         <div className="grid gap-5 sm:grid-cols-2">
           <Field
             label={COPY.dashboard.form.price}
-            name="priceRsd"
-            error={err?.priceRsd}
+            name="priceEur"
+            error={err?.priceEur}
             hint={COPY.dashboard.form.priceHint}
           >
             {(aria) => (
               <Input
                 {...aria}
-                name="priceRsd"
+                name="priceEur"
                 inputMode="numeric"
-                defaultValue={listing?.priceRsd ?? ""}
+                defaultValue={listing?.priceEur ?? ""}
                 placeholder={COPY.dashboard.form.pricePlaceholder}
                 className="u-numeric"
-                hasError={Boolean(err?.priceRsd)}
+                hasError={Boolean(err?.priceEur)}
               />
             )}
           </Field>
@@ -188,6 +188,160 @@ export function ListingForm({
           defaultChecked={listing?.isNegotiable ?? false}
           label={COPY.dashboard.form.negotiable}
         />
+      </section>
+
+      {/* ---------------- Specification ----------------
+          The spec sheet the buyer reads, entered in the order they read
+          it. Field names are prefixed `attr.` and land in the
+          `attributes` jsonb rather than in columns — see
+          listingAttributesSchema, which does all coercion, so every
+          input here can stay a plain text/number box.
+
+          Nothing is `required`: a garage has no room count, and a draft
+          may be half-finished. Blank simply means "no such row". */}
+      <section className="border-line bg-panel space-y-5 rounded-md border p-6">
+        <div>
+          <h2 className="u-eyebrow text-fg-faint">{COPY.dashboard.form.sectionAttributes}</h2>
+          <p className="text-fg-muted mt-2 max-w-prose text-sm leading-relaxed">
+            {COPY.dashboard.form.attributesHint}
+          </p>
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-3">
+          <Field label={COPY.dashboard.form.attrKvadratura} name="attr.kvadratura">
+            {(aria) => (
+              <Input
+                {...aria}
+                name="attr.kvadratura"
+                inputMode="decimal"
+                defaultValue={listing?.attributes.kvadratura ?? ""}
+                placeholder={COPY.dashboard.form.attrKvadraturaPlaceholder}
+                className="u-numeric"
+              />
+            )}
+          </Field>
+
+          <Field label={COPY.dashboard.form.attrBrojSoba} name="attr.brojSoba">
+            {(aria) => (
+              <Input
+                {...aria}
+                name="attr.brojSoba"
+                inputMode="decimal"
+                defaultValue={listing?.attributes.brojSoba ?? ""}
+                placeholder={COPY.dashboard.form.attrBrojSobaPlaceholder}
+                className="u-numeric"
+              />
+            )}
+          </Field>
+
+          <Field label={COPY.dashboard.form.attrBrojKupatila} name="attr.brojKupatila">
+            {(aria) => (
+              <Input
+                {...aria}
+                name="attr.brojKupatila"
+                inputMode="numeric"
+                defaultValue={listing?.attributes.brojKupatila ?? ""}
+                className="u-numeric"
+              />
+            )}
+          </Field>
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-3">
+          <Field label={COPY.dashboard.form.attrSprat} name="attr.sprat">
+            {(aria) => (
+              <Input
+                {...aria}
+                name="attr.sprat"
+                defaultValue={listing?.attributes.sprat ?? ""}
+                placeholder={COPY.dashboard.form.attrSpratPlaceholder}
+                maxLength={60}
+                className="u-numeric"
+              />
+            )}
+          </Field>
+
+          <Field label={COPY.dashboard.form.attrTerasa} name="attr.terasaM2">
+            {(aria) => (
+              <Input
+                {...aria}
+                name="attr.terasaM2"
+                inputMode="decimal"
+                defaultValue={listing?.attributes.terasaM2 ?? ""}
+                className="u-numeric"
+              />
+            )}
+          </Field>
+
+          <Field label={COPY.dashboard.form.attrOrijentacija} name="attr.orijentacija">
+            {(aria) => (
+              <Input
+                {...aria}
+                name="attr.orijentacija"
+                defaultValue={listing?.attributes.orijentacija ?? ""}
+                placeholder={COPY.dashboard.form.attrOrijentacijaPlaceholder}
+                maxLength={60}
+              />
+            )}
+          </Field>
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-3">
+          <Field label={COPY.dashboard.form.attrGrejanje} name="attr.grejanje">
+            {(aria) => (
+              <Input
+                {...aria}
+                name="attr.grejanje"
+                defaultValue={listing?.attributes.grejanje ?? ""}
+                placeholder={COPY.dashboard.form.attrGrejanjePlaceholder}
+                maxLength={60}
+              />
+            )}
+          </Field>
+
+          <Field label={COPY.dashboard.form.attrRokUseljenja} name="attr.rokUseljenja">
+            {(aria) => (
+              <Input
+                {...aria}
+                name="attr.rokUseljenja"
+                defaultValue={listing?.attributes.rokUseljenja ?? ""}
+                placeholder={COPY.dashboard.form.attrRokUseljenjaPlaceholder}
+                maxLength={60}
+              />
+            )}
+          </Field>
+
+          <Field label={COPY.dashboard.form.attrEnergetskiRazred} name="attr.energetskiRazred">
+            {(aria) => (
+              <Input
+                {...aria}
+                name="attr.energetskiRazred"
+                defaultValue={listing?.attributes.energetskiRazred ?? ""}
+                placeholder={COPY.dashboard.form.attrEnergetskiRazredPlaceholder}
+                maxLength={60}
+                className="u-numeric"
+              />
+            )}
+          </Field>
+        </div>
+
+        <div className="border-line grid gap-4 border-t pt-5 sm:grid-cols-3">
+          <Checkbox
+            name="attr.lift"
+            defaultChecked={listing?.attributes.lift ?? false}
+            label={COPY.dashboard.form.attrLift}
+          />
+          <Checkbox
+            name="attr.garaznoMesto"
+            defaultChecked={listing?.attributes.garaznoMesto ?? false}
+            label={COPY.dashboard.form.attrGaraznoMesto}
+          />
+          <Checkbox
+            name="attr.uknjizen"
+            defaultChecked={listing?.attributes.uknjizen ?? false}
+            label={COPY.dashboard.form.attrUknjizen}
+          />
+        </div>
       </section>
 
       {/* ---------------- Images ---------------- */}

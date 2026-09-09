@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { COPY } from "@/config/copy";
 import { LIMITS, SITE } from "@/config/site";
@@ -14,9 +15,28 @@ import { cn } from "@/lib/cn";
 import { getCategoriesWithCounts } from "@/lib/data/categories";
 import { getLatestListings, searchListings } from "@/lib/data/listings";
 import { parseFilters } from "@/lib/filters";
+import { buildMetadata } from "@/lib/seo";
 
 /** ISR: 5 minutes. See the ISR POLICY table in @/config/site. */
 export const revalidate = 300;
+
+/**
+ * The homepage previously exported no metadata at all, so it inherited
+ * the root layout's generic description and shipped no twitter: tags —
+ * on the one URL that ranks for the brand.
+ *
+ * The title goes through the root's `%s | BG Building` template, so it
+ * is written WITHOUT the brand — the template appends it.
+ *
+ * Calling buildMetadata here defines `openGraph`, which suppresses Next's
+ * opengraph-image.tsx file convention for this route — the helper already
+ * compensates by pointing at /opengraph-image explicitly.
+ */
+export const metadata: Metadata = buildMetadata({
+  title: "Stanovi u novogradnji u Beogradu",
+  description: SITE.description,
+  path: "/",
+});
 
 /** Small mono tag, large heading, optional lead — every section opener. */
 function SectionTitle({ tag, title, subtitle }: { tag: string; title: string; subtitle?: string }) {
@@ -139,7 +159,7 @@ export default async function HomePage() {
                       {category.description}
                     </p>
                     <span className="u-eyebrow text-fg-faint flex items-center gap-3 whitespace-nowrap">
-                      {countWithNoun(category.listingCount, "oglas")}
+                      {countWithNoun(category.listingCount, "nekretnina")}
                       <span
                         aria-hidden="true"
                         className="transition-transform duration-300 ease-[var(--ease-out-quart)] group-hover:translate-x-1"

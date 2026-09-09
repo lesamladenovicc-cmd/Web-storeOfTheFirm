@@ -19,12 +19,12 @@ const LISTING = "33333333-3333-4333-8333-333333333333";
 /** A complete, publishable listing. Tests override one field at a time. */
 function publishable(overrides: Record<string, unknown> = {}) {
   return {
-    title: "Bager guseničar CAT 320D",
-    description: "Redovno servisiran, gusenice na 70%, hidraulika bez curenja. Može se pogledati.",
-    condition: "korisceno",
-    priceRsd: 8_450_000,
+    title: "Dvoiposoban stan 62 m2, Vračar",
+    description: "Stan na četvrtom spratu, sa terasom i garažnim mestom. Useljivo odmah.",
+    condition: "u_izgradnji",
+    priceEur: 8_450_000,
     isNegotiable: true,
-    location: "Novi Sad",
+    location: "Vračar, Beograd",
     categoryId: "44444444-4444-4444-8444-444444444444",
     contactName: "Marko Petrović",
     contactPhone: "064 111 0002",
@@ -38,12 +38,12 @@ function publishable(overrides: Record<string, unknown> = {}) {
 describe("draft schema — deliberately lenient", () => {
   it("accepts a half-finished listing, including no condition yet", () => {
     const result = listingDraftSchema.safeParse({
-      title: "Nacrt oglasa",
+      title: "Nacrt jedinice",
       description: "",
       // The whole point of a draft: a seller can park work before
       // deciding the condition. Mirrors listings_active_needs_condition.
       condition: null,
-      priceRsd: null,
+      priceEur: null,
       isNegotiable: false,
       location: "",
       categoryId: null,
@@ -61,7 +61,7 @@ describe("draft schema — deliberately lenient", () => {
       title: "abc",
       description: "",
       condition: null,
-      priceRsd: null,
+      priceEur: null,
       isNegotiable: false,
       location: "",
       categoryId: null,
@@ -139,28 +139,28 @@ describe("publish schema — the rules that protect the buyer", () => {
 
 describe("price", () => {
   it("allows null — that is 'Po dogovoru', not zero", () => {
-    const result = listingPublishSchema.safeParse(publishable({ priceRsd: null }));
+    const result = listingPublishSchema.safeParse(publishable({ priceEur: null }));
     expect(result.success).toBe(true);
-    if (result.success) expect(result.data.priceRsd).toBeNull();
+    if (result.success) expect(result.data.priceEur).toBeNull();
   });
 
   it("allows zero as a real price", () => {
-    const result = listingPublishSchema.safeParse(publishable({ priceRsd: 0 }));
+    const result = listingPublishSchema.safeParse(publishable({ priceEur: 0 }));
     expect(result.success).toBe(true);
   });
 
   it("rejects a negative price", () => {
-    const result = listingPublishSchema.safeParse(publishable({ priceRsd: -1 }));
+    const result = listingPublishSchema.safeParse(publishable({ priceEur: -1 }));
     expect(result.success).toBe(false);
   });
 
   it("rejects a price beyond the DB check constraint", () => {
-    const result = listingPublishSchema.safeParse(publishable({ priceRsd: 2_000_000_001 }));
+    const result = listingPublishSchema.safeParse(publishable({ priceEur: 2_000_000_001 }));
     expect(result.success).toBe(false);
   });
 
   it("rejects a fractional price — RSD subunits are not used", () => {
-    const result = listingPublishSchema.safeParse(publishable({ priceRsd: 1950.5 }));
+    const result = listingPublishSchema.safeParse(publishable({ priceEur: 1950.5 }));
     expect(result.success).toBe(false);
   });
 });

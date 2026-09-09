@@ -1,5 +1,6 @@
 import "server-only";
 
+import { COPY } from "@/config/copy";
 import { SITE } from "@/config/site";
 import { serverEnv } from "@/lib/env";
 import { formatPhone } from "@/lib/format";
@@ -50,7 +51,7 @@ export async function sendInquiryEmail(input: InquiryEmailInput): Promise<boolea
         to: [input.to],
         // Lets the seller hit Reply and reach the buyer directly.
         ...(input.senderEmail ? { reply_to: input.senderEmail } : {}),
-        subject: `Novi upit: ${input.listingTitle}`,
+        subject: `${COPY.email.subjectPrefix} ${input.listingTitle}`,
         text: buildText(input, url),
         html: buildHtml(input, url),
       }),
@@ -63,19 +64,21 @@ export async function sendInquiryEmail(input: InquiryEmailInput): Promise<boolea
 }
 
 function buildText(i: InquiryEmailInput, url: string): string {
+  const e = COPY.email;
+
   return [
-    `Poštovani ${i.sellerName},`,
+    `${e.greeting} ${i.sellerName},`,
     "",
-    `Dobili ste novi upit za oglas "${i.listingTitle}".`,
+    `${e.intro} „${i.listingTitle}”.`,
     "",
-    `Ime: ${i.senderName}`,
-    i.senderPhone ? `Telefon: ${formatPhone(i.senderPhone)}` : null,
-    i.senderEmail ? `E-mail: ${i.senderEmail}` : null,
+    `${e.rowName}: ${i.senderName}`,
+    i.senderPhone ? `${e.rowPhone}: ${formatPhone(i.senderPhone)}` : null,
+    i.senderEmail ? `${e.rowEmail}: ${i.senderEmail}` : null,
     "",
-    "Poruka:",
+    e.messageTitle,
     i.message,
     "",
-    `Oglas: ${url}`,
+    `${e.linkLabel} ${url}`,
     "",
     `— ${SITE.name}`,
   ]
@@ -83,29 +86,38 @@ function buildText(i: InquiryEmailInput, url: string): string {
     .join("\n");
 }
 
-/** Inline styles only — email clients strip <style> blocks. */
+/**
+ * Inline styles only — email clients strip <style> blocks.
+ *
+ * The hex values are the design tokens written out literally: mail
+ * clients cannot read CSS custom properties, so globals.css cannot be
+ * the source here. Keep them in step with --ground/--panel/--accent by
+ * hand; square corners and hairline rules match the site.
+ */
 function buildHtml(i: InquiryEmailInput, url: string): string {
-  const row = (label: string, value: string) =>
-    `<tr><td style="padding:4px 12px 4px 0;color:#4b5568;font-size:14px">${label}</td>` +
-    `<td style="padding:4px 0;color:#14213a;font-size:14px"><strong>${esc(value)}</strong></td></tr>`;
+  const e = COPY.email;
 
-  return `<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:#efe9dd;padding:24px">
-  <div style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #d3c9b3;border-radius:8px;padding:28px">
-    <p style="margin:0 0 4px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#7f521c">${esc(SITE.name)}</p>
-    <h1 style="margin:0 0 18px;font-size:20px;color:#14213a">Novi upit za oglas</h1>
-    <p style="margin:0 0 18px;font-size:15px;color:#14213a">
-      Poštovani ${esc(i.sellerName)}, dobili ste upit za oglas
+  const row = (label: string, value: string) =>
+    `<tr><td style="padding:4px 12px 4px 0;color:#4F555E;font-size:14px">${esc(label)}</td>` +
+    `<td style="padding:4px 0;color:#1B212B;font-size:14px"><strong>${esc(value)}</strong></td></tr>`;
+
+  return `<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:#ECEAE5;padding:24px">
+  <div style="max-width:560px;margin:0 auto;background:#F7F6F3;border:1px solid #D2CFC7;padding:28px">
+    <p style="margin:0 0 4px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#7A5A34">${esc(SITE.name)}</p>
+    <h1 style="margin:0 0 18px;font-size:20px;color:#1B212B">${esc(e.heading)}</h1>
+    <p style="margin:0 0 18px;font-size:15px;color:#1B212B">
+      ${esc(e.greeting)} ${esc(i.sellerName)}, ${esc(e.intro.toLowerCase())}
       <strong>${esc(i.listingTitle)}</strong>.
     </p>
     <table style="border-collapse:collapse;margin-bottom:18px">
-      ${row("Ime", i.senderName)}
-      ${i.senderPhone ? row("Telefon", formatPhone(i.senderPhone)) : ""}
-      ${i.senderEmail ? row("E-mail", i.senderEmail) : ""}
+      ${row(e.rowName, i.senderName)}
+      ${i.senderPhone ? row(e.rowPhone, formatPhone(i.senderPhone)) : ""}
+      ${i.senderEmail ? row(e.rowEmail, i.senderEmail) : ""}
     </table>
-    <div style="border-left:3px solid #c4935f;padding:2px 0 2px 14px;margin-bottom:22px">
-      <p style="margin:0;font-size:15px;line-height:1.6;color:#14213a;white-space:pre-wrap">${esc(i.message)}</p>
+    <div style="border-left:3px solid #B99A72;padding:2px 0 2px 14px;margin-bottom:22px">
+      <p style="margin:0;font-size:15px;line-height:1.6;color:#1B212B;white-space:pre-wrap">${esc(i.message)}</p>
     </div>
-    <a href="${esc(url)}" style="display:inline-block;background:#c4935f;color:#14213a;text-decoration:none;padding:11px 20px;border-radius:4px;font-weight:600;font-size:14px">Otvori oglas</a>
+    <a href="${esc(url)}" style="display:inline-block;background:#B99A72;color:#1B212B;text-decoration:none;padding:11px 20px;font-weight:600;font-size:14px">${esc(e.cta)}</a>
   </div>
 </div>`;
 }

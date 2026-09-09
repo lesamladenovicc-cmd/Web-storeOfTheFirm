@@ -33,7 +33,7 @@ type SoldRow = {
   id: string;
   slug: string;
   title: string;
-  price_rsd: number | null;
+  price_eur: number | null;
   sold_at: string | null;
   updated_at: string;
   seller_id: string;
@@ -42,7 +42,7 @@ type SoldRow = {
 };
 
 const SOLD_SELECT =
-  "id, slug, title, price_rsd, sold_at, updated_at, seller_id, " +
+  "id, slug, title, price_eur, sold_at, updated_at, seller_id, " +
   "categories ( name, slug ), profiles ( full_name )";
 
 function toSale(row: SoldRow): SaleRecord {
@@ -50,7 +50,7 @@ function toSale(row: SoldRow): SaleRecord {
     id: row.id,
     slug: row.slug,
     title: row.title,
-    priceRsd: row.price_rsd,
+    priceEur: row.price_eur,
     // sold_at is null only for rows written before migration 0010
     // reached the database. updated_at is the same approximation the
     // backfill uses, so a half-migrated table still charts correctly.

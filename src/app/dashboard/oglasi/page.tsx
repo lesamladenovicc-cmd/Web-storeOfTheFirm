@@ -148,7 +148,7 @@ export default async function DashboardListingsPage({
                       <StatusBadge status={listing.status} />
                     </Td>
                     <Td className="u-numeric text-right whitespace-nowrap">
-                      {formatPrice(listing.priceRsd)}
+                      {formatPrice(listing.priceEur)}
                     </Td>
                     {isAdmin ? (
                       <Td className="text-fg-muted">{listing.sellerName ?? "—"}</Td>

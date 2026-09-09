@@ -60,7 +60,7 @@ export type ListingCard = {
   title: string;
   /** Null only on drafts; publishing requires it. */
   condition: ListingCondition | null;
-  priceRsd: number | null;
+  priceEur: number | null;
   isNegotiable: boolean;
   status: ListingStatus;
   location: string;
@@ -71,6 +71,38 @@ export type ListingCard = {
   updatedAt: string;
 };
 
+/**
+ * Property specification, stored in `listings.attributes` (jsonb).
+ *
+ * The column was in the schema from the start as a niche escape hatch
+ * and went unused by the machine-listing MVP; this is what it now holds.
+ * It stays jsonb rather than becoming columns because the fields differ
+ * per property type — a garage has no `brojSoba`, a plot has no `sprat`
+ * — and because a new field must not mean a migration.
+ *
+ * EVERY FIELD IS OPTIONAL. A draft may be half-finished, and a genuinely
+ * unknown value must be absent rather than zero: `kvadratura: 0` would
+ * render as "0 m²" and, worse, reach `floorSize` in the JSON-LD.
+ */
+export type ListingAttributes = {
+  /** Interior area in m². Drives floorSize and the price-per-m² figure. */
+  kvadratura?: number;
+  /** Serbian half-rooms are real: 2.5 means "dvoiposoban". */
+  brojSoba?: number;
+  /** Free text because "PR", "VPR" and "4/8" are all valid answers. */
+  sprat?: string;
+  brojKupatila?: number;
+  grejanje?: string;
+  orijentacija?: string;
+  terasaM2?: number;
+  lift?: boolean;
+  garaznoMesto?: boolean;
+  uknjizen?: boolean;
+  /** Free text: "Q3 2026", "odmah", "po tehničkom prijemu". */
+  rokUseljenja?: string;
+  energetskiRazred?: string;
+};
+
 /** Full listing as rendered on the public detail page. */
 export type Listing = ListingCard & {
   description: string;
@@ -79,7 +111,7 @@ export type Listing = ListingCard & {
   contactName: string;
   contactPhone: string | null;
   contactEmail: string | null;
-  attributes: Record<string, unknown>;
+  attributes: ListingAttributes;
   viewCount: number;
   createdAt: string;
   images: ListingImage[];

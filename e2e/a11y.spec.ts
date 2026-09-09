@@ -84,7 +84,7 @@ for (const route of PUBLIC_ROUTES) {
  */
 test("revenue report has no WCAG A/AA violations", async ({ page }) => {
   await page.goto("/prijava");
-  await page.getByLabel(/e-mail/i).fill(process.env.E2E_ADMIN_EMAIL ?? "admin@jadranko.rs");
+  await page.getByLabel(/e-mail/i).fill(process.env.E2E_ADMIN_EMAIL ?? "admin@bgbuilding.rs");
   await page.getByLabel(/lozinka/i).fill(process.env.E2E_ADMIN_PASSWORD ?? "AdminLozinka2026!");
   await page.getByRole("button", { name: /prijavi se/i }).click();
   await expect(page).toHaveURL(/\/dashboard/);

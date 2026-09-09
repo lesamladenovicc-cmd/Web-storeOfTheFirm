@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Archivo, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import { SITE, SITE_URL } from "@/config/site";
 import { COPY } from "@/config/copy";
-import { organizationJsonLd, websiteJsonLd } from "@/lib/seo";
+import { siteGraphJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
 import "./globals.css";
 
@@ -76,7 +76,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           {COPY.common.skipToContent}
         </a>
         {children}
-        <JsonLd data={[organizationJsonLd(), websiteJsonLd()]} />
+        <JsonLd data={siteGraphJsonLd()} />
       </body>
     </html>
   );

@@ -181,8 +181,8 @@ const db = {
 };
 
 const USERS = [
-  { id: ADMIN_ID, email: "admin@jadranko.rs", password: "AdminLozinka2026!" },
-  { id: SELLER_ID, email: "prodavac@jadranko.rs", password: "ProdavacLozinka2026!" },
+  { id: ADMIN_ID, email: "admin@bgbuilding.rs", password: "AdminLozinka2026!" },
+  { id: SELLER_ID, email: "prodaja@bgbuilding.rs", password: "ProdajaLozinka2026!" },
 ];
 
 function seedListing(n, o) {
@@ -211,7 +211,7 @@ function seedListing(n, o) {
     title: o.title,
     description: o.description,
     condition: o.condition,
-    price_rsd: o.price,
+    price_eur: o.price,
     is_negotiable: o.negotiable ?? false,
     status: o.status ?? "aktivan",
     location: o.location,
@@ -219,9 +219,9 @@ function seedListing(n, o) {
     seller_id: owner,
     contact_name: owner === ADMIN_ID ? "Administrator" : "Marko Petrović",
     contact_phone: owner === ADMIN_ID ? "+381641110001" : "+381641110002",
-    contact_email: owner === ADMIN_ID ? "admin@jadranko.rs" : "prodavac@jadranko.rs",
+    contact_email: owner === ADMIN_ID ? "admin@bgbuilding.rs" : "prodaja@bgbuilding.rs",
     cover_image_path: count > 0 ? `${owner}/${id}/foto-1.png` : null,
-    attributes: {},
+    attributes: o.attrs ?? {},
     view_count: o.views ?? 0,
     published_at: o.status === "nacrt" ? null : ago(o.days),
     // Mirrors the stamp_sold_at trigger (0010): set only while sold.
@@ -236,26 +236,28 @@ function seedListing(n, o) {
 export function reset() {
   db.profiles = [
     {
-      id: ADMIN_ID, email: "admin@jadranko.rs", full_name: "Administrator",
-      phone: "+381641110001", location: "Novi Sad", role: "admin",
+      id: ADMIN_ID, email: "admin@bgbuilding.rs", full_name: "Administrator",
+      phone: "+381641110001", location: "Beograd", role: "admin",
       is_active: true, must_change_password: false,
       created_at: ago(60), updated_at: ago(60),
     },
     {
-      id: SELLER_ID, email: "prodavac@jadranko.rs", full_name: "Marko Petrović",
-      phone: "+381641110002", location: "Novi Sad", role: "seller",
+      id: SELLER_ID, email: "prodaja@bgbuilding.rs", full_name: "Marko Petrović",
+      phone: "+381641110002", location: "Beograd", role: "seller",
       is_active: true, must_change_password: false,
       created_at: ago(50), updated_at: ago(50),
     },
   ];
 
+  // Mirrors CATEGORY_SEED in src/config/taxonomy.ts. Ids are stable so
+  // the listing fixtures below can reference them by hand.
   db.categories = [
-    { id: "c0000001-0000-4000-8000-000000000001", slug: "gradjevinske-masine", name: "Građevinske mašine", description: "Bageri, utovarivači, valjci, mešalice i prateća oprema.", sort_order: 10, is_active: true },
-    { id: "c0000001-0000-4000-8000-000000000002", slug: "poljoprivredne-masine", name: "Poljoprivredne mašine", description: "Traktori, priključne mašine, kombajni i oprema za ratarstvo.", sort_order: 20, is_active: true },
-    { id: "c0000001-0000-4000-8000-000000000003", slug: "industrijske-masine", name: "Industrijske mašine", description: "Mašine za proizvodnju, obradu metala i drveta.", sort_order: 30, is_active: true },
-    { id: "c0000001-0000-4000-8000-000000000004", slug: "viljuskari-i-transport", name: "Viljuškari i transport", description: "Viljuškari, paletari, dizalice i transportna sredstva.", sort_order: 40, is_active: true },
-    { id: "c0000001-0000-4000-8000-000000000005", slug: "alati-i-oprema", name: "Alati i oprema", description: "Ručni i električni alati, kompresori, agregati.", sort_order: 50, is_active: true },
-    { id: "c0000001-0000-4000-8000-000000000006", slug: "rezervni-delovi", name: "Rezervni delovi", description: "Delovi, potrošni materijal i dodatna oprema.", sort_order: 60, is_active: true },
+    { id: "c0000001-0000-4000-8000-000000000001", slug: "stanovi", name: "Stanovi", description: "Garsonjere, jednosobni i višesobni stanovi u zgradama koje BG Building gradi u Beogradu.", sort_order: 10, is_active: true },
+    { id: "c0000001-0000-4000-8000-000000000002", slug: "lokali", name: "Lokali", description: "Ulični lokali u prizemlju novogradnje, sa izlogom i sopstvenim ulazom.", sort_order: 20, is_active: true },
+    { id: "c0000001-0000-4000-8000-000000000003", slug: "poslovni-prostor", name: "Poslovni prostor", description: "Kancelarije i poslovne jedinice na višim etažama naših objekata.", sort_order: 30, is_active: true },
+    { id: "c0000001-0000-4000-8000-000000000004", slug: "garaze-i-parking", name: "Garaže i parking", description: "Garažna i parking mesta u podzemnim etažama, uz stanove ili zasebno.", sort_order: 40, is_active: true },
+    { id: "c0000001-0000-4000-8000-000000000005", slug: "kuce", name: "Kuće", description: "Samostojeći objekti i kuće u nizu iz naše gradnje.", sort_order: 50, is_active: true },
+    { id: "c0000001-0000-4000-8000-000000000006", slug: "ostalo", name: "Ostalo", description: "Ostave, magacinski prostor i ostale jedinice u objektima.", sort_order: 99, is_active: true },
   ];
 
   db.listings = [];
@@ -263,71 +265,83 @@ export function reset() {
   db.inquiries = [];
   db.storage = new Map();
 
+  // Invented demo units on plausible Belgrade streets. Deliberately
+  // spread across every build phase, both priced and "po dogovoru", so
+  // the phase lamp, the price-per-m² row and the omitted-offer JSON-LD
+  // path all have something to render.
   seedListing(1, {
-    slug: "bager-gusenicar-cat-320d-2018-a1b2c3",
-    title: "Bager guseničar CAT 320D, 2018. god, 4.200 radnih sati",
-    description: "Bager guseničar Caterpillar 320D, godište 2018, 4.200 radnih sati.\n\nRedovno servisiran u ovlašćenom servisu, kompletna servisna dokumentacija dostupna na uvid. Gusenice na oko 70%, hidraulika bez curenja, klima ispravna.\n\nMašina je u svakodnevnoj upotrebi i može se pogledati i isprobati uz prethodni dogovor.",
-    condition: "korisceno", price: 8450000, negotiable: true,
-    location: "Novi Sad", category: "c0000001-0000-4000-8000-000000000001", days: 1, views: 214, imageCount: 4,
+    slug: "dvoiposoban-stan-62m2-vracar-a1b2c3",
+    title: "Dvoiposoban stan 62 m², Vračar — Njegoševa",
+    description: "Dvoiposoban stan na četvrtom spratu novog objekta u Njegoševoj, sa liftom i podzemnom garažom.\n\nRaspored: dnevni boravak sa trpezarijom i izlazom na terasu, odvojena kuhinja, dve spavaće sobe i kupatilo sa prozorom. Orijentacija jugoistok, stan je svetao tokom celog dana.\n\nObjekat je završen i tehnički primljen. Useljenje odmah po overi ugovora.",
+    condition: "useljivo", price: 242000, negotiable: true,
+    location: "Vračar, Beograd", category: "c0000001-0000-4000-8000-000000000001", days: 1, views: 214, imageCount: 4,
+    attrs: { kvadratura: 62, brojSoba: 2.5, sprat: "4/6", brojKupatila: 1, grejanje: "etažno gasno", orijentacija: "jugoistok", terasaM2: 6, lift: true, garaznoMesto: false, uknjizen: true, rokUseljenja: "odmah", energetskiRazred: "B" },
   });
   seedListing(2, {
-    slug: "traktor-imt-539-servisiran-d4e5f6",
-    title: "Traktor IMT 539, kompletno servisiran",
-    description: "IMT 539, kompletno servisiran prošle sezone. Zamenjeno kvačilo, novi akumulator, nove gume napred.\n\nMotor bez dima, ne troši ulje. Hidraulika ispravna. Registrovan do kraja godine.",
-    condition: "korisceno", price: 1950000,
-    location: "Kragujevac", category: "c0000001-0000-4000-8000-000000000002", days: 2, views: 158,
+    slug: "trosoban-stan-78m2-vozdovac-d4e5f6",
+    title: "Trosoban stan 78 m², Voždovac — Vojvode Stepe",
+    description: "Trosoban stan na šestom spratu, u objektu koji je u završnoj fazi radova.\n\nDnevni boravak sa kuhinjom u otvorenom planu, tri spavaće sobe, dva kupatila i prostrana terasa. Pogled na Banjicu.\n\nUseljenje se očekuje u trećem kvartalu 2026. Plaćanje u ratama koje prate dinamiku radova.",
+    condition: "pred_useljenje", price: 210000,
+    location: "Voždovac, Beograd", category: "c0000001-0000-4000-8000-000000000001", days: 2, views: 158,
+    attrs: { kvadratura: 78, brojSoba: 3, sprat: "6/8", brojKupatila: 2, grejanje: "toplotna pumpa", orijentacija: "jugozapad", terasaM2: 9, lift: true, garaznoMesto: true, uknjizen: false, rokUseljenja: "Q3 2026", energetskiRazred: "A" },
   });
   seedListing(3, {
-    slug: "viljuskar-linde-h25-dizel-g7h8i9",
-    title: "Viljuškar Linde H25, dizel, nosivost 2,5 t",
-    description: "Linde H25, dizel, nosivost 2.500 kg, visina dizanja 3,3 m.\n\nSati rada oko 6.800. Motor i hidraulika ispravni, bez curenja.",
-    condition: "kao_novo", price: 3200000,
-    location: "Beograd", category: "c0000001-0000-4000-8000-000000000004", days: 3, views: 96,
+    slug: "lokal-45m2-vracar-njegoseva-g7h8i9",
+    title: "Lokal 45 m², Vračar — ulični, sa izlogom",
+    description: "Ulični lokal u prizemlju stambenog objekta, sa velikim izlogom prema Njegoševoj i sopstvenim ulazom.\n\nJedinstven prostor sa mokrim čvorom i ostavom. Struja, voda i kanalizacija izvedeni do priključaka.",
+    condition: "useljivo", price: 180000,
+    location: "Vračar, Beograd", category: "c0000001-0000-4000-8000-000000000002", days: 3, views: 96,
+    attrs: { kvadratura: 45, sprat: "PR", brojKupatila: 1, grejanje: "etažno gasno", uknjizen: true, rokUseljenja: "odmah", energetskiRazred: "B" },
   });
   seedListing(4, {
-    slug: "kompresor-atlas-copco-ga11-j1k2l3",
-    title: "Vijčani kompresor Atlas Copco GA11",
-    description: "Vijčani kompresor Atlas Copco GA11, 11 kW, radni pritisak 8 bara.\n\nSa ugrađenim rezervoarom i sušačem vazduha. Sati rada oko 12.000.",
-    condition: "korisceno", price: 480000, negotiable: true,
-    location: "Niš", category: "c0000001-0000-4000-8000-000000000005", days: 5, views: 73, imageCount: 2,
+    slug: "garazno-mesto-vracar-j1k2l3",
+    title: "Garažno mesto, Vračar — podzemna garaža",
+    description: "Garažno mesto u podzemnoj etaži objekta u Njegoševoj, dimenzija 2,5 × 5,0 m.\n\nPristup preko automatske rampe. Garaža je pod video nadzorom.\n\nProdaje se zasebno, ne mora uz stan.",
+    condition: "useljivo", price: 22000, negotiable: true,
+    location: "Vračar, Beograd", category: "c0000001-0000-4000-8000-000000000004", days: 5, views: 73, imageCount: 2,
+    attrs: { kvadratura: 12.5, sprat: "-1", uknjizen: true, rokUseljenja: "odmah" },
   });
   seedListing(5, {
-    slug: "cirkular-za-drvo-industrijski-m4n5o6",
-    title: "Industrijski cirkular za drvo sa pomičnim stolom",
+    slug: "dvosoban-stan-54m2-vozdovac-m4n5o6",
+    title: "Dvosoban stan 54 m², Voždovac — Vojvode Stepe",
     // Po dogovoru: Product JSON-LD must omit `offers` entirely.
-    description: "Industrijski cirkular sa pomičnim stolom, dužina reza 3.200 mm.\n\nTrofazni motor 5,5 kW, list 400 mm. Cena po dogovoru — zavisi od načina preuzimanja.",
-    condition: "korisceno", price: null, negotiable: true,
-    location: "Subotica", category: "c0000001-0000-4000-8000-000000000003", days: 8, views: 41,
+    description: "Dvosoban stan na trećem spratu, sa terasom orijentisanom ka mirnoj strani.\n\nPraktičan raspored bez hodnika koji troše kvadraturu.\n\nCena po dogovoru — u zavisnosti od dinamike plaćanja i izmena u standardu opreme.",
+    condition: "pred_useljenje", price: null, negotiable: true,
+    location: "Voždovac, Beograd", category: "c0000001-0000-4000-8000-000000000001", days: 8, views: 41,
+    attrs: { kvadratura: 54, brojSoba: 2, sprat: "3/8", brojKupatila: 1, grejanje: "toplotna pumpa", orijentacija: "zapad", terasaM2: 5, lift: true, garaznoMesto: true, uknjizen: false, rokUseljenja: "Q3 2026" },
   });
   seedListing(6, {
-    slug: "mini-bager-kubota-u17-nov-p7q8r9",
-    title: "Mini bager Kubota U17-3, nov, nekorišćen",
-    description: "Kubota U17-3, potpuno nov, nekorišćen. Isporučen prošlog meseca, nije uvođen u rad.\n\nRadna masa 1.720 kg, dubina kopanja 2,3 m. Garancija proizvođača prenosiva.",
-    condition: "novo", price: 4990000,
-    location: "Beograd", category: "c0000001-0000-4000-8000-000000000001", days: 10, views: 302, imageCount: 4,
+    slug: "cetvorosoban-stan-104m2-novi-beograd-p7q8r9",
+    title: "Četvorosoban stan 104 m², Novi Beograd — Blok 63",
+    description: "Četvorosoban stan na osmom spratu, sa pogledom na Ušće i dve terase.\n\nVeliki dnevni boravak sa trpezarijom, odvojena kuhinja sa ostavom, tri spavaće sobe, dva kupatila i toalet. Dupla orijentacija.\n\nStan se predaje u standardu opisanom u specifikaciji radova.",
+    condition: "useljivo", price: 333000,
+    location: "Novi Beograd, Beograd", category: "c0000001-0000-4000-8000-000000000001", days: 10, views: 302, imageCount: 4,
+    attrs: { kvadratura: 104, brojSoba: 4, sprat: "8/12", brojKupatila: 2, grejanje: "daljinsko", orijentacija: "istok-zapad", terasaM2: 14, lift: true, garaznoMesto: true, uknjizen: true, rokUseljenja: "odmah", energetskiRazred: "A" },
   });
   seedListing(7, {
-    slug: "prikolica-kiper-jednoosovinska-s1t2u3",
-    title: "Kiper prikolica jednoosovinska, 3,5 t",
+    slug: "garsonjera-27m2-zemun-s1t2u3",
+    title: "Garsonjera 27 m², Zemun — Gornji grad",
     // Sold: badge, struck price, SoldOut availability, still reachable.
-    description: "Jednoosovinska kiper prikolica nosivosti 3,5 t. Hidraulično kipovanje na tri strane.",
-    condition: "korisceno", price: 320000, status: "prodato",
-    location: "Novi Sad", category: "c0000001-0000-4000-8000-000000000002",
+    description: "Garsonjera na trećem spratu manjeg objekta sa osam stanova. Kompaktan raspored bez izgubljenih kvadrata.",
+    condition: "useljivo", price: 65000, status: "prodato",
+    location: "Zemun, Beograd", category: "c0000001-0000-4000-8000-000000000001",
     days: 16, soldDays: 2, views: 187, imageCount: 2,
+    attrs: { kvadratura: 27, brojSoba: 1, sprat: "3/4", brojKupatila: 1, grejanje: "etažno gasno", orijentacija: "jug", lift: false, uknjizen: true, rokUseljenja: "odmah" },
   });
   seedListing(8, {
-    slug: "agregat-honda-ex7-za-delove-v4w5x6",
-    title: "Agregat Honda EX7 — ne pali, za delove",
-    description: "Honda EX7, ne pali. Verovatno problem sa paljenjem ili karburatorom.\n\nProdaje se isključivo za delove ili popravku, bez garancije na ispravnost.",
-    condition: "neispravno", price: 18500, negotiable: true,
-    location: "Čačak", category: "c0000001-0000-4000-8000-000000000005", days: 22, views: 55, imageCount: 1,
+    slug: "jednosoban-stan-38m2-zvezdara-v4w5x6",
+    title: "Jednosoban stan 38 m², Zvezdara — Bulevar kralja Aleksandra",
+    description: "Jednosoban stan na drugom spratu, idealan za izdavanje ili prvu nekretninu.\n\nMirno dvorišno krilo bez buke sa bulevara.\n\nObjekat je u izgradnji, grubi radovi su završeni. Kupovina u ovoj fazi je po najpovoljnijoj ceni kvadrata u objektu.",
+    condition: "u_izgradnji", price: 95000, negotiable: true,
+    location: "Zvezdara, Beograd", category: "c0000001-0000-4000-8000-000000000001", days: 22, views: 55, imageCount: 1,
+    attrs: { kvadratura: 38, brojSoba: 1, sprat: "2/7", brojKupatila: 1, grejanje: "centralno", orijentacija: "istok", lift: true, garaznoMesto: false, uknjizen: false, rokUseljenja: "Q2 2027", energetskiRazred: "B" },
   });
   seedListing(9, {
-    slug: "nacrt-primer-neobjavljenog-oglasa-y7z8a9",
+    slug: "nacrt-primer-neobjavljene-jedinice-y7z8a9",
     title: "Primer nacrta — nije javno vidljiv",
     description: "Vidljiv samo vlasniku i administratoru; ne pojavljuje se u javnoj pretrazi.",
-    condition: "korisceno", price: 125000, status: "nacrt",
-    location: "Novi Sad", category: "c0000001-0000-4000-8000-000000000006", days: 4, views: 0, imageCount: 1,
+    condition: "u_pripremi", price: 88000, status: "nacrt",
+    location: "Beograd", category: "c0000001-0000-4000-8000-000000000006", days: 4, views: 0, imageCount: 1,
   });
 
   // --- Sales history -------------------------------------------------
@@ -335,47 +349,52 @@ export function reset() {
   // /dashboard/prihod renders a real curve, a per-seller split and the
   // "sold without a price" footnote instead of a single bar.
   seedListing(10, {
-    slug: "utovarivac-jcb-3cx-2015-b2c3d4",
-    title: "Utovarivač JCB 3CX, 2015. godište",
-    description: "JCB 3CX, 2015, oko 7.400 radnih sati. Prodat kupcu iz Šapca.",
-    condition: "korisceno", price: 5300000, status: "prodato",
-    location: "Šabac", category: "c0000001-0000-4000-8000-000000000001",
+    slug: "trosoban-stan-81m2-zvezdara-b2c3d4",
+    title: "Trosoban stan 81 m², Zvezdara — Mali Mokri Lug",
+    description: "Trosoban stan na petom spratu, sa dve terase i pogledom na park. Prodat porodici iz Beograda.",
+    condition: "useljivo", price: 205000, status: "prodato",
+    location: "Zvezdara, Beograd", category: "c0000001-0000-4000-8000-000000000001",
     days: 78, soldDays: 62, views: 341, imageCount: 3,
+    attrs: { kvadratura: 81, brojSoba: 3, sprat: "5/7", brojKupatila: 2, grejanje: "centralno", terasaM2: 11, lift: true, garaznoMesto: true, uknjizen: true },
   });
   seedListing(11, {
-    slug: "kombajn-zmaj-142-e5f6g7",
-    title: "Kombajn Zmaj 142, sa hederom",
-    description: "Zmaj 142 sa hederom od 4,2 m. Prodat pred sezonu.",
-    condition: "korisceno", price: 1450000, status: "prodato",
-    location: "Sombor", category: "c0000001-0000-4000-8000-000000000002",
+    slug: "lokal-62m2-zemun-e5f6g7",
+    title: "Lokal 62 m², Zemun — Glavna ulica",
+    description: "Ulični lokal sa dvostrukim izlogom u pešačkoj zoni. Prodat pre otvaranja objekta.",
+    condition: "useljivo", price: 235000, status: "prodato",
+    location: "Zemun, Beograd", category: "c0000001-0000-4000-8000-000000000002",
     days: 150, soldDays: 132, views: 210, imageCount: 2,
+    attrs: { kvadratura: 62, sprat: "PR", brojKupatila: 1, uknjizen: true },
   });
   seedListing(12, {
-    slug: "presa-za-lim-hidraulicna-h8i9j1",
-    title: "Hidraulična presa za lim, 60 t",
-    description: "Hidraulična presa 60 t, trofazna. Prodata radionici iz Kruševca.",
-    condition: "korisceno", price: 890000, status: "prodato",
-    location: "Kruševac", category: "c0000001-0000-4000-8000-000000000003",
+    slug: "poslovni-prostor-88m2-novi-beograd-h8i9j1",
+    title: "Poslovni prostor 88 m², Novi Beograd — Blok 63",
+    description: "Kancelarijski prostor na drugom spratu, sa zasebnim ulazom iz zajedničkog hola. Prodat agenciji iz Novog Beograda.",
+    condition: "useljivo", price: 255000, status: "prodato",
+    location: "Novi Beograd, Beograd", category: "c0000001-0000-4000-8000-000000000003",
     days: 240, soldDays: 226, views: 128, imageCount: 2,
     seller: ADMIN_ID,
+    attrs: { kvadratura: 88, sprat: "2/12", brojKupatila: 2, grejanje: "toplotna pumpa", lift: true, garaznoMesto: true, uknjizen: true, energetskiRazred: "A" },
   });
   seedListing(13, {
-    slug: "set-rezervnih-delova-hidraulika-k2l3m4",
-    title: "Set rezervnih delova za hidrauliku",
+    slug: "garazno-mesto-novi-beograd-k2l3m4",
+    title: "Garažno mesto, Novi Beograd — Blok 63",
     // Sold with no price: counts as a sale, cannot enter the sum.
-    description: "Mešoviti set zaptivki, creva i pumpi. Cena je dogovorena telefonom.",
-    condition: "novo", price: null, status: "prodato",
-    location: "Novi Sad", category: "c0000001-0000-4000-8000-000000000006",
+    description: "Garažno mesto u podzemnoj etaži. Cena je dogovorena uz kupovinu stana.",
+    condition: "useljivo", price: null, status: "prodato",
+    location: "Novi Beograd, Beograd", category: "c0000001-0000-4000-8000-000000000004",
     days: 40, soldDays: 33, views: 64, imageCount: 1,
+    attrs: { kvadratura: 12.5, sprat: "-1", uknjizen: true },
   });
   seedListing(14, {
-    slug: "agregat-dizel-15-kva-n5o6p7",
-    title: "Dizel agregat 15 kVA, sa kućištem",
-    description: "Agregat 15 kVA u zvučno izolovanom kućištu. Prodat prošlog meseca.",
-    condition: "kao_novo", price: 640000, status: "prodato",
-    location: "Beograd", category: "c0000001-0000-4000-8000-000000000005",
+    slug: "dvosoban-stan-49m2-zemun-n5o6p7",
+    title: "Dvosoban stan 49 m², Zemun — Gornji grad",
+    description: "Dvosoban stan na drugom spratu, sa francuskim balkonom. Prodat prošlog meseca.",
+    condition: "useljivo", price: 118000, status: "prodato",
+    location: "Zemun, Beograd", category: "c0000001-0000-4000-8000-000000000001",
     days: 34, soldDays: 21, views: 97, imageCount: 2,
     seller: ADMIN_ID,
+    attrs: { kvadratura: 49, brojSoba: 2, sprat: "2/4", brojKupatila: 1, grejanje: "etažno gasno", lift: false, uknjizen: true },
   });
 
   db.inquiries = [
@@ -759,14 +778,14 @@ export function start(port = DEFAULT_PORT) {
           );
         }
         if (a.p_conditions?.length) rows = rows.filter((l) => a.p_conditions.includes(l.condition));
-        if (a.p_price_min != null) rows = rows.filter((l) => l.price_rsd != null && l.price_rsd >= a.p_price_min);
-        if (a.p_price_max != null) rows = rows.filter((l) => l.price_rsd != null && l.price_rsd <= a.p_price_max);
+        if (a.p_price_min != null) rows = rows.filter((l) => l.price_eur != null && l.price_eur >= a.p_price_min);
+        if (a.p_price_max != null) rows = rows.filter((l) => l.price_eur != null && l.price_eur <= a.p_price_max);
         if (a.p_location) rows = rows.filter((l) => fold(l.location).includes(fold(a.p_location)));
 
         if (a.p_sort === "cena_rastuce") {
-          rows = [...rows].sort((x, y) => (x.price_rsd ?? Infinity) - (y.price_rsd ?? Infinity));
+          rows = [...rows].sort((x, y) => (x.price_eur ?? Infinity) - (y.price_eur ?? Infinity));
         } else if (a.p_sort === "cena_opadajuce") {
-          rows = [...rows].sort((x, y) => (y.price_rsd ?? -Infinity) - (x.price_rsd ?? -Infinity));
+          rows = [...rows].sort((x, y) => (y.price_eur ?? -Infinity) - (x.price_eur ?? -Infinity));
         } else {
           rows = [...rows].sort((x, y) => String(y.published_at).localeCompare(String(x.published_at)));
         }
@@ -778,7 +797,7 @@ export function start(port = DEFAULT_PORT) {
             const cat = db.categories.find((c) => c.id === l.category_id);
             return {
               id: l.id, slug: l.slug, title: l.title, condition: l.condition,
-              price_rsd: l.price_rsd, is_negotiable: l.is_negotiable, status: l.status,
+              price_eur: l.price_eur, is_negotiable: l.is_negotiable, status: l.status,
               location: l.location, cover_image_path: l.cover_image_path,
               category_name: cat?.name ?? null, category_slug: cat?.slug ?? null,
               published_at: l.published_at, updated_at: l.updated_at,
@@ -944,7 +963,7 @@ export function start(port = DEFAULT_PORT) {
 
   server.listen(port, () => {
     console.log(`  mock supabase  →  http://127.0.0.1:${port}`);
-    console.log(`  prijava        →  prodavac@jadranko.rs / ProdavacLozinka2026!`);
+    console.log(`  prijava        →  prodaja@bgbuilding.rs / ProdajaLozinka2026!`);
   });
 
   return server;

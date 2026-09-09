@@ -70,10 +70,10 @@ export default function OpengraphImage() {
             letterSpacing: -2.5,
           }}
         >
-          Polovna i nova oprema
+          Stanovi u novogradnji
         </div>
         <div style={{ color: "#b6bbc4", fontSize: 32, marginTop: 20 }}>
-          Bez posrednika. Direktan kontakt sa prodavcem.
+          Beograd. Direktno od investitora, bez provizije.
         </div>
       </div>
 

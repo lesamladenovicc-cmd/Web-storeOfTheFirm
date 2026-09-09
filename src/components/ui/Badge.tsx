@@ -48,12 +48,16 @@ export function Badge({
   );
 }
 
-/** Condition never uses accent — accent belongs to actions, not metadata. */
+/**
+ * Build phase never uses accent — accent belongs to actions, not metadata.
+ * Only `useljivo` earns the success tone; the earlier phases are facts,
+ * not warnings, so they stay neutral rather than borrowing `warning`.
+ */
 const CONDITION_TONES: Record<ListingCondition, BadgeTone> = {
-  novo: "success",
-  kao_novo: "neutral",
-  korisceno: "neutral",
-  neispravno: "warning",
+  u_pripremi: "neutral",
+  u_izgradnji: "neutral",
+  pred_useljenje: "neutral",
+  useljivo: "success",
 };
 
 export function ConditionBadge({

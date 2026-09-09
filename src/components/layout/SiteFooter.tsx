@@ -44,8 +44,15 @@ export function SiteFooter() {
           <p className="flex items-center gap-4">
             <ColorBar />
             <span>
-              {COPY.footer.pib} {SITE.registration.pib} · {COPY.footer.maticniBroj}{" "}
-              {SITE.registration.maticniBroj} · {SITE.locale} · {SITE.currency}
+              {[
+                SITE.registration.pib && `${COPY.footer.pib} ${SITE.registration.pib}`,
+                SITE.registration.maticniBroj &&
+                  `${COPY.footer.maticniBroj} ${SITE.registration.maticniBroj}`,
+                SITE.locale,
+                SITE.currency,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
             </span>
           </p>
         </div>

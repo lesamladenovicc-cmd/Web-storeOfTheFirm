@@ -3,7 +3,7 @@
 Project guidance for Claude Code. Read this before doing anything in this repo.
 
 ## Project
-Internal listings web store (MVP). KupujemProdajem-style but **listing-only**: approved internal staff post products; public browses and contacts sellers. **No cart, no checkout, no payments.** Language: **Serbian (sr-RS)**. Currency: **RSD**. Niche is not final (starts with "machines") — keep everything **niche-agnostic and easy to re-theme**.
+Internal listings web store (MVP). KupujemProdajem-style but **listing-only**: approved internal staff post products; public browses and contacts sellers. **No cart, no checkout, no payments.** Language: **Serbian (sr-RS)**. Currency: **EUR** — Serbian property is quoted in euros. Niche is **new-build property in Belgrade** (BG Building, a developer selling units in its own buildings); keep everything **niche-agnostic and easy to re-theme** regardless.
 
 ## Golden rules
 - **Listing-only.** Never add cart, checkout, or payment code.
@@ -11,7 +11,7 @@ Internal listings web store (MVP). KupujemProdajem-style but **listing-only**: a
 - **No public sign-up.** Admin creates or invites internal accounts.
 - Keep categorization **flat and minimal**. No deep nested category trees.
 - All UI text in **Serbian**. Use Serbian mock/placeholder text until told otherwise.
-- Prices in **RSD**, formatted like `1.950 din`.
+- Prices in **EUR**, formatted like `242.000 €` (symbol after the amount). `null` means "Po dogovoru", never 0.
 
 ## Skills — BUILD PHASE ONLY
 - The project vendors the cline/skills repo at `Skills/skills/` (36 skill folders, standard `SKILL.md` format).
@@ -97,11 +97,11 @@ Rules:
 
 ## Domain model (target)
 - **users** — internal staff; `role` (admin | seller)
-- **listings** — title, description, condition, price_rsd, status, location, seller_id, category, created_at, updated_at
+- **listings** — title, description, condition (build phase), price_eur, status, location, seller_id, category, attributes (jsonb spec), created_at, updated_at
 - **listing_images** — listing_id, storage_path, sort_order
 
 Enums (Serbian, user-facing):
-- condition: `Novo`, `Kao novo`, `Korišćeno`, `Neispravno`
+- condition — build phase, not wear. Slugs `u_pripremi`, `u_izgradnji`, `pred_useljenje`, `useljivo`; labels `U pripremi`, `U izgradnji`, `Pred useljenje`, `Useljivo`. Migration 0011 renamed these in place, so the **Postgres enum order is no longer chronological** — display order comes from `LISTING_CONDITIONS` and nothing may `order by condition`.
 - status: `aktivan`, `prodato`, `nacrt`
 
 ## Auth
@@ -111,7 +111,7 @@ Enums (Serbian, user-facing):
 
 ## SEO (non-negotiable)
 - SSR/SSG all public listing pages.
-- Per listing: `<title>`, meta description, canonical, OG/Twitter tags, and **Product JSON-LD** (name, description, image, `offers` in RSD, `itemCondition`).
+- Per listing: `<title>`, meta description, canonical, OG/Twitter tags, and **Product JSON-LD** (name, description, image, `offers` in EUR, `itemCondition`) plus an `Accommodation` node carrying floorSize / rooms.
 - Generate `sitemap.xml` + `robots.txt`. Locale `sr-RS`. Optimize images via `next/image`.
 
 ## Conventions
@@ -127,7 +127,7 @@ Enums (Serbian, user-facing):
 - lint: `npm run lint`
 - typecheck: `npm run typecheck`
 - unit tests: `npm run test`
-- **db + RLS verification: `npm run verify:db`** — runs every migration and 105
+- **db + RLS verification: `npm run verify:db`** — runs every migration and 114
   assertions in PGlite (real Postgres in WASM). No Docker needed. Run this after
   ANY change under `supabase/migrations/`.
 - e2e: `npm run test:e2e`

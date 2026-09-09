@@ -12,38 +12,56 @@
  */
 
 /* ------------------------------------------------------------------ */
-/* Condition                                                           */
+/* Build phase (column is still `condition` — see migration 0011)      */
 /* ------------------------------------------------------------------ */
 
-export const LISTING_CONDITIONS = ["novo", "kao_novo", "korisceno", "neispravno"] as const;
+/**
+ * ORDER MATTERS AND IS DEFINED HERE, NOT IN POSTGRES.
+ *
+ * Migration 0011 renamed the four enum values in place, which leaves
+ * their original creation order behind: Postgres still sorts them
+ * `useljivo < pred_useljenje < u_izgradnji < u_pripremi`. This array is
+ * the chronological truth and drives every picker and filter, so no
+ * query may `order by condition`.
+ */
+export const LISTING_CONDITIONS = [
+  "u_pripremi",
+  "u_izgradnji",
+  "pred_useljenje",
+  "useljivo",
+] as const;
 
 export type ListingCondition = (typeof LISTING_CONDITIONS)[number];
 
 export const CONDITION_LABELS: Record<ListingCondition, string> = {
-  novo: "Novo",
-  kao_novo: "Kao novo",
-  korisceno: "Korišćeno",
-  neispravno: "Neispravno",
+  u_pripremi: "U pripremi",
+  u_izgradnji: "U izgradnji",
+  pred_useljenje: "Pred useljenje",
+  useljivo: "Useljivo",
 };
 
-/** Short helper text shown under the condition picker in the dashboard. */
+/** Short helper text shown under the phase picker in the dashboard. */
 export const CONDITION_HINTS: Record<ListingCondition, string> = {
-  novo: "Nekorišćeno, u originalnom pakovanju.",
-  kao_novo: "Korišćeno vrlo malo, bez vidljivih tragova.",
-  korisceno: "Ispravno, sa vidljivim tragovima korišćenja.",
-  neispravno: "Ne radi ili radi delimično — za delove ili popravku.",
+  u_pripremi: "Projekat u pripremi. Ugovaranje po sistemu rezervacije, pre početka radova.",
+  u_izgradnji: "Objekat je u gradnji. Kupovina u ranoj fazi, po povoljnijoj ceni.",
+  pred_useljenje: "Radovi su u završnoj fazi. Useljenje u roku od nekoliko meseci.",
+  useljivo: "Objekat je završen i tehnički primljen. Useljenje odmah.",
 };
 
 /**
- * schema.org OfferItemCondition mapping used by Product JSON-LD.
- * `kao_novo` maps to UsedCondition rather than RefurbishedCondition —
- * "kao novo" means lightly used, not professionally refurbished.
+ * schema.org OfferItemCondition used by the Product node.
+ *
+ * All four map to NewCondition, and that is not laziness: every unit we
+ * list is new-build, so wear is genuinely constant. The axis that varies
+ * — how far the building has got — has no OfferItemCondition that means
+ * it, and forcing it into one would be a false claim about the property.
+ * It is emitted as a PropertyValue in `additionalProperty` instead.
  */
 export const CONDITION_SCHEMA_URL: Record<ListingCondition, string> = {
-  novo: "https://schema.org/NewCondition",
-  kao_novo: "https://schema.org/UsedCondition",
-  korisceno: "https://schema.org/UsedCondition",
-  neispravno: "https://schema.org/DamagedCondition",
+  u_pripremi: "https://schema.org/NewCondition",
+  u_izgradnji: "https://schema.org/NewCondition",
+  pred_useljenje: "https://schema.org/NewCondition",
+  useljivo: "https://schema.org/NewCondition",
 };
 
 /* ------------------------------------------------------------------ */
@@ -111,45 +129,41 @@ export type CategorySeed = {
 
 export const CATEGORY_SEED: CategorySeed[] = [
   {
-    slug: "gradjevinske-masine",
-    name: "Građevinske mašine",
-    description: "Bageri, utovarivači, valjci, mešalice i prateća oprema.",
+    slug: "stanovi",
+    name: "Stanovi",
+    description:
+      "Garsonjere, jednosobni i višesobni stanovi u zgradama koje BG Building gradi u Beogradu.",
     sort_order: 10,
   },
   {
-    slug: "poljoprivredne-masine",
-    name: "Poljoprivredne mašine",
-    description: "Traktori, priključne mašine, kombajni i oprema za ratarstvo.",
+    slug: "lokali",
+    name: "Lokali",
+    description:
+      "Ulični lokali u prizemlju novogradnje, sa izlogom i sopstvenim ulazom.",
     sort_order: 20,
   },
   {
-    slug: "industrijske-masine",
-    name: "Industrijske mašine",
-    description: "Mašine za proizvodnju, obradu metala i drveta.",
+    slug: "poslovni-prostor",
+    name: "Poslovni prostor",
+    description: "Kancelarije i poslovne jedinice na višim etažama naših objekata.",
     sort_order: 30,
   },
   {
-    slug: "viljuskari-i-transport",
-    name: "Viljuškari i transport",
-    description: "Viljuškari, paletari, dizalice i transportna sredstva.",
+    slug: "garaze-i-parking",
+    name: "Garaže i parking",
+    description: "Garažna i parking mesta u podzemnim etažama, uz stanove ili zasebno.",
     sort_order: 40,
   },
   {
-    slug: "alati-i-oprema",
-    name: "Alati i oprema",
-    description: "Ručni i električni alati, kompresori, agregati.",
+    slug: "kuce",
+    name: "Kuće",
+    description: "Samostojeći objekti i kuće u nizu iz naše gradnje.",
     sort_order: 50,
-  },
-  {
-    slug: "rezervni-delovi",
-    name: "Rezervni delovi",
-    description: "Delovi, potrošni materijal i dodatna oprema.",
-    sort_order: 60,
   },
   {
     slug: "ostalo",
     name: "Ostalo",
-    description: "Sve što ne spada u prethodne kategorije.",
+    description: "Ostave, magacinski prostor i ostale jedinice u objektima.",
     sort_order: 99,
   },
 ];

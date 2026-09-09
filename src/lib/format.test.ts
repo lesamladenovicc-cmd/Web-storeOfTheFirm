@@ -1,14 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
   countWithNoun,
-  formatCompactRsd,
+  formatArea,
+  formatCompactMoney,
   formatDate,
   formatDateTime,
   formatMonthLabel,
   formatPhone,
   formatPrice,
+  formatPricePerSquare,
   formatRelativeDate,
-  formatRsd,
+  formatRooms,
+  formatMoney,
   groupDigits,
   maskPhone,
   normalizePhone,
@@ -18,7 +21,7 @@ import {
   whatsappHref,
 } from "./format";
 
-describe("groupDigits / formatRsd", () => {
+describe("groupDigits / formatMoney", () => {
   it("groups thousands with Serbian dot separators", () => {
     expect(groupDigits(0)).toBe("0");
     expect(groupDigits(950)).toBe("950");
@@ -29,15 +32,16 @@ describe("groupDigits / formatRsd", () => {
     expect(groupDigits(1234567890)).toBe("1.234.567.890");
   });
 
-  it("formats the canonical example from the brief", () => {
-    expect(formatRsd(1950)).toBe("1.950 din");
+  it("puts the euro symbol after the amount, Serbian style", () => {
+    expect(formatMoney(1950)).toBe("1.950 €");
+    expect(formatMoney(242_000)).toBe("242.000 €");
   });
 
   it("falls back to 'Po dogovoru' for a null price", () => {
     expect(formatPrice(null)).toBe("Po dogovoru");
     expect(formatPrice(undefined)).toBe("Po dogovoru");
-    expect(formatPrice(0)).toBe("0 din");
-    expect(formatPrice(1950000)).toBe("1.950.000 din");
+    expect(formatPrice(0)).toBe("0 €");
+    expect(formatPrice(242_000)).toBe("242.000 €");
   });
 });
 
@@ -152,27 +156,27 @@ describe("truncate", () => {
   });
 });
 
-describe("formatCompactRsd", () => {
+describe("formatCompactMoney", () => {
   it("leaves amounts under a thousand grouped and unabbreviated", () => {
-    expect(formatCompactRsd(0)).toBe("0");
-    expect(formatCompactRsd(950)).toBe("950");
+    expect(formatCompactMoney(0)).toBe("0");
+    expect(formatCompactMoney(950)).toBe("950");
   });
 
   it("abbreviates thousands and millions with a decimal comma", () => {
-    expect(formatCompactRsd(1000)).toBe("1 hilj");
-    expect(formatCompactRsd(18500)).toBe("18,5 hilj");
-    expect(formatCompactRsd(450000)).toBe("450 hilj");
-    expect(formatCompactRsd(1_450_000)).toBe("1,5 mil");
-    expect(formatCompactRsd(8_450_000)).toBe("8,5 mil");
+    expect(formatCompactMoney(1000)).toBe("1 hilj");
+    expect(formatCompactMoney(18500)).toBe("18,5 hilj");
+    expect(formatCompactMoney(450000)).toBe("450 hilj");
+    expect(formatCompactMoney(1_450_000)).toBe("1,5 mil");
+    expect(formatCompactMoney(8_450_000)).toBe("8,5 mil");
   });
 
   it("drops a trailing zero decimal", () => {
-    expect(formatCompactRsd(2_000_000)).toBe("2 mil");
-    expect(formatCompactRsd(11_000)).toBe("11 hilj");
+    expect(formatCompactMoney(2_000_000)).toBe("2 mil");
+    expect(formatCompactMoney(11_000)).toBe("11 hilj");
   });
 
   it("keeps the minus sign on a negative amount", () => {
-    expect(formatCompactRsd(-40_000)).toBe("-40 hilj");
+    expect(formatCompactMoney(-40_000)).toBe("-40 hilj");
   });
 });
 
@@ -186,5 +190,50 @@ describe("formatMonthLabel", () => {
   it("gives the full Latin-script Serbian month when asked", () => {
     expect(formatMonthLabel(2026, 8, { short: false })).toBe("septembar 2026.");
     expect(formatMonthLabel(2026, 7, { short: false })).toBe("avgust 2026.");
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* Property helpers                                                    */
+/* ------------------------------------------------------------------ */
+
+describe("formatArea", () => {
+  it("uses a decimal comma and drops a trailing zero", () => {
+    expect(formatArea(62)).toBe("62 m²");
+    expect(formatArea(62.5)).toBe("62,5 m²");
+    expect(formatArea(62.04)).toBe("62 m²");
+  });
+
+  it("groups thousands like every other figure on the site", () => {
+    expect(formatArea(1250)).toBe("1.250 m²");
+  });
+});
+
+describe("formatPricePerSquare", () => {
+  it("divides and rounds to whole euros", () => {
+    expect(formatPricePerSquare(242_000, 62)).toBe("3.903 €/m²");
+  });
+
+  it("returns null rather than a figure when the price is negotiable", () => {
+    // "Po dogovoru": there is no price to divide, and printing "0 €/m²"
+    // would be worse than printing nothing.
+    expect(formatPricePerSquare(null, 62)).toBeNull();
+  });
+
+  it("returns null when the area is missing or zero", () => {
+    expect(formatPricePerSquare(242_000, undefined)).toBeNull();
+    expect(formatPricePerSquare(242_000, 0)).toBeNull();
+  });
+});
+
+describe("formatRooms", () => {
+  it("uses the Serbian word buyers actually search for", () => {
+    expect(formatRooms(1)).toBe("jednosoban");
+    expect(formatRooms(2.5)).toBe("dvoiposoban");
+    expect(formatRooms(4)).toBe("četvorosoban");
+  });
+
+  it("falls back to a numeral past the table", () => {
+    expect(formatRooms(6)).toBe("6 sobe");
   });
 });

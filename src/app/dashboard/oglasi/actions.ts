@@ -51,12 +51,12 @@ function parseListingForm(formData: FormData): ParsedForm {
     };
   }
 
-  const price = formInt(formData, "priceRsd");
+  const price = formInt(formData, "priceEur");
   if (price !== undefined && Number.isNaN(price)) {
     return {
       ok: false,
       state: fail(COPY.validation.genericError, {
-        priceRsd: COPY.validation.invalidPrice,
+        priceEur: COPY.validation.invalidPrice,
       }),
     };
   }
@@ -73,7 +73,7 @@ function parseListingForm(formData: FormData): ParsedForm {
       // with "Izaberite stanje." Every other nullable field below
       // already normalises the same way.
       condition: formString(formData, "condition") ?? null,
-      priceRsd: price ?? null,
+      priceEur: price ?? null,
       isNegotiable: formBool(formData, "isNegotiable"),
       location: formString(formData, "location") ?? "",
       categoryId: formString(formData, "categoryId") ?? null,
@@ -81,6 +81,23 @@ function parseListingForm(formData: FormData): ParsedForm {
       contactPhone: rawPhone,
       contactEmail: formString(formData, "contactEmail") ?? null,
       imagePaths: formStringArray(formData, "imagePaths"),
+      // Raw strings straight from the form: listingAttributesSchema does
+      // the coercion and strips blanks to undefined, so nothing here has
+      // to know which fields are numbers and which are checkboxes.
+      attributes: {
+        kvadratura: formData.get("attr.kvadratura"),
+        brojSoba: formData.get("attr.brojSoba"),
+        sprat: formData.get("attr.sprat"),
+        brojKupatila: formData.get("attr.brojKupatila"),
+        grejanje: formData.get("attr.grejanje"),
+        orijentacija: formData.get("attr.orijentacija"),
+        terasaM2: formData.get("attr.terasaM2"),
+        lift: formData.get("attr.lift"),
+        garaznoMesto: formData.get("attr.garaznoMesto"),
+        uknjizen: formData.get("attr.uknjizen"),
+        rokUseljenja: formData.get("attr.rokUseljenja"),
+        energetskiRazred: formData.get("attr.energetskiRazred"),
+      },
       status,
     },
   };
@@ -130,7 +147,7 @@ export async function createListingAction(
     title: input.title,
     description: input.description,
     condition: input.condition,
-    price_rsd: input.priceRsd,
+    price_eur: input.priceEur,
     is_negotiable: input.isNegotiable,
     status: input.status,
     location: input.location,
@@ -140,6 +157,7 @@ export async function createListingAction(
     contact_phone: input.contactPhone,
     contact_email: input.contactEmail,
     cover_image_path: input.imagePaths[0] ?? null,
+    attributes: input.attributes,
   });
 
   if (error) return fail(COPY.validation.genericError);
@@ -230,7 +248,7 @@ export async function updateListingAction(
       title: input.title,
       description: input.description,
       condition: input.condition,
-      price_rsd: input.priceRsd,
+      price_eur: input.priceEur,
       is_negotiable: input.isNegotiable,
       status: input.status,
       location: input.location,
@@ -239,6 +257,7 @@ export async function updateListingAction(
       contact_phone: input.contactPhone,
       contact_email: input.contactEmail,
       cover_image_path: input.imagePaths[0] ?? null,
+      attributes: input.attributes,
     })
     .eq("id", listingId);
 

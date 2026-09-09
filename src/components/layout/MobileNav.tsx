@@ -144,14 +144,16 @@ export function MobileNav({ isAuthed = false }: { isAuthed?: boolean }) {
                 </ButtonLink>
 
                 <div className="mt-auto pt-10">
-                  <a
-                    href={SITE.contact.phoneHref}
-                    className="u-numeric text-fg hover:text-signal-text block text-sm transition-colors"
-                  >
-                    {SITE.contact.phone}
-                  </a>
+                  {SITE.contact.phoneHref ? (
+                    <a
+                      href={SITE.contact.phoneHref}
+                      className="u-numeric text-fg hover:text-signal-text block text-sm transition-colors"
+                    >
+                      {SITE.contact.phone}
+                    </a>
+                  ) : null}
                   <p className="text-fg-muted mt-1.5 text-sm">
-                    {SITE.contact.address}, {SITE.contact.city}
+                    {[SITE.contact.address, SITE.contact.city].filter(Boolean).join(", ")}
                   </p>
                 </div>
               </div>

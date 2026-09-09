@@ -8,7 +8,7 @@
  *
  * Two rules the whole file turns on:
  *
- *   * A sale with NO PRICE ("Po dogovoru", price_rsd is null) is a real
+ *   * A sale with NO PRICE ("Po dogovoru", price_eur is null) is a real
  *     sale and is counted, but it can never enter a sum or an average.
  *     Treating it as 0 would quietly drag every average down.
  *   * Buckets are built from the calendar, not from the data: twelve
@@ -24,7 +24,7 @@ export type SaleRecord = {
   slug: string;
   title: string;
   /** Null means the price was never published — "Po dogovoru". */
-  priceRsd: number | null;
+  priceEur: number | null;
   /** ISO timestamp of the sale. */
   soldAt: string;
   sellerId: string;
@@ -142,7 +142,7 @@ export function summarizeRevenue(
   let best = 0;
 
   for (const sale of sales) {
-    const price = sale.priceRsd;
+    const price = sale.priceEur;
     const sold = new Date(sale.soldAt);
 
     count += 1;

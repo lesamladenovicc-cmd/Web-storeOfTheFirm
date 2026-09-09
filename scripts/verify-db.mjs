@@ -116,11 +116,11 @@ async function createFlowSection(db) {
     db,
     "seller creates a draft with a client-generated id",
     `insert into public.listings
-       (id, slug, title, description, condition, price_rsd, is_negotiable,
+       (id, slug, title, description, condition, price_eur, is_negotiable,
         status, location, category_id, seller_id, contact_name, contact_phone)
      values ($1, 'novi-bager-test-a1b2c3', 'Novi bager za test',
              'Opis koji je dovoljno dugacak da prodje validaciju objave.',
-             'korisceno', 1250000, true, 'nacrt', 'Novi Sad', $2, $3,
+             'u_izgradnji', 1250000, true, 'nacrt', 'Novi Sad', $2, $3,
              'Prodavac A', '+381641234567')`,
     [NEW_ID, CATEGORY, SELLER],
   );
@@ -180,9 +180,9 @@ async function createFlowSection(db) {
   // --- 5. Edit -----------------------------------------------------
   await asRole(db, "authenticated", SELLER);
   await allow(db, "seller edits the price",
-    `update public.listings set price_rsd = 1190000 where id = '${NEW_ID}'`);
+    `update public.listings set price_eur = 1190000 where id = '${NEW_ID}'`);
   await expectValue(db, "the new price is stored",
-    `select price_rsd from public.listings where id = '${NEW_ID}'`, 1190000);
+    `select price_eur from public.listings where id = '${NEW_ID}'`, 1190000);
 
   await allow(db, "seller marks it sold",
     `update public.listings set status = 'prodato' where id = '${NEW_ID}'`);
@@ -193,7 +193,7 @@ async function createFlowSection(db) {
   await expectValue(db, "sold_at was stamped on the sale",
     `select sold_at is not null from public.listings where id = '${NEW_ID}'`, true);
   await allow(db, "seller corrects the price of the sold listing",
-    `update public.listings set price_rsd = 1150000 where id = '${NEW_ID}'`);
+    `update public.listings set price_eur = 1150000 where id = '${NEW_ID}'`);
   await expectValue(db, "an edit that does not touch status keeps sold_at",
     `select sold_at is not null from public.listings where id = '${NEW_ID}'`, true);
 
@@ -227,7 +227,7 @@ async function createFlowSection(db) {
     "cannot publish without a contact channel",
     `insert into public.listings
        (slug, title, condition, status, location, category_id, seller_id)
-     values ('bez-kontakta-test-x1y2z3', 'Oglas bez kontakta', 'novo',
+     values ('bez-kontakta-test-x1y2z3', 'Oglas bez kontakta', 'useljivo',
              'aktivan', 'Nis', '${CATEGORY}', '${SELLER}')`,
   );
   await deny(
@@ -235,14 +235,14 @@ async function createFlowSection(db) {
     "cannot publish without a category",
     `insert into public.listings
        (slug, title, condition, status, location, seller_id, contact_phone)
-     values ('bez-kategorije-test-x1y2z3', 'Oglas bez kategorije', 'novo',
+     values ('bez-kategorije-test-x1y2z3', 'Oglas bez kategorije', 'useljivo',
              'aktivan', 'Nis', '${SELLER}', '+381641234567')`,
   );
   await deny(
     db,
     "cannot reuse an existing slug",
     `insert into public.listings (slug, title, condition, seller_id)
-     values ('bager-masina-aktivan-a1b2c3', 'Duplirani slug', 'novo', '${SELLER}')`,
+     values ('bager-masina-aktivan-a1b2c3', 'Duplirani slug', 'useljivo', '${SELLER}')`,
   );
 
   await asRole(db, null, null);
@@ -268,8 +268,8 @@ async function seedSection(db) {
 
   await db.exec(`
     insert into auth.users (id, email, raw_user_meta_data) values
-      ('55555555-5555-4555-8555-555555555555', 'admin@jadranko.rs',    '{}'),
-      ('66666666-6666-4666-8666-666666666666', 'prodavac@jadranko.rs', '{}');
+      ('55555555-5555-4555-8555-555555555555', 'admin@bgbuilding.rs',    '{}'),
+      ('66666666-6666-4666-8666-666666666666', 'prodaja@bgbuilding.rs', '{}');
   `);
 
   const before = await db.query("select count(*)::int as n from public.listings");
@@ -279,14 +279,28 @@ async function seedSection(db) {
     "executes cleanly once the accounts exist",
     await readFile(path.join(ROOT, "supabase", "seed.sql"), "utf8"),
   );
-  await expectValue(db, "added 9 mock listings",
-    `select count(*)::int - ${before.rows[0].n} from public.listings`, 9);
+  await expectValue(db, "added 12 mock listings",
+    `select count(*)::int - ${before.rows[0].n} from public.listings`, 12);
   await expectValue(db, "one of them is an unpublished draft",
-    "select count(*) from public.listings where slug like 'nacrt-primer%'", 1);
-  await expectValue(db, "seeded all 7 categories",
+    "select count(*) from public.listings where slug like 'primer-nacrta%'", 1);
+  await expectValue(db, "seeded all 6 property categories",
     "select count(*) from public.categories where slug in " +
+      "('stanovi','lokali','poslovni-prostor','garaze-i-parking','kuce','ostalo')", 6);
+  // The seed also retires the machine-era categories. On a fresh
+  // database that UPDATE matches nothing (they were never inserted), so
+  // what is actually verifiable here is the outcome: the six property
+  // categories are the only active ones. The deactivation branch itself
+  // only ever fires against a database seeded before the re-niche, and
+  // it deactivates rather than deletes because listings_category_id_fkey
+  // is ON DELETE RESTRICT.
+  await expectValue(db, "leaves no machine-era category active",
+    "select count(*) from public.categories where is_active and slug in " +
       "('gradjevinske-masine','poljoprivredne-masine','industrijske-masine'," +
-      "'viljuskari-i-transport','alati-i-oprema','rezervni-delovi','ostalo')", 7);
+      "'viljuskari-i-transport','alati-i-oprema','rezervni-delovi')", 0);
+  // The spec sheet, the feed and the JSON-LD all read this column.
+  await expectValue(db, "stored the property specification as jsonb",
+    "select (attributes->>'kvadratura')::numeric from public.listings " +
+      "where slug like 'dvoiposoban-stan-62m2-vracar%'", 62);
 
   const after = await db.query("select count(*)::int as n from public.listings");
   await allowScript(
@@ -299,7 +313,7 @@ async function seedSection(db) {
 
   // A null price must survive as NULL, not collapse to 0.
   await expectValue(db, "'Po dogovoru' listing stored price as NULL",
-    "select price_rsd is null from public.listings where slug like 'cirkular-za-drvo%'",
+    "select price_eur is null from public.listings where slug like 'dvosoban-stan-54m2-vozdovac%'",
     true);
 }
 
@@ -365,20 +379,20 @@ async function main() {
 
   await db.exec(`
     insert into public.listings
-      (id, slug, title, description, condition, price_rsd, status, location,
+      (id, slug, title, description, condition, price_eur, status, location,
        category_id, seller_id, contact_phone)
     values
       ('${L_ACTIVE_A}', 'bager-masina-aktivan-a1b2c3',
        'Bager mašina guseničar', 'Ispravna mašina, redovno servisirana.',
-       'korisceno', 1950000, 'aktivan', 'Novi Sad',
+       'u_izgradnji', 1950000, 'aktivan', 'Novi Sad',
        'aaaaaaaa-0000-4000-8000-000000000001', '${SELLER_A}', '+381641234567'),
       ('${L_DRAFT_A}', 'nacrt-oglas-a-d4e5f6',
        'Nacrt oglasa prodavca A', 'Ovo je nacrt.',
-       'novo', 100000, 'nacrt', 'Beograd',
+       'useljivo', 100000, 'nacrt', 'Beograd',
        'aaaaaaaa-0000-4000-8000-000000000001', '${SELLER_A}', '+381641234567'),
       ('${L_ACTIVE_B}', 'testera-aktivan-b-g7h8i9',
        'Testera za drvo', 'Ispravna testera.',
-       'kao_novo', 45000, 'aktivan', 'Niš',
+       'pred_useljenje', 45000, 'aktivan', 'Niš',
        'aaaaaaaa-0000-4000-8000-000000000002', '${SELLER_B}', '+381641234568');
 
     insert into public.listing_images (listing_id, storage_path, sort_order) values
@@ -413,9 +427,9 @@ async function main() {
      values ('${L_ACTIVE_A}', '${SELLER_A}', 'Spam Bot', 's@b.rs', 'spam spam spam')`);
   await deny(db, "CANNOT insert a listing",
     `insert into public.listings (slug, title, condition, seller_id)
-     values ('hack-oglas-x1y2z3', 'Neovlascen oglas', 'novo', '${SELLER_A}')`);
+     values ('hack-oglas-x1y2z3', 'Neovlascen oglas', 'useljivo', '${SELLER_A}')`);
   await deny(db, "CANNOT update a listing",
-    `update public.listings set price_rsd = 1 where id = '${L_ACTIVE_A}'`);
+    `update public.listings set price_eur = 1 where id = '${L_ACTIVE_A}'`);
   await deny(db, "CANNOT delete a listing",
     `delete from public.listings where id = '${L_ACTIVE_A}'`);
 
@@ -431,10 +445,10 @@ async function main() {
     "select count(*) from public.inquiries", 1);
 
   await allow(db, "can update own listing",
-    `update public.listings set price_rsd = 1900000 where id = '${L_ACTIVE_A}'`);
+    `update public.listings set price_eur = 1900000 where id = '${L_ACTIVE_A}'`);
 
   await expectValue(db, "update to seller B's listing affects 0 rows",
-    `with u as (update public.listings set price_rsd = 1
+    `with u as (update public.listings set price_eur = 1
                 where id = '${L_ACTIVE_B}' returning 1)
      select count(*) from u`, 0);
   await expectValue(db, "delete of seller B's listing affects 0 rows",
@@ -443,7 +457,7 @@ async function main() {
 
   await deny(db, "CANNOT create a listing owned by seller B",
     `insert into public.listings (slug, title, condition, seller_id)
-     values ('podmetnut-oglas-x1y2z3', 'Podmetnut oglas', 'novo', '${SELLER_B}')`);
+     values ('podmetnut-oglas-x1y2z3', 'Podmetnut oglas', 'useljivo', '${SELLER_B}')`);
   await deny(db, "CANNOT reassign own listing to seller B",
     `update public.listings set seller_id = '${SELLER_B}' where id = '${L_ACTIVE_A}'`);
   await deny(db, "CANNOT escalate own role to admin",
@@ -466,7 +480,7 @@ async function main() {
 
   await deny(db, "CANNOT create listings once deactivated",
     `insert into public.listings (slug, title, condition, seller_id)
-     values ('deaktiviran-oglas-x1y2z3', 'Oglas deaktiviranog', 'novo', '${INACTIVE}')`);
+     values ('deaktiviran-oglas-x1y2z3', 'Oglas deaktiviranog', 'useljivo', '${INACTIVE}')`);
   // The real escalation path: a disabled account switching itself back on.
   await deny(db, "CANNOT reactivate its own disabled account",
     `update public.profiles set is_active = true where id = '${INACTIVE}'`);
@@ -484,7 +498,7 @@ async function main() {
   // away as redundant.
   await asRole(db, null, null);
   await db.query(
-    `update public.listings set status = 'prodato', price_rsd = 45000
+    `update public.listings set status = 'prodato', price_eur = 45000
       where id = $1`,
     [L_ACTIVE_B],
   );
@@ -496,7 +510,7 @@ async function main() {
       where status = 'prodato' and seller_id = '${SELLER_B}'`, 1);
   await expectValue(db,
     "revenue: so the report must filter by seller_id — scoped sum is 0",
-    `select coalesce(sum(price_rsd), 0) from public.listings
+    `select coalesce(sum(price_eur), 0) from public.listings
       where status = 'prodato' and seller_id = '${SELLER_A}'`, 0);
 
   await asRole(db, null, null);
@@ -536,8 +550,33 @@ async function main() {
     "select count(*) from public.search_listings(null, 'alati')", 1);
   await expectValue(db, "price filter narrows results",
     "select count(*) from public.search_listings(null, null, null, 1000000, null)", 1);
+
+  // Migration 0012 moved prices to euros. The RETURNS TABLE column name
+  // is a separate contract from the table column and does NOT follow a
+  // rename, so 0012 drops and rebuilds the function — if that step is
+  // ever lost, the client keeps reading a field called price_rsd and
+  // every price silently renders as "Po dogovoru".
+  await expectValue(db, "the listings column is price_eur, not price_rsd",
+    "select count(*) from information_schema.columns where table_schema = 'public' " +
+      "and table_name = 'listings' and column_name = 'price_eur'", 1);
+  await expectValue(db, "no price_rsd column survives the rename",
+    "select count(*) from information_schema.columns where table_schema = 'public' " +
+      "and table_name = 'listings' and column_name = 'price_rsd'", 0);
+  // A function's OUT columns are not in information_schema.columns —
+  // the signature has to be read back from the catalog.
+  await expectValue(db, "search_listings returns price_eur",
+    "select count(*) from pg_proc where proname = 'search_listings' " +
+      "and pg_get_function_result(oid) like '%price_eur%'", 1);
+  await expectValue(db, "search_listings no longer returns price_rsd",
+    "select count(*) from pg_proc where proname = 'search_listings' " +
+      "and pg_get_function_result(oid) like '%price_rsd%'", 0);
+  // The euro ceiling from 0012: far above anything we list, low enough
+  // to catch a stray extra zero. Mirrors LIMITS.priceMax.
+  await expectValue(db, "the euro price ceiling is enforced",
+    "select count(*) from pg_constraint where conname = 'listings_price_range' " +
+      "and pg_get_constraintdef(oid) like '%100000000%'", 1);
   await expectValue(db, "condition filter narrows results",
-    "select count(*) from public.search_listings(null, null, array['kao_novo']::public.listing_condition[])", 1);
+    "select count(*) from public.search_listings(null, null, array['pred_useljenje']::public.listing_condition[])", 1);
   await expectValue(db, "category_counts() reports live counts",
     "select listing_count from public.category_counts() where slug = 'masine'", 1);
 
@@ -567,18 +606,18 @@ async function main() {
 
   await deny(db, "constraint: cannot activate a listing with no contact",
     `insert into public.listings (slug, title, condition, status, seller_id, category_id)
-     values ('bez-kontakta-x1y2z3', 'Oglas bez kontakta', 'novo', 'aktivan',
+     values ('bez-kontakta-x1y2z3', 'Oglas bez kontakta', 'useljivo', 'aktivan',
              '${SELLER_A}', 'aaaaaaaa-0000-4000-8000-000000000001')`);
   await deny(db, "constraint: cannot activate a listing with no category",
     `insert into public.listings (slug, title, condition, status, seller_id, contact_phone)
-     values ('bez-kategorije-x1y2z3', 'Oglas bez kategorije', 'novo', 'aktivan',
+     values ('bez-kategorije-x1y2z3', 'Oglas bez kategorije', 'useljivo', 'aktivan',
              '${SELLER_A}', '+381641234567')`);
   await deny(db, "constraint: rejects a malformed slug",
     `insert into public.listings (slug, title, condition, seller_id)
-     values ('Neispravan Slug!', 'Neispravan slug', 'novo', '${SELLER_A}')`);
+     values ('Neispravan Slug!', 'Neispravan slug', 'useljivo', '${SELLER_A}')`);
   await deny(db, "constraint: rejects a negative price",
-    `insert into public.listings (slug, title, condition, seller_id, price_rsd)
-     values ('negativna-cena-x1y2z3', 'Negativna cena', 'novo', '${SELLER_A}', -1)`);
+    `insert into public.listings (slug, title, condition, seller_id, price_eur)
+     values ('negativna-cena-x1y2z3', 'Negativna cena', 'useljivo', '${SELLER_A}', -1)`);
   await deny(db, "constraint: rejects an image path outside {seller}/{listing}/",
     `insert into public.listing_images (listing_id, storage_path)
      values ('${L_ACTIVE_A}', '../../etc/passwd')`);

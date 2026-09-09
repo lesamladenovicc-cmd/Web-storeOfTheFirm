@@ -6,7 +6,7 @@ import { requireProfile } from "@/lib/auth";
 import { getDashboardStats } from "@/lib/data/listings";
 import { getUnreadInquiryCount } from "@/lib/data/inquiries";
 import { getRevenueOverview } from "@/lib/data/revenue";
-import { countWithNoun, formatNumber, formatRsd } from "@/lib/format";
+import { countWithNoun, formatNumber, formatMoney } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -68,17 +68,17 @@ export default async function DashboardPage() {
             {isAdmin ? " · " + COPY.dashboard.revenue.allSellers : ""}
           </span>
           <p className="u-numeric text-fg mt-4 text-[clamp(1.875rem,1.2rem+2.4vw,3rem)] leading-none font-semibold tracking-tight">
-            {formatRsd(revenue.total)}
+            {formatMoney(revenue.total)}
           </p>
           <p className="text-fg-muted mt-3 text-sm">
-            {countWithNoun(revenue.count, "oglas")} {COPY.dashboard.revenue.soldSuffix}
+            {countWithNoun(revenue.count, "jedinica")} {COPY.dashboard.revenue.soldSuffix}
           </p>
         </div>
 
         <div className="sm:text-right">
           <span className="u-eyebrow text-fg-faint">{COPY.dashboard.revenue.thisMonth}</span>
           <p className="u-numeric text-fg mt-3 text-xl font-semibold">
-            {formatRsd(revenue.thisMonth.total)}
+            {formatMoney(revenue.thisMonth.total)}
           </p>
           <span className="u-eyebrow text-accent-text mt-4 inline-block">
             {COPY.dashboard.revenue.openReport} →

@@ -33,20 +33,24 @@ export function groupDigits(value: number): string {
 }
 
 /**
- * Formats an RSD amount for display: 1950 → "1.950 din".
- * Amounts are whole dinars; RSD subunits are not used in practice.
+ * Formats a money amount for display: 242000 → "242.000 €".
+ *
+ * Whole units only. Property is quoted in round euros here — nobody
+ * advertises a flat at 241.999,50 — and the column is an integer.
+ * Currency-agnostic: the symbol comes from SITE.currencySuffix, so
+ * changing currency is a config edit, not a change here.
  */
-export function formatRsd(amount: number): string {
+export function formatMoney(amount: number): string {
   return `${groupDigits(amount)} ${SITE.currencySuffix}`;
 }
 
 /**
- * Price for a listing, where `null` means the seller wants to negotiate.
+ * Price for a listing, where `null` means the price is negotiable.
  * null → "Po dogovoru"
  */
 export function formatPrice(amount: number | null | undefined): string {
   if (amount === null || amount === undefined) return COPY.listing.priceOnRequest;
-  return formatRsd(amount);
+  return formatMoney(amount);
 }
 
 /** Plain grouped integer, no currency (view counts, result counts). */
@@ -55,14 +59,75 @@ export function formatNumber(value: number): string {
 }
 
 /**
- * Abbreviated RSD for axis labels, where a full "8.450.000 din" would
- * not fit in a 70px column: 8450000 → "8,4 mil" · 450000 → "450 hilj".
+ * Area in square metres: 62 → "62 m²", 62.5 → "62,5 m²".
+ * Decimal comma, at most one place, trailing ",0" dropped.
+ */
+export function formatArea(value: number): string {
+  const tenths = Math.round(value * 10);
+  const whole = Math.floor(tenths / 10);
+  const decimal = tenths % 10;
+  const digits = decimal === 0 ? groupDigits(whole) : `${groupDigits(whole)},${decimal}`;
+  return `${digits} ${COPY.listing.squareMetreSuffix}`;
+}
+
+/**
+ * Price per square metre — the number every property buyer actually
+ * compares on, and one we can derive rather than ask a seller to type
+ * (and get wrong).
+ *
+ * Returns null, not a formatted "0", whenever it cannot be computed:
+ * "Po dogovoru" listings have no price, and drafts may have no area.
+ * The caller drops the row instead of printing a meaningless figure.
+ */
+export function formatPricePerSquare(
+  priceEur: number | null | undefined,
+  kvadratura: number | null | undefined,
+): string | null {
+  if (priceEur === null || priceEur === undefined) return null;
+  if (!kvadratura || kvadratura <= 0) return null;
+  return `${formatMoney(Math.round(priceEur / kvadratura))}/${COPY.listing.squareMetreSuffix}`;
+}
+
+/**
+ * Serbian room counts: 1 → "jednosoban", 2.5 → "dvoiposoban".
+ *
+ * These are the words buyers search for, so the listing must contain
+ * them as text rather than only as a numeral. Anything outside the
+ * table (0.5, 6+) falls back to "N soba", which is still correct.
+ */
+const ROOM_WORDS: Record<string, string> = {
+  "1": "jednosoban",
+  "1.5": "jednoiposoban",
+  "2": "dvosoban",
+  "2.5": "dvoiposoban",
+  "3": "trosoban",
+  "3.5": "troiposoban",
+  "4": "četvorosoban",
+  "4.5": "četvoroiposoban",
+  "5": "petosoban",
+};
+
+export function formatRooms(value: number): string {
+  const word = ROOM_WORDS[String(value)];
+  if (word) return word;
+  const tenths = Math.round(value * 10);
+  const digits = tenths % 10 === 0 ? String(tenths / 10) : String(value).replace(".", ",");
+  return `${digits} ${COPY.listing.roomsSuffix}`;
+}
+
+/**
+ * Abbreviated money for axis labels, where a full "1.240.000 €" would
+ * not fit in a 70px column: 1240000 → "1,2 mil" · 450000 → "450 hilj".
  * Decimal comma, one place, trailing ",0" dropped — Serbian convention.
  *
+ * Deliberately carries no currency symbol: it labels a chart axis whose
+ * unit is stated once in the heading, and "1,2 mil €" is wider than the
+ * column this exists to fit.
+ *
  * Display only. Never use it where the exact figure matters; the tables
- * and the totals always show `formatRsd`.
+ * and the totals always show `formatMoney`.
  */
-export function formatCompactRsd(amount: number): string {
+export function formatCompactMoney(amount: number): string {
   const abs = Math.abs(amount);
   if (abs < 1000) return groupDigits(amount);
 
@@ -103,9 +168,19 @@ export function pluralize(
   return forms[2];
 }
 
-/** Common noun forms used across the storefront. */
+/**
+ * Common noun forms used across the storefront.
+ *
+ * `nekretnina` is the public-facing counter and `jedinica` the internal
+ * one in the dashboard. `oglas` stays because the URL scheme and the
+ * dashboard's own vocabulary still use it, but no buyer-facing string
+ * should reach for it.
+ */
 export const PLURALS = {
   oglas: ["oglas", "oglasa", "oglasa"],
+  nekretnina: ["nekretnina", "nekretnine", "nekretnina"],
+  jedinica: ["jedinica", "jedinice", "jedinica"],
+  stan: ["stan", "stana", "stanova"],
   rezultat: ["rezultat", "rezultata", "rezultata"],
   slika: ["slika", "slike", "slika"],
   dan: ["dan", "dana", "dana"],

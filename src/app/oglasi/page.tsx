@@ -12,7 +12,8 @@ import { getActiveCategories } from "@/lib/data/categories";
 import { searchListings } from "@/lib/data/listings";
 import { countWithNoun } from "@/lib/format";
 import { hasActiveFilters, parseFilters, shouldNoIndex, type RawSearchParams } from "@/lib/filters";
-import { buildMetadata } from "@/lib/seo";
+import { breadcrumbJsonLd, buildMetadata, itemListJsonLd } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/JsonLd";
 
 /**
  * SSR on every request: reading searchParams makes the route dynamic by
@@ -66,7 +67,7 @@ export default async function ListingsPage({
           ]}
           meta={
             <p className="u-eyebrow text-fg-muted">
-              {COPY.listings.resultsPrefix} {countWithNoun(result.total, "oglas")}
+              {COPY.listings.resultsPrefix} {countWithNoun(result.total, "nekretnina")}
             </p>
           }
         >
@@ -87,6 +88,27 @@ export default async function ListingsPage({
           </Container>
         </section>
       </main>
+
+      {/* Emitted on the bare /oglasi only. A filtered view is noindex
+          (see shouldNoIndex), and handing a crawler a catalogue listing
+          for a page we are asking it not to index is a mixed signal. */}
+      {!filtered && result.page === 1 ? (
+        <JsonLd
+          data={[
+            itemListJsonLd({
+              listings: result.items,
+              path: "/oglasi",
+              name: COPY.listings.title,
+              description: COPY.listings.subtitle,
+              total: result.total,
+            }),
+            breadcrumbJsonLd([
+              { name: COPY.listing.breadcrumbHome, path: "/" },
+              { name: COPY.listing.breadcrumbListings, path: "/oglasi" },
+            ]),
+          ]}
+        />
+      ) : null}
 
       <SiteFooter />
     </>
