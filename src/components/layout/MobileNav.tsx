@@ -125,8 +125,8 @@ export function MobileNav({ isAuthed = false }: { isAuthed?: boolean }) {
                       className={cn(
                         "border-line font-display border-b py-4 text-2xl font-semibold tracking-tight transition-colors",
                         pathname === item.href
-                          ? "text-accent-text"
-                          : "text-fg hover:text-accent-text",
+                          ? "text-signal-text"
+                          : "text-fg hover:text-signal-text",
                       )}
                     >
                       {item.label}
@@ -146,7 +146,7 @@ export function MobileNav({ isAuthed = false }: { isAuthed?: boolean }) {
                 <div className="mt-auto pt-10">
                   <a
                     href={SITE.contact.phoneHref}
-                    className="u-numeric text-fg hover:text-accent-text block text-sm transition-colors"
+                    className="u-numeric text-fg hover:text-signal-text block text-sm transition-colors"
                   >
                     {SITE.contact.phone}
                   </a>

@@ -74,7 +74,7 @@ export default async function DashboardListingsPage({
                   className={cn(
                     "inline-flex h-9 items-center rounded-sm border px-3.5 text-sm transition-colors",
                     active
-                      ? "border-accent text-accent-text"
+                      ? "border-fg text-fg shadow-[inset_0_-2px_0_var(--color-signal)]"
                       : "border-line text-fg-muted hover:border-line-strong hover:text-fg",
                   )}
                 >

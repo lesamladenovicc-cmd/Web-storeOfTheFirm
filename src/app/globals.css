@@ -6,43 +6,62 @@
    No component may hardcode a hex value.
 
    Aesthetic direction: "tehnicki list" — a spec sheet. Two grounds:
-   navy (header, hero, trust, footer) and warm paper stock (listings,
-   detail, content). Hairline rules instead of shadows, register marks on
-   the corners of plates, monospace for anything numeric, a gold accent
-   used only as a stamp on primary actions.
+   graphite slate (header, hero, trust, footer) and warm grey paper
+   (listings, detail, content). Hairline rules instead of shadows,
+   register marks on the corners of plates, monospace for anything
+   numeric, a sand accent used only as a stamp on primary actions — and
+   a SIGNAL tier of bright inks used only as small marks.
 
    PALETTE SOURCE — the BG Building emblem (Slike/, cut into
-   src/assets/brand/logo-badge.png). Its navy #2C4877 is the dark
-   ground's strongest panel; the darker navies step down from it. Its
-   gold lettering #EEC492 is accent-text on dark, its gold tower #C09060
-   is the accent fill, and the white it sits on is the light panel.
+   src/assets/brand/logo-badge.png), NEUTRALISED. The emblem's navy is
+   desaturated into the slate grounds, its gold is calmed into sand for
+   the accent fill, and its white is warmed into the paper panel. The
+   emblem itself keeps its saturated inks, so it reads as the one
+   "true colour" object on a quiet page.
+
+   SIGNAL — the bright details. A construction yellow is the highlighter
+   of the sheet: the eyebrow square, the active marker, the hover arrow,
+   the checked box, the strip at the very top of the header. It is a
+   FILL only, always carrying `on-signal` text. As TEXT the highlighter
+   changes ink with the ground — yellow on slate, cobalt on paper — like
+   the two inks of a technical drawing (`signal-text`). Cobalt, red and
+   green complete the set as status lamps and the printer's colour bar.
+   Never a signal colour on a surface larger than a button.
 
    TWO GROUNDS, ONE SET OF CLASS NAMES
    Every ground-dependent token (fg, panel, line, accent-text, danger…)
    is a plain CSS variable set on `.theme-dark` / `.theme-light`, and
    exposed to Tailwind via `@theme inline` so utilities read the nearest
    wrapper's value. `text-fg` is therefore paper on a dark section and
-   ink on a beige one, with no component changes. The root is dark;
-   wrap a section in `theme-light` to switch it to beige.
+   ink on a paper one, with no component changes. The root is dark;
+   wrap a section in `theme-light` to switch it to paper.
 
    CONTRAST (verified by axe-core in e2e/a11y.spec.ts, not by eye).
    Every text token below clears 4.5:1 on its ground AND on `panel`.
    Known limits, do not regress:
-     fg-faint on panel-3 (dark) ......... 4.66   OK, the floor
+     fg-faint on panel-3 (dark) ......... 4.94   OK
      fg-faint on panel-2 (light) ........ 4.72   OK
-     fg-faint on panel-3 (light) ........ 4.07   FAIL — never faint on
+     fg-faint on panel-3 (light) ........ 4.08   FAIL — never faint on
                                                  panel-3 in a paper section
-     accent-text on panel-2 (light) ..... 4.88   OK
-     accent-text on panel-3 (light) ..... 4.21   FAIL — never on panel-3
-     accent (fill) as TEXT on light ..... 2.26   FAIL — use accent-text
-     on-accent over accent .............. 5.87   OK
-     on-accent over accent-hover ........ 4.75   OK
-     accent fill against paper ground ... 2.26   non-text: the fill must
+     accent-text on panel-2 (light) ..... 4.68   OK
+     accent-text on panel-3 (light) ..... 4.05   FAIL — never on panel-3
+     signal-text on panel-2 (light) ..... 4.87   OK
+     signal-text on panel-3 (light) ..... 4.2    FAIL — never on panel-3
+     danger on panel-3 (dark) ........... 4.4    FAIL — never on panel-3
+     accent (fill) as TEXT on light ..... 2.2    FAIL — use accent-text
+     signal (fill) as TEXT anywhere ..... 1.4    FAIL — use signal-text
+     on-accent over accent .............. 6.10   OK
+     on-accent over accent-hover ........ 5.00   OK
+     on-signal over signal .............. 9.81   OK
+     accent fill against paper ground ... 2.2    non-text: the fill must
                                                  always carry on-accent
                                                  text, never stand alone
                                                  as an outline on paper
-   White over the gold fill is 2.8:1 — on-accent is navy, never paper.
-   Never put opacity on text over the accent fill; use `on-accent`.
+     signal fill against paper ground ... 1.4    non-text: a mark beside
+                                                 text, never an outline
+   White over the sand fill is 3.3:1 and over the yellow 1.5:1 — both
+   `on-*` tokens are ink, never paper. Never put opacity on text over a
+   fill; use the `on-*` token.
    ================================================================== */
 
 /* --- Ground variables ------------------------------------------------ */
@@ -51,54 +70,63 @@
 .theme-dark {
   color-scheme: dark;
 
-  --t-ground: #182742;
-  --t-panel: #1e2f4d;
-  --t-panel-2: #243858;
-  /* The emblem's own navy. */
-  --t-panel-3: #2c4877;
+  /* The emblem navy, desaturated to graphite. */
+  --t-ground: #1b212b;
+  --t-panel: #222935;
+  --t-panel-2: #2a3240;
+  --t-panel-3: #343e4f;
 
-  --t-fg: #f6f2ea;
-  --t-fg-muted: #b7c2d4;
-  --t-fg-faint: #afbacc;
+  --t-fg: #f3f1ec;
+  --t-fg-muted: #b6bbc4;
+  --t-fg-faint: #aab0ba;
 
-  --t-line: #293d5e;
-  --t-line-strong: #3e547a;
+  --t-line: #2e3644;
+  --t-line-strong: #46505f;
 
-  /* The emblem's gold lettering: clears 4.5:1 as text on every dark surface. */
-  --t-accent-text: #ebc38f;
+  /* The emblem's gold lettering, calmed to sand: clears 4.5:1 on every dark surface. */
+  --t-accent-text: #e2c79a;
 
-  --t-danger: #f07a68;
-  --t-success: #5fb57e;
-  /* Pushed towards orange so a warning never reads as the gold accent. */
-  --t-warning: #f0a047;
+  /* The highlighter as ink: construction yellow on slate. */
+  --t-signal-text: #ffc53d;
 
-  --t-grid: rgb(246 242 234 / 0.05);
+  --t-danger: #f48678;
+  --t-success: #5fc28a;
+  /* Pushed towards orange so a warning never reads as the yellow signal. */
+  --t-warning: #f2a94a;
+
+  --t-grid: rgb(243 241 236 / 0.045);
+  --t-glow: rgb(92 132 204 / 0.16);
 }
 
 .theme-light {
   color-scheme: light;
 
-  --t-ground: #efe9dd;
-  --t-panel: #f8f5ee;
-  --t-panel-2: #e3dbc9;
-  --t-panel-3: #d6ccb5;
+  /* Warm grey paper, not yellow beige. */
+  --t-ground: #eceae5;
+  --t-panel: #f7f6f3;
+  --t-panel-2: #e1ded7;
+  --t-panel-3: #d3cfc6;
 
-  /* Ink is the navy, not black, so paper sections stay on-brand. */
-  --t-fg: #14213a;
-  --t-fg-muted: #4b5568;
-  --t-fg-faint: #565e70;
+  /* Ink is the slate, not black, so paper sections stay on-brand. */
+  --t-fg: #1b212b;
+  --t-fg-muted: #4f555e;
+  --t-fg-faint: #5a6069;
 
-  --t-line: #d3c9b3;
-  --t-line-strong: #a69c86;
+  --t-line: #d2cfc7;
+  --t-line-strong: #a29f97;
 
-  /* The gold darkened to bronze until it clears 4.5:1 as text on paper. */
-  --t-accent-text: #7f521c;
+  /* Sand darkened to bronze until it clears 4.5:1 as text on paper. */
+  --t-accent-text: #7a5a34;
 
-  --t-danger: #a8321b;
-  --t-success: #2a6640;
+  /* The highlighter as ink: cobalt on paper (yellow cannot be text here). */
+  --t-signal-text: #1756c0;
+
+  --t-danger: #b0341c;
+  --t-success: #24663f;
   --t-warning: #7a4f00;
 
-  --t-grid: rgb(20 33 58 / 0.07);
+  --t-grid: rgb(27 33 43 / 0.06);
+  --t-glow: rgb(23 86 192 / 0.06);
 }
 
 /* Applying a ground paints it. Layered under `base` so a utility on the
@@ -127,6 +155,7 @@
   --color-line-strong: var(--t-line-strong);
 
   --color-accent-text: var(--t-accent-text);
+  --color-signal-text: var(--t-signal-text);
 
   --color-danger: var(--t-danger);
   --color-danger-soft: color-mix(in oklab, var(--t-danger) 12%, transparent);
@@ -139,25 +168,36 @@
 
 @theme {
   /* Raw stock — for elements that pin a ground regardless of context. */
-  --color-dark: #182742;
-  --color-dark-2: #1e2f4d;
-  --color-beige: #efe9dd;
-  --color-beige-muted: #d6ccb5;
-  --color-beige-deep: #c9bda2;
-  --color-paper: #f6f2ea;
-  --color-ink: #14213a;
-  --color-ink-muted: #4b5568;
-  --color-ink-faint: #565e70;
+  --color-dark: #1b212b;
+  --color-dark-2: #222935;
+  --color-beige: #eceae5;
+  --color-beige-muted: #d3cfc6;
+  --color-beige-deep: #c4c0b6;
+  --color-paper: #f3f1ec;
+  --color-ink: #1b212b;
+  --color-ink-muted: #4f555e;
+  --color-ink-faint: #5a6069;
 
-  /* Accent — the emblem's gold. Primary actions and the active marker ONLY.
+  /* Accent — the emblem's gold, calmed to sand. Primary actions ONLY.
      As a FILL it is the same on both grounds; as TEXT use `accent-text`.
-     Text over the fill is navy: white on this gold is only 2.8:1. */
-  --color-accent: #c4935f;
-  --color-accent-hover: #b5814d;
-  --color-on-accent: #14213a;
-  --color-accent-soft: #c4935f1f;
+     Text over the fill is ink: white on this sand is only 3.3:1. */
+  --color-accent: #b99a72;
+  --color-accent-hover: #a98a62;
+  --color-on-accent: #1b212b;
+  --color-accent-soft: #b99a721f;
   /* The emblem's navy, kept as an optional second highlight. Unused. */
   --color-accent-2: #2c4877;
+
+  /* Signal — the bright details. FILLS for marks no larger than a
+     button, and the lamps. Text over the yellow is ink (9.8:1). As TEXT
+     use the contextual `signal-text`. */
+  --color-signal: #ffbf2e;
+  --color-signal-hover: #f5b21a;
+  --color-on-signal: #1b212b;
+  --color-signal-soft: #ffbf2e29;
+  --color-signal-blue: #2f7bea;
+  --color-signal-red: #f0472f;
+  --color-signal-green: #22c55e;
 
   /* --- Typography ----------------------------------------------------
      display  Archivo — headings and UI labels, 600 and tight
@@ -264,12 +304,14 @@
   }
 
   ::selection {
-    background-color: var(--color-accent);
-    color: var(--color-on-accent);
+    background-color: var(--color-signal);
+    color: var(--color-on-signal);
   }
 
+  /* The highlighter as ink: yellow on slate, cobalt on paper, so the
+     ring clears 3:1 against either ground. */
   :focus-visible {
-    outline: 2px solid var(--color-accent-text);
+    outline: 2px solid var(--color-signal-text);
     outline-offset: 2px;
   }
 
@@ -376,6 +418,41 @@
     background-size: 56px 56px;
     background-position: -1px -1px;
     mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
+  }
+
+  /* A soft wash of the emblem's blue in two corners of a band —
+     atmosphere, kept faint enough that nobody would call it a gradient.
+     Composes with .u-grid: the grid is ::before, the wash is ::after. */
+  .u-glow {
+    position: relative;
+    isolation: isolate;
+  }
+  .u-glow::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(55% 75% at 100% 0%, var(--t-glow), transparent 70%),
+      radial-gradient(40% 50% at 0% 100%, var(--t-glow), transparent 70%);
+  }
+
+  /* The highlighter tab: a short signal-yellow bar on the top-left inner
+     edge of a plate — the coloured index tab of a sheet. A mark only;
+     the element keeps its own border and background. */
+  .u-tab {
+    position: relative;
+  }
+  .u-tab::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    width: 2.25rem;
+    height: 3px;
+    background-color: var(--color-signal);
+    pointer-events: none;
   }
 
   /* Fine grain overlay — texture without an image request. */

@@ -237,7 +237,7 @@ function MonthChart({ months, currentKey }: { months: RevenueBucket[]; currentKe
                   <div
                     className={cn(
                       "mx-auto w-[62%] min-w-[6px]",
-                      isCurrent ? "bg-accent" : "bg-fg-muted",
+                      isCurrent ? "bg-signal" : "bg-fg-muted",
                     )}
                     style={{ height: `${height}%` }}
                   />
@@ -246,7 +246,7 @@ function MonthChart({ months, currentKey }: { months: RevenueBucket[]; currentKe
                 <p
                   className={cn(
                     "u-eyebrow border-line-strong mt-0 border-t pt-2 text-center",
-                    isCurrent ? "text-accent-text" : "text-fg-faint",
+                    isCurrent ? "text-signal-text" : "text-fg-faint",
                   )}
                 >
                   <span className="sr-only">

@@ -29,7 +29,7 @@ export function PageBanner({
   const hasCrumbs = Boolean(crumbs?.length);
 
   return (
-    <section className="theme-dark u-grid border-line border-b">
+    <section className="theme-dark u-grid u-glow border-line border-b">
       <Container className="relative py-10 sm:py-14 lg:py-16">
         {hasCrumbs ? <Breadcrumbs items={crumbs!} /> : null}
 

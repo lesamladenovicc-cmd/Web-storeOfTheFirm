@@ -32,7 +32,7 @@ export function FilterBar({
   const active = hasActiveFilters(filters);
 
   return (
-    <form action={basePath} method="get" className="border-line bg-panel border">
+    <form action={basePath} method="get" className="u-tab border-line bg-panel border">
       <div className="border-line flex items-center justify-between gap-4 border-b px-5 py-3 sm:px-6">
         <p className="u-eyebrow text-fg-muted">{COPY.listings.filters}</p>
         {active ? (
@@ -141,7 +141,7 @@ export function FilterBar({
                   name={PARAM.condition}
                   value={c}
                   defaultChecked={selected.has(c)}
-                  className="border-line-strong bg-ground checked:border-accent checked:bg-accent h-4 w-4 cursor-pointer appearance-none border transition-colors"
+                  className="border-line-strong bg-ground checked:border-signal checked:bg-signal h-4 w-4 cursor-pointer appearance-none border transition-colors"
                 />
                 {CONDITION_LABELS[c]}
               </label>

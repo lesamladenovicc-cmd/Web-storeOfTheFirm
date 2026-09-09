@@ -31,8 +31,8 @@ export default function GlobalError({
           minHeight: "100dvh",
           display: "grid",
           placeItems: "center",
-          background: "#182742",
-          color: "#F6F2EA",
+          background: "#1b212b",
+          color: "#f3f1ec",
           padding: "24px",
         }}
       >
@@ -40,7 +40,7 @@ export default function GlobalError({
           <p
             style={{
               margin: 0,
-              color: "#EBC38F",
+              color: "#ffc53d",
               fontSize: "0.6875rem",
               letterSpacing: "0.16em",
               textTransform: "uppercase",
@@ -54,7 +54,7 @@ export default function GlobalError({
           >
             Došlo je do greške
           </h1>
-          <p style={{ margin: "12px 0 0", color: "#B7C2D4", lineHeight: 1.6 }}>
+          <p style={{ margin: "12px 0 0", color: "#b6bbc4", lineHeight: 1.6 }}>
             Pokušajte ponovo. Ako se problem ponovi, javite nam se.
           </p>
           <button
@@ -66,8 +66,8 @@ export default function GlobalError({
               padding: "0 28px",
               border: "none",
               borderRadius: 0,
-              background: "#C4935F",
-              color: "#14213A",
+              background: "#b99a72",
+              color: "#1b212b",
               fontSize: "0.75rem",
               fontWeight: 600,
               letterSpacing: "0.12em",
@@ -78,7 +78,7 @@ export default function GlobalError({
             Pokušaj ponovo
           </button>
           {error.digest ? (
-            <p style={{ marginTop: "24px", fontSize: "0.75rem", color: "#AFBACC" }}>
+            <p style={{ marginTop: "24px", fontSize: "0.75rem", color: "#aab0ba" }}>
               Ref: {error.digest}
             </p>
           ) : null}

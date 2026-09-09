@@ -14,8 +14,9 @@ import { InquiryForm } from "./InquiryForm";
  * the reveal click. This is friction against casual scraping, not a
  * security measure, and is not treated as one.
  *
- * Rendered as a plate with register marks. The reveal/call button is the
- * page's primary action and the only brick element in the panel.
+ * Rendered as a plate with register marks and a signal index tab. The
+ * reveal/call button is the page's primary action and the only accent
+ * fill in the panel.
  */
 const UI_LABEL =
   "font-[family-name:var(--font-ui)] text-xs font-semibold tracking-[0.12em] uppercase transition-colors duration-200";
@@ -28,7 +29,7 @@ export function ContactPanel({ listing }: { listing: Listing }) {
   const mailSubject = `${COPY.contact.emailSubjectPrefix} ${listing.title}`;
 
   return (
-    <aside className="u-marks border-line bg-panel border">
+    <aside className="u-marks u-tab border-line bg-panel border">
       <div className="border-line border-b p-6 sm:p-7">
         <h2 className="u-eyebrow text-fg-faint">{COPY.contact.title}</h2>
 

@@ -174,7 +174,7 @@ export function Checkbox({
     >
       <input
         type="checkbox"
-        className="border-line-strong bg-panel checked:border-accent checked:bg-accent h-4 w-4 shrink-0 cursor-pointer appearance-none border transition-colors"
+        className="border-line-strong bg-panel checked:border-signal checked:bg-signal h-4 w-4 shrink-0 cursor-pointer appearance-none border transition-colors"
         {...props}
       />
       <span>{label}</span>

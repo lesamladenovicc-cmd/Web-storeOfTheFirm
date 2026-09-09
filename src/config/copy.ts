@@ -66,7 +66,9 @@ export const COPY = {
   home: {
     // MOCK — replace with real positioning copy.
     heroEyebrow: "Interna ponuda",
-    heroTitle: "Mašine, alati i oprema — bez posrednika",
+    // Two strings so the second half can carry the signal ink.
+    heroTitle: "Mašine, alati i oprema —",
+    heroTitleAccent: "bez posrednika",
     heroSubtitle:
       "Pregledajte aktuelnu ponudu i javite se prodavcu direktno. Bez provizije, bez čekanja, bez registracije.",
     heroSearchLabel: "Pretražite ponudu",

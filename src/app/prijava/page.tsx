@@ -28,7 +28,7 @@ export default async function LoginPage({
           <Logo />
         </div>
 
-        <div className="u-marks border-line bg-panel border p-7">
+        <div className="u-marks u-tab border-line bg-panel border p-7">
           <h1 className="text-h2 text-fg">{COPY.auth.loginTitle}</h1>
           <p className="text-fg-muted mt-2 mb-7 text-sm">{COPY.auth.loginSubtitle}</p>
 

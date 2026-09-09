@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { COPY } from "@/config/copy";
 import { FOOTER_NAV, SITE } from "@/config/site";
+import { ColorBar } from "@/components/ui/ColorBar";
 import { Container } from "./Container";
 import { Logo } from "./Logo";
 
@@ -40,9 +41,12 @@ export function SiteFooter() {
           <p>
             © {year} {SITE.legalName}. {COPY.footer.rightsReserved}
           </p>
-          <p>
-            {COPY.footer.pib} {SITE.registration.pib} · {COPY.footer.maticniBroj}{" "}
-            {SITE.registration.maticniBroj} · {SITE.locale} · {SITE.currency}
+          <p className="flex items-center gap-4">
+            <ColorBar />
+            <span>
+              {COPY.footer.pib} {SITE.registration.pib} · {COPY.footer.maticniBroj}{" "}
+              {SITE.registration.maticniBroj} · {SITE.locale} · {SITE.currency}
+            </span>
           </p>
         </div>
       </Container>

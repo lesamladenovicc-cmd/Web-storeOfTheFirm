@@ -8,8 +8,8 @@ import type { ListingFilters } from "@/types/domain";
  * Server-rendered pagination. Real <a> links, so crawlers can follow
  * them and users can open pages in a new tab.
  *
- * A row of 44px squares in the mono face. The current page is the one
- * "active marker" the accent is allowed to fill.
+ * A row of 44px squares in the mono face. The current page is the
+ * active marker, filled with the signal yellow.
  */
 export function Pagination({
   page,
@@ -30,7 +30,7 @@ export function Pagination({
     cn(
       "u-numeric inline-flex h-11 w-11 items-center justify-center border text-sm font-medium transition-colors duration-200",
       active
-        ? "border-accent bg-accent text-on-accent"
+        ? "border-signal bg-signal text-on-signal"
         : "border-line bg-panel text-fg hover:border-fg",
     );
 

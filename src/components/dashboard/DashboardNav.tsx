@@ -36,7 +36,9 @@ export function DashboardNav({
   const linkClass = (active: boolean) =>
     cn(
       "flex items-center justify-between gap-2 rounded-sm px-3 py-2 text-sm transition-colors",
-      active ? "bg-panel-2 text-accent-text" : "text-fg-muted hover:bg-panel-2 hover:text-fg",
+      active
+        ? "bg-panel-2 text-fg shadow-[inset_2px_0_0_var(--color-signal)]"
+        : "text-fg-muted hover:bg-panel-2 hover:text-fg",
     );
 
   return (
@@ -51,7 +53,7 @@ export function DashboardNav({
             >
               {item.label}
               {item.href === "/dashboard/upiti" && unreadInquiries > 0 ? (
-                <span className="u-numeric bg-accent text-on-accent rounded-xs px-1.5 py-0.5 text-[0.6875rem] font-semibold">
+                <span className="u-numeric bg-signal text-on-signal rounded-xs px-1.5 py-0.5 text-[0.6875rem] font-semibold">
                   {unreadInquiries}
                 </span>
               ) : null}

@@ -40,7 +40,7 @@ export default function OpengraphImage() {
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        background: "#182742",
+        background: "#1b212b",
         padding: 72,
       }}
     >
@@ -49,7 +49,7 @@ export default function OpengraphImage() {
         <img src={emblemSrc} width={96} height={96} alt="" />
         <div
           style={{
-            color: "#F6F2EA",
+            color: "#f3f1ec",
             fontSize: 30,
             fontWeight: 700,
             letterSpacing: 6,
@@ -63,7 +63,7 @@ export default function OpengraphImage() {
       <div style={{ display: "flex", flexDirection: "column" }}>
         <div
           style={{
-            color: "#F6F2EA",
+            color: "#f3f1ec",
             fontSize: 76,
             fontWeight: 700,
             lineHeight: 1.02,
@@ -72,14 +72,14 @@ export default function OpengraphImage() {
         >
           Polovna i nova oprema
         </div>
-        <div style={{ color: "#B7C2D4", fontSize: 32, marginTop: 20 }}>
+        <div style={{ color: "#b6bbc4", fontSize: 32, marginTop: 20 }}>
           Bez posrednika. Direktan kontakt sa prodavcem.
         </div>
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-        <div style={{ width: 12, height: 12, background: "#C4935F" }} />
-        <div style={{ color: "#AFBACC", fontSize: 22, letterSpacing: 4 }}>SR-RS / RSD</div>
+        <div style={{ width: 12, height: 12, background: "#ffbf2e" }} />
+        <div style={{ color: "#aab0ba", fontSize: 22, letterSpacing: 4 }}>SR-RS / RSD</div>
       </div>
     </div>,
     size,

@@ -5,6 +5,7 @@ import { Container } from "@/components/layout/Container";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ButtonLink } from "@/components/ui/Button";
+import { ColorBar } from "@/components/ui/ColorBar";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { ListingGrid } from "@/components/listing/ListingGrid";
 import { SearchBar } from "@/components/listing/SearchBar";
@@ -48,7 +49,7 @@ export default async function HomePage() {
 
       <main id="sadrzaj">
         {/* ---------------- Hero (dark) ---------------- */}
-        <section className="theme-dark u-grid u-grain border-line relative overflow-hidden border-b">
+        <section className="theme-dark u-grid u-glow border-line relative overflow-hidden border-b">
           <Container className="relative py-20 sm:py-28 lg:py-32">
             <div className="grid gap-14 lg:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)] lg:items-end lg:gap-20">
               <div>
@@ -59,7 +60,8 @@ export default async function HomePage() {
                   className="u-reveal text-display text-fg mt-6 max-w-3xl"
                   style={{ "--i": 1 } as React.CSSProperties}
                 >
-                  {COPY.home.heroTitle}
+                  {COPY.home.heroTitle}{" "}
+                  <span className="text-signal-text">{COPY.home.heroTitleAccent}</span>
                 </h1>
                 <p
                   className="u-reveal text-fg-muted mt-7 max-w-xl text-lg leading-relaxed"
@@ -78,12 +80,15 @@ export default async function HomePage() {
 
               {/* The data plate: live figures, set like a nameplate. */}
               <dl
-                className="u-marks u-reveal border-line bg-panel/70 grid grid-cols-2 border backdrop-blur-sm"
+                className="u-marks u-tab u-reveal border-line bg-panel/70 grid grid-cols-2 border backdrop-blur-sm"
                 style={{ "--i": 4 } as React.CSSProperties}
               >
-                <div className="border-line col-span-2 border-b px-6 py-3">
+                <div className="border-line col-span-2 flex items-center justify-between gap-4 border-b px-6 py-3">
                   <dt className="u-eyebrow text-fg-muted">{COPY.home.plateTitle}</dt>
-                  <dd className="sr-only">{SITE.name}</dd>
+                  <dd className="flex items-center">
+                    <span className="sr-only">{SITE.name}</span>
+                    <ColorBar />
+                  </dd>
                 </div>
                 {plate.map(([label, value], i) => (
                   <div
@@ -121,10 +126,10 @@ export default async function HomePage() {
                     href={`/kategorija/${category.slug}`}
                     className="group border-line hover:bg-panel grid grid-cols-[3rem_minmax(0,1fr)_auto] items-baseline gap-x-4 border-b py-5 transition-colors sm:grid-cols-[4rem_minmax(0,1fr)_minmax(0,1.3fr)_auto] sm:gap-x-6 sm:py-6"
                   >
-                    <span className="u-numeric text-fg-faint text-sm">
+                    <span className="u-numeric text-fg-faint group-hover:text-signal-text text-sm transition-colors">
                       {String(i + 1).padStart(2, "0")}
                     </span>
-                    <h3 className="text-h3 text-fg decoration-accent decoration-2 underline-offset-[6px] group-hover:underline">
+                    <h3 className="text-h3 text-fg decoration-signal decoration-2 underline-offset-[6px] group-hover:underline">
                       {category.name}
                     </h3>
                     {/* `hidden` + `sm:line-clamp-2` rather than a custom clamp
@@ -168,7 +173,7 @@ export default async function HomePage() {
         </section>
 
         {/* ---------------- Trust + CTA (dark) ---------------- */}
-        <section className="theme-dark u-grid border-line border-t">
+        <section className="theme-dark u-grid u-glow border-line border-t">
           <Container className="py-16 sm:py-20 lg:py-24">
             <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.45fr)] lg:gap-20">
               <div>
@@ -182,7 +187,7 @@ export default async function HomePage() {
               <ol className="border-line bg-line grid gap-px border sm:grid-cols-3">
                 {COPY.home.trust.map((item, i) => (
                   <li key={item.title} className="bg-ground flex flex-col p-6 lg:p-7">
-                    <span aria-hidden="true" className="u-numeric text-fg-faint text-sm">
+                    <span aria-hidden="true" className="u-numeric text-signal-text text-sm">
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     <h3 className="text-h4 text-fg mt-8">{item.title}</h3>

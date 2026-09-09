@@ -136,7 +136,7 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
 
       <main id="sadrzaj">
         {/* ---------------- Title band (dark) ---------------- */}
-        <section className="theme-dark u-grid border-line border-b">
+        <section className="theme-dark u-grid u-glow border-line border-b">
           <Container className="py-8 sm:py-10 lg:py-12">
             <Breadcrumbs items={crumbs} />
 

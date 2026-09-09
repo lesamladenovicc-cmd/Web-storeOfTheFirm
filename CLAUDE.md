@@ -60,27 +60,40 @@ by `npm run brand:logo` into `src/assets/brand/logo-badge.png`, `src/app/icon.pn
 `src/app/apple-icon.png`, `public/logo.png`). Its navy is the dark ground's strongest panel, its
 gold lettering is the accent, its white is the light panel. `Logo.tsx` renders the emblem.
 
+The emblem's inks are **neutralised** for the page (its navy → graphite slate, its gold → sand,
+its white → warm grey paper) so the emblem itself is the one saturated object; a small **signal**
+tier of bright inks supplies the details.
+
 ```
 /* Grounds (per-section, set by .theme-dark / .theme-light) */
-dark:  ground #182742  panel #1E2F4D  panel-3 #2C4877 (emblem navy)  fg #F6F2EA  fg-muted #B7C2D4  line #293D5E
-light: ground #EFE9DD  panel #F8F5EE  fg #14213A (navy ink)  fg-muted #4B5568  line #D3C9B3
-/* Accent — emblem gold, same on both grounds */
---accent:      #C4935F   /* FILL only: primary buttons, active page, eyebrow square */
---on-accent:   #14213A   /* text over the accent fill — navy; white is only 2.8:1   */
-accent-text:   #EBC38F (dark) / #7F521C (light)  /* accent usable as TEXT          */
---accent-2:    #2C4877   /* the emblem navy, optional highlight, unused            */
+dark:  ground #1B212B  panel #222935  panel-3 #343E4F  fg #F3F1EC  fg-muted #B6BBC4  line #2E3644
+light: ground #ECEAE5  panel #F7F6F3  fg #1B212B (slate ink)  fg-muted #4F555E  line #D2CFC7
+/* Accent — emblem gold calmed to sand, same on both grounds */
+--accent:      #B99A72   /* FILL only: primary buttons                               */
+--on-accent:   #1B212B   /* text over the accent fill — ink; white is only 3.3:1     */
+accent-text:   #E2C79A (dark) / #7A5A34 (light)  /* accent usable as TEXT           */
+/* Signal — the bright details. Marks no larger than a button. */
+--signal:      #FFBF2E   /* FILL: eyebrow square, active page, hover arrow, checked
+                            box, header top strip, index tab (.u-tab)              */
+--on-signal:   #1B212B   /* text over the yellow — ink (9.8:1); never paper         */
+signal-text:   #FFC53D (dark, yellow) / #1756C0 (light, cobalt)  /* the highlighter
+                            as TEXT: hero phrase, trust numbers, hover numerals    */
+--signal-blue #2F7BEA  --signal-red #F0472F  --signal-green #22C55E  /* lamps + ColorBar */
 ```
 Rules:
 - Components use the **contextual** classes (`text-fg`, `text-fg-muted`, `bg-panel`, `border-line`,
-  `text-accent-text`) and never a ground-specific colour, so the same component is correct on
-  navy and on paper. Wrap a paper section in `theme-light`; the root is navy.
+  `text-accent-text`, `text-signal-text`) and never a ground-specific colour, so the same
+  component is correct on slate and on paper. Wrap a paper section in `theme-light`; the root is
+  slate.
 - Accent as **text** only via `accent-text`; the fill (`bg-accent`) only ever carries `on-accent`
-  (navy) and is 2.3:1 against paper, so it never stands alone as an outline there. Every text
-  token clears AA on its ground and on `panel` — see the contrast table in globals.css before
-  adding a colour.
-- Accent ONLY on primary actions and the active marker. Generous whitespace. Strong type
-  hierarchy. Square corners. No decorative gradients, no clutter. Must not look templated — lean
-  on the `frontend-design` skill.
+  and is 2.2:1 against paper, so it never stands alone as an outline there. Same for the yellow:
+  `bg-signal` carries `on-signal`, is never text (use `signal-text`), and never covers a surface
+  larger than a button. Every text token clears AA on its ground and on `panel` — see the
+  contrast table in globals.css before adding a colour.
+- Accent ONLY on primary actions. Signal ONLY on marks: the eyebrow square, the active marker,
+  the condition/status lamps, the index tab, the `ColorBar`. Generous whitespace. Strong type
+  hierarchy. Square corners. No decorative gradients (the faint `.u-glow` wash is the ceiling),
+  no clutter. Must not look templated — lean on the `frontend-design` skill.
 
 ## Domain model (target)
 - **users** — internal staff; `role` (admin | seller)

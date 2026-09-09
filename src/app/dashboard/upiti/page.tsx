@@ -32,7 +32,7 @@ export default async function InquiriesPage() {
                 key={inquiry.id}
                 className={cn(
                   "bg-panel rounded-md border p-5",
-                  inquiry.isRead ? "border-line" : "border-accent/40",
+                  inquiry.isRead ? "border-line" : "border-signal",
                 )}
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -64,7 +64,7 @@ export default async function InquiriesPage() {
                   </p>
                 ) : null}
 
-                <p className="border-accent text-fg-muted mt-4 border-l-2 pl-4 text-[0.9375rem] leading-relaxed whitespace-pre-line">
+                <p className="border-signal text-fg-muted mt-4 border-l-2 pl-4 text-[0.9375rem] leading-relaxed whitespace-pre-line">
                   {inquiry.message}
                 </p>
 

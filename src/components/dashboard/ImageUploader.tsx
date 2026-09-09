@@ -193,7 +193,7 @@ export function ImageUploader({
         }}
         className={cn(
           "rounded-md border border-dashed p-6 text-center transition-colors",
-          dragging ? "border-accent bg-accent-soft" : "border-line",
+          dragging ? "border-signal bg-signal-soft" : "border-line",
         )}
       >
         <p className="text-fg-muted text-sm">{COPY.dashboard.form.imagesDrop}</p>
@@ -228,7 +228,7 @@ export function ImageUploader({
               key={img.key}
               className={cn(
                 "bg-panel relative overflow-hidden rounded-sm border",
-                i === 0 ? "border-accent" : "border-line",
+                i === 0 ? "border-signal" : "border-line",
               )}
             >
               <div className="relative aspect-square">
@@ -259,7 +259,7 @@ export function ImageUploader({
                 ) : null}
 
                 {i === 0 && img.status === "done" ? (
-                  <span className="u-eyebrow bg-accent text-on-accent absolute top-1.5 left-1.5 rounded-xs px-1.5 py-0.5">
+                  <span className="u-eyebrow bg-signal text-on-signal absolute top-1.5 left-1.5 rounded-xs px-1.5 py-0.5">
                     {COPY.dashboard.form.imageCover}
                   </span>
                 ) : null}

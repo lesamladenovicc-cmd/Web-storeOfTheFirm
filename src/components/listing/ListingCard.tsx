@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { COPY } from "@/config/copy";
-import { CONDITION_LABELS } from "@/config/taxonomy";
+import { CONDITION_LABELS, type ListingCondition } from "@/config/taxonomy";
 import { BLUR_DATA_URL, publicImageUrl } from "@/lib/images";
 import { formatRelativeDate } from "@/lib/format";
 import { cn } from "@/lib/cn";
@@ -9,9 +9,21 @@ import type { ListingCard as ListingCardType } from "@/types/domain";
 import { PriceTag } from "./PriceTag";
 
 /**
+ * The condition lamp at the head of the data strip — the one coloured
+ * pixel on a resting card. `korisceno` is the unmarked default, so it
+ * stays in the strip's own grey.
+ */
+const CONDITION_LAMP: Record<ListingCondition, string> = {
+  novo: "bg-signal-green",
+  kao_novo: "bg-signal-blue",
+  korisceno: "bg-fg-faint",
+  neispravno: "bg-signal-red",
+};
+
+/**
  * Grid card as a small spec sheet: a 4:3 photograph, a mono data strip
  * (condition / location / date) under its own rule, the title, and the
- * price row with a square arrow that takes the accent on hover.
+ * price row with a square arrow that takes the signal yellow on hover.
  *
  * The <Link> in the title is stretched over the whole <article> via a
  * `before:` pseudo-element, so the card must stay `relative` and must
@@ -63,7 +75,7 @@ export function ListingCard({
 
         {isSold ? (
           <span className="u-eyebrow bg-ink text-paper absolute top-3 left-3 flex items-center gap-2 px-2.5 py-1.5 text-[0.625rem]">
-            <span aria-hidden="true" className="bg-danger h-1.5 w-1.5" />
+            <span aria-hidden="true" className="bg-signal-red h-1.5 w-1.5" />
             {COPY.listing.soldRibbon}
           </span>
         ) : null}
@@ -73,6 +85,12 @@ export function ListingCard({
         <ul className="u-eyebrow border-line text-fg-faint flex flex-wrap items-center gap-x-2.5 gap-y-1 border-b px-4 py-2.5 text-[0.625rem]">
           {specs.map((spec, i) => (
             <li key={i} className="flex items-center gap-2.5 whitespace-nowrap">
+              {i === 0 && listing.condition ? (
+                <span
+                  aria-hidden="true"
+                  className={cn("h-1.5 w-1.5 shrink-0", CONDITION_LAMP[listing.condition])}
+                />
+              ) : null}
               {i > 0 ? (
                 <span aria-hidden="true" className="text-line-strong">
                   /
@@ -95,7 +113,7 @@ export function ListingCard({
           <PriceTag price={listing.priceRsd} isNegotiable={listing.isNegotiable} size="md" />
           <span
             aria-hidden="true"
-            className="border-line text-fg-muted group-hover:border-accent group-hover:bg-accent group-hover:text-on-accent grid h-8 w-8 shrink-0 place-items-center border transition-colors duration-200"
+            className="border-line text-fg-muted group-hover:border-signal group-hover:bg-signal group-hover:text-on-signal grid h-8 w-8 shrink-0 place-items-center border transition-colors duration-200"
           >
             <svg
               viewBox="0 0 16 16"
