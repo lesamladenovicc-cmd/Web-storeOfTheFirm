@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { COPY } from "@/config/copy";
-import { FOOTER_NAV, SITE } from "@/config/site";
+import { FOOTER_NAV, SITE, WORKING_HOURS } from "@/config/site";
 import { ColorBar } from "@/components/ui/ColorBar";
 import { Container } from "./Container";
 import { Logo } from "./Logo";
@@ -15,7 +15,41 @@ export function SiteFooter() {
           <div className="max-w-xs">
             <Logo />
             <p className="text-fg-muted mt-5 text-sm leading-relaxed">{COPY.footer.tagline}</p>
-            <p className="text-fg-faint mt-3 text-sm leading-relaxed">{COPY.footer.builtNote}</p>
+
+            {/* Every row is conditional on SITE.contact, which holds
+                `null` for anything the client has not confirmed — an
+                empty "Telefon —" line reads as a broken page. */}
+            {SITE.contact.phoneHref || SITE.contact.email ? (
+              <ul className="mt-5 space-y-1.5 text-sm">
+                {SITE.contact.phoneHref && SITE.contact.phone ? (
+                  <li>
+                    <a
+                      href={SITE.contact.phoneHref}
+                      className="u-numeric text-fg hover:text-accent-text transition-colors"
+                    >
+                      {SITE.contact.phone}
+                    </a>
+                  </li>
+                ) : null}
+                {SITE.contact.email ? (
+                  <li>
+                    <a
+                      href={`mailto:${SITE.contact.email}`}
+                      className="text-fg-muted hover:text-accent-text transition-colors"
+                    >
+                      {SITE.contact.email}
+                    </a>
+                  </li>
+                ) : null}
+                {WORKING_HOURS.map((w) => (
+                  <li key={w.label} className="text-fg-faint">
+                    {w.label}: <span className="u-numeric">{w.hours}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+
+            <p className="text-fg-faint mt-5 text-sm leading-relaxed">{COPY.footer.builtNote}</p>
           </div>
 
           {FOOTER_NAV.map((group) => (

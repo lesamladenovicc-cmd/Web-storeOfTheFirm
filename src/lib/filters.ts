@@ -12,11 +12,15 @@
 import {
   DEFAULT_SORT,
   isListingCondition,
+  isListingPurpose,
   isSortOption,
+  PURPOSE_LABELS,
   type ListingCondition,
+  type ListingPurpose,
   type SortOption,
 } from "@/config/taxonomy";
 import { LIMITS, SITE } from "@/config/site";
+import { COPY } from "@/config/copy";
 import { groupDigits } from "./format";
 import type { ListingFilters } from "@/types/domain";
 
@@ -24,6 +28,7 @@ import type { ListingFilters } from "@/types/domain";
 export const PARAM = {
   q: "q",
   category: "kategorija",
+  purpose: "namena",
   condition: "stanje",
   priceMin: "cena_od",
   priceMax: "cena_do",
@@ -62,6 +67,9 @@ export function parseFilters(params: RawSearchParams): ListingFilters {
     isListingCondition(c),
   );
 
+  const rawPurpose = first(params[PARAM.purpose]);
+  const purpose = isListingPurpose(rawPurpose) ? rawPurpose : undefined;
+
   const rawSort = first(params[PARAM.sort]);
   const sort: SortOption = isSortOption(rawSort) ? rawSort : DEFAULT_SORT;
 
@@ -78,6 +86,7 @@ export function parseFilters(params: RawSearchParams): ListingFilters {
   return {
     ...(q ? { q } : {}),
     ...(categorySlug ? { categorySlug } : {}),
+    ...(purpose ? { purpose } : {}),
     ...(conditions.length ? { conditions } : {}),
     ...(priceMin !== undefined ? { priceMin } : {}),
     ...(priceMax !== undefined ? { priceMax } : {}),
@@ -92,6 +101,7 @@ export function hasActiveFilters(filters: ListingFilters): boolean {
   return Boolean(
     filters.q ||
     filters.categorySlug ||
+    filters.purpose ||
     filters.conditions?.length ||
     filters.priceMin !== undefined ||
     filters.priceMax !== undefined ||
@@ -103,15 +113,20 @@ export function hasActiveFilters(filters: ListingFilters): boolean {
  * True when the URL should be marked noindex.
  *
  * Category pages have their own canonical route (/kategorija/[slug]) and
- * are indexable there. Every other narrowing — free-text search, price
- * bands, condition, sort, page 2+ — creates near-duplicate pages, so
- * they get `noindex, follow`: crawl the links, index none of the
- * permutations.
+ * are indexable there; so do the two purpose facets, at /prodaja and
+ * /izdavanje. Every other narrowing — free-text search, price bands,
+ * condition, sort, page 2+ — creates near-duplicate pages, so they get
+ * `noindex, follow`: crawl the links, index none of the permutations.
+ *
+ * Note this returns true FOR the category and purpose params as well:
+ * `/oglasi?namena=izdavanje` is the duplicate that must not be indexed,
+ * while `/izdavanje` renders the same results and never calls this.
  */
 export function shouldNoIndex(filters: ListingFilters): boolean {
   return Boolean(
     filters.q ||
     filters.categorySlug ||
+    filters.purpose ||
     filters.conditions?.length ||
     filters.priceMin !== undefined ||
     filters.priceMax !== undefined ||
@@ -131,6 +146,7 @@ export function buildQuery(
 
   if (merged.q) sp.set(PARAM.q, merged.q);
   if (merged.categorySlug) sp.set(PARAM.category, merged.categorySlug);
+  if (merged.purpose) sp.set(PARAM.purpose, merged.purpose);
   for (const c of merged.conditions ?? []) sp.append(PARAM.condition, c);
   if (merged.priceMin !== undefined) sp.set(PARAM.priceMin, String(merged.priceMin));
   if (merged.priceMax !== undefined) sp.set(PARAM.priceMax, String(merged.priceMax));
@@ -180,6 +196,14 @@ export function activeChips(
     });
   }
 
+  if (filters.purpose) {
+    chips.push({
+      key: "purpose",
+      label: PURPOSE_LABELS[filters.purpose],
+      next: { ...base, purpose: undefined },
+    });
+  }
+
   for (const c of filters.conditions ?? []) {
     chips.push({
       key: `condition-${c}`,
@@ -194,7 +218,7 @@ export function activeChips(
   if (filters.priceMin !== undefined || filters.priceMax !== undefined) {
     chips.push({
       key: "price",
-      label: priceChipLabel(filters.priceMin, filters.priceMax),
+      label: priceChipLabel(filters.priceMin, filters.priceMax, filters.purpose),
       next: { ...base, priceMin: undefined, priceMax: undefined },
     });
   }
@@ -210,11 +234,19 @@ export function activeChips(
   return chips;
 }
 
-function priceChipLabel(min: number | undefined, max: number | undefined): string {
+function priceChipLabel(
+  min: number | undefined,
+  max: number | undefined,
+  purpose?: ListingPurpose,
+): string {
   // groupDigits, not toLocaleString — the same server/client determinism
   // requirement that governs every other price string in the app.
   const f = groupDigits;
-  const unit = SITE.currencySuffix;
+  // On the rental facet the same numbers mean something else entirely,
+  // and "do 900 €" next to a monthly rent reads as the price of a flat.
+  const unit = purpose === "izdavanje"
+    ? `${SITE.currencySuffix}${COPY.listing.perMonth}`
+    : SITE.currencySuffix;
   if (min !== undefined && max !== undefined) return `${f(min)}–${f(max)} ${unit}`;
   if (min !== undefined) return `od ${f(min)} ${unit}`;
   if (max !== undefined) return `do ${f(max)} ${unit}`;

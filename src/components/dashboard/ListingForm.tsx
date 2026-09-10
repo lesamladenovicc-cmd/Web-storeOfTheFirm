@@ -3,7 +3,14 @@
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import { COPY } from "@/config/copy";
-import { CONDITION_HINTS, CONDITION_LABELS, LISTING_CONDITIONS } from "@/config/taxonomy";
+import {
+  CONDITION_HINTS,
+  CONDITION_LABELS,
+  LISTING_CONDITIONS,
+  LISTING_PURPOSES,
+  PURPOSE_LABELS,
+  type ListingPurpose,
+} from "@/config/taxonomy";
 import { Button } from "@/components/ui/Button";
 import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { Alert, Spinner } from "@/components/ui/Feedback";
@@ -48,6 +55,9 @@ export function ListingForm({
         status: "done" as const,
       })) ?? [],
   );
+
+  const [purpose, setPurpose] = useState<ListingPurpose>(listing?.purpose ?? "prodaja");
+  const isRental = purpose === "izdavanje";
 
   const isEdit = Boolean(listing);
   const isPublished = listing?.status === "aktivan" || listing?.status === "prodato";
@@ -107,6 +117,28 @@ export function ListingForm({
         </Field>
 
         <div className="grid gap-5 sm:grid-cols-2">
+          {/* Controlled, unlike every other field here: the price label
+              and the terminal-status button both have to follow it, and
+              a seller who picks "Izdavanje" and still reads "Cena (€)"
+              above an empty box types a sale price into a rent. */}
+          <Field label={COPY.dashboard.form.purpose} name="purpose" error={err?.purpose}>
+            {(aria) => (
+              <Select
+                {...aria}
+                name="purpose"
+                value={purpose}
+                onChange={(e) => setPurpose(e.target.value as ListingPurpose)}
+                hasError={Boolean(err?.purpose)}
+              >
+                {LISTING_PURPOSES.map((p) => (
+                  <option key={p} value={p}>
+                    {PURPOSE_LABELS[p]}
+                  </option>
+                ))}
+              </Select>
+            )}
+          </Field>
+
           <Field label={COPY.dashboard.form.condition} name="condition" error={err?.condition}>
             {(aria) => (
               <Select
@@ -151,10 +183,10 @@ export function ListingForm({
 
         <div className="grid gap-5 sm:grid-cols-2">
           <Field
-            label={COPY.dashboard.form.price}
+            label={isRental ? COPY.listing.monthlyRent : COPY.dashboard.form.price}
             name="priceEur"
             error={err?.priceEur}
-            hint={COPY.dashboard.form.priceHint}
+            hint={isRental ? COPY.dashboard.form.rentHint : COPY.dashboard.form.priceHint}
           >
             {(aria) => (
               <Input
@@ -162,7 +194,11 @@ export function ListingForm({
                 name="priceEur"
                 inputMode="numeric"
                 defaultValue={listing?.priceEur ?? ""}
-                placeholder={COPY.dashboard.form.pricePlaceholder}
+                placeholder={
+                  isRental
+                    ? COPY.dashboard.form.rentPlaceholder
+                    : COPY.dashboard.form.pricePlaceholder
+                }
                 className="u-numeric"
                 hasError={Boolean(err?.priceEur)}
               />
@@ -448,7 +484,7 @@ export function ListingForm({
             variant="secondary"
             disabled={pending}
           >
-            {COPY.dashboard.form.markSold}
+            {isRental ? COPY.dashboard.form.markRented : COPY.dashboard.form.markSold}
           </Button>
         ) : null}
 
@@ -460,7 +496,7 @@ export function ListingForm({
             variant="secondary"
             disabled={pending}
           >
-            {COPY.dashboard.form.markActive}
+            {isRental ? COPY.dashboard.form.markAvailable : COPY.dashboard.form.markActive}
           </Button>
         ) : null}
 

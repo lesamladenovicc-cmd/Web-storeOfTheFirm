@@ -3,6 +3,8 @@ import { cn } from "@/lib/cn";
 import {
   CONDITION_LABELS,
   STATUS_LABELS,
+  soldLabel,
+  type ListingPurpose,
   type ListingCondition,
   type ListingStatus,
 } from "@/config/taxonomy";
@@ -83,10 +85,27 @@ const STATUS_TONES: Record<ListingStatus, BadgeTone> = {
   prodato: "danger",
 };
 
-export function StatusBadge({ status, className }: { status: ListingStatus; className?: string }) {
+/**
+ * `purpose` is optional so the badge still works where it is unknown,
+ * but pass it wherever you have it: `prodato` is the terminal state for
+ * rentals too, and without the purpose the badge falls back to the
+ * ambiguous "Prodato / Izdato" instead of naming what happened.
+ */
+export function StatusBadge({
+  status,
+  purpose,
+  className,
+}: {
+  status: ListingStatus;
+  purpose?: ListingPurpose;
+  className?: string;
+}) {
+  const label =
+    status === "prodato" && purpose ? soldLabel(purpose) : STATUS_LABELS[status];
+
   return (
     <Badge tone={STATUS_TONES[status]} dot className={className}>
-      {STATUS_LABELS[status]}
+      {label}
     </Badge>
   );
 }

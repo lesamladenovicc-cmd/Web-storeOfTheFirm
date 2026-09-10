@@ -73,6 +73,10 @@ function parseListingForm(formData: FormData): ParsedForm {
       // with "Izaberite stanje." Every other nullable field below
       // already normalises the same way.
       condition: formString(formData, "condition") ?? null,
+      // Defaulted rather than `?? null`: the schema requires a purpose,
+      // and a form posted without the field (an older client, a test)
+      // means the same thing the column's default does — a sale.
+      purpose: formString(formData, "purpose") ?? "prodaja",
       priceEur: price ?? null,
       isNegotiable: formBool(formData, "isNegotiable"),
       location: formString(formData, "location") ?? "",
@@ -147,6 +151,7 @@ export async function createListingAction(
     title: input.title,
     description: input.description,
     condition: input.condition,
+    purpose: input.purpose,
     price_eur: input.priceEur,
     is_negotiable: input.isNegotiable,
     status: input.status,
@@ -248,6 +253,7 @@ export async function updateListingAction(
       title: input.title,
       description: input.description,
       condition: input.condition,
+      purpose: input.purpose,
       price_eur: input.priceEur,
       is_negotiable: input.isNegotiable,
       status: input.status,

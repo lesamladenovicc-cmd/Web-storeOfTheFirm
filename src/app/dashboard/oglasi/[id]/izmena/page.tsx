@@ -35,7 +35,7 @@ export default async function EditListingPage({
         title={COPY.dashboard.form.editTitle}
         actions={
           <div className="flex items-center gap-3">
-            <StatusBadge status={listing.status} />
+            <StatusBadge status={listing.status} purpose={listing.purpose} />
             {listing.status !== "nacrt" ? (
               <Link
                 href={`/oglas/${listing.slug}`}

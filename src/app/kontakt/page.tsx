@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { COPY } from "@/config/copy";
-import { SITE } from "@/config/site";
+import { SITE, WORKING_HOURS } from "@/config/site";
 import { ProsePage } from "@/components/layout/ProsePage";
 import { buildMetadata } from "@/lib/seo";
 
@@ -42,6 +42,19 @@ export default function ContactPage() {
       ),
     });
   }
+
+  rows.push({
+    label: COPY.pages.contact.hoursLabel,
+    value: (
+      <>
+        {WORKING_HOURS.map((w) => (
+          <span key={w.label} className="block first:mt-0">
+            {w.label}: <span className="u-numeric">{w.hours}</span>
+          </span>
+        ))}
+      </>
+    ),
+  });
 
   rows.push({
     label: COPY.pages.contact.addressLabel,

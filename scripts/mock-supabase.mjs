@@ -211,6 +211,8 @@ function seedListing(n, o) {
     title: o.title,
     description: o.description,
     condition: o.condition,
+    // Mirrors the NOT NULL DEFAULT 'prodaja' column added in 0013.
+    purpose: o.purpose ?? "prodaja",
     price_eur: o.price,
     is_negotiable: o.negotiable ?? false,
     status: o.status ?? "aktivan",
@@ -395,6 +397,52 @@ export function reset() {
     days: 34, soldDays: 21, views: 97, imageCount: 2,
     seller: ADMIN_ID,
     attrs: { kvadratura: 49, brojSoba: 2, sprat: "2/4", brojKupatila: 1, grejanje: "etažno gasno", lift: false, uknjizen: true },
+  });
+
+  // ---- Rentals (0013) ------------------------------------------------
+  // Prices here are MONTHLY, in the same price_eur column. The set is
+  // deliberately shaped to exercise the new paths: an active rental, a
+  // rented one (the IZDATO ribbon), a rental with no price at all, and
+  // — the load-bearing one — a rental cheaper than every other rental,
+  // so "cena: rastuće" on /izdavanje proves availability sorts first.
+  seedListing(15, {
+    slug: "dvosoban-stan-52m2-vracar-izdavanje-r1s2t3",
+    title: "Dvosoban stan 52 m², Vračar — izdavanje",
+    description: "Dvosoban stan na trećem spratu, namešten, sa terasom.\n\nIzdaje se direktno od investitora — bez agencije i bez provizije.\n\nUslove zakupa dogovaramo za svaku jedinicu posebno.",
+    condition: "useljivo", purpose: "izdavanje", price: 650,
+    location: "Vračar, Beograd", category: "c0000001-0000-4000-8000-000000000001",
+    days: 3, views: 128, imageCount: 3,
+    attrs: { kvadratura: 52, brojSoba: 2, sprat: "3/6", brojKupatila: 1, grejanje: "etažno gasno", orijentacija: "jugoistok", terasaM2: 6, lift: true, uknjizen: true, rokUseljenja: "odmah" },
+  });
+  seedListing(16, {
+    slug: "lokal-38m2-dorcol-izdavanje-u4v5w6",
+    title: "Lokal 38 m², Dorćol — ulični, sa izlogom",
+    description: "Ulični lokal u prizemlju novogradnje, sa izlogom prema ulici i sopstvenim ulazom.\n\nPogodan za uslužnu delatnost ili manju kancelariju.\n\nIzdaje se na duži rok.",
+    condition: "useljivo", purpose: "izdavanje", price: 900,
+    location: "Stari grad, Beograd", category: "c0000001-0000-4000-8000-000000000002",
+    days: 6, views: 84, imageCount: 2,
+    attrs: { kvadratura: 38, sprat: "PR", brojKupatila: 1, grejanje: "klima uređaj", uknjizen: true, rokUseljenja: "odmah" },
+  });
+  seedListing(17, {
+    slug: "garsonjera-28m2-zvezdara-izdavanje-x7y8z9",
+    title: "Garsonjera 28 m², Zvezdara — izdavanje",
+    description: "Garsonjera na petom spratu, namešteno, sa liftom.\n\nNajpovoljnija jedinica koju izdajemo — i trenutno je izdata.",
+    condition: "useljivo", purpose: "izdavanje", price: 320, status: "prodato",
+    location: "Zvezdara, Beograd", category: "c0000001-0000-4000-8000-000000000001",
+    days: 24, soldDays: 12, views: 210, imageCount: 2,
+    attrs: { kvadratura: 28, brojSoba: 1, sprat: "5/7", brojKupatila: 1, grejanje: "daljinsko", lift: true, uknjizen: true },
+  });
+  seedListing(18, {
+    slug: "poslovni-prostor-72m2-novi-beograd-izdavanje-a1b2c3",
+    title: "Poslovni prostor 72 m², Novi Beograd — Blok 63",
+    // Po dogovoru on a rental: the Offer must be omitted here too, and
+    // the card must read "Po dogovoru", never "null €/mesec".
+    description: "Kancelarijski prostor na četvrtom spratu, otvorenog plana, sa dva parking mesta.\n\nCena zakupa po dogovoru — zavisi od dužine ugovora i potrebnih adaptacija.",
+    condition: "pred_useljenje", purpose: "izdavanje", price: null, negotiable: true,
+    location: "Novi Beograd, Beograd", category: "c0000001-0000-4000-8000-000000000003",
+    days: 9, views: 57, imageCount: 2,
+    seller: ADMIN_ID,
+    attrs: { kvadratura: 72, sprat: "4/9", brojKupatila: 2, grejanje: "toplotna pumpa", lift: true, garaznoMesto: true, uknjizen: true, rokUseljenja: "Q2 2026" },
   });
 
   db.inquiries = [
@@ -765,7 +813,11 @@ export function start(port = DEFAULT_PORT) {
 
       if (pathname === "/rest/v1/rpc/search_listings") {
         const a = json() ?? {};
-        let rows = db.listings.filter((l) => l.status === "aktivan");
+        // 0013: sold/rented rows come back too, parked below the
+        // available ones by the sort further down.
+        let rows = db.listings.filter(
+          (l) => l.status === "aktivan" || l.status === "prodato",
+        );
 
         if (a.p_category_slug) {
           const cat = db.categories.find((c) => c.slug === a.p_category_slug);
@@ -778,6 +830,7 @@ export function start(port = DEFAULT_PORT) {
           );
         }
         if (a.p_conditions?.length) rows = rows.filter((l) => a.p_conditions.includes(l.condition));
+        if (a.p_purpose) rows = rows.filter((l) => l.purpose === a.p_purpose);
         if (a.p_price_min != null) rows = rows.filter((l) => l.price_eur != null && l.price_eur >= a.p_price_min);
         if (a.p_price_max != null) rows = rows.filter((l) => l.price_eur != null && l.price_eur <= a.p_price_max);
         if (a.p_location) rows = rows.filter((l) => fold(l.location).includes(fold(a.p_location)));
@@ -790,6 +843,14 @@ export function start(port = DEFAULT_PORT) {
           rows = [...rows].sort((x, y) => String(y.published_at).localeCompare(String(x.published_at)));
         }
 
+        // Availability outranks the chosen sort — the same first ORDER BY
+        // key the SQL function uses, so /oglasi never opens on a unit
+        // that is already gone. Array.sort is stable, so the sort above
+        // survives inside each group.
+        rows = [...rows].sort(
+          (x, y) => (x.status === "prodato" ? 1 : 0) - (y.status === "prodato" ? 1 : 0),
+        );
+
         const total = rows.length;
         const offset = a.p_offset ?? 0;
         return send(
@@ -797,6 +858,7 @@ export function start(port = DEFAULT_PORT) {
             const cat = db.categories.find((c) => c.id === l.category_id);
             return {
               id: l.id, slug: l.slug, title: l.title, condition: l.condition,
+              purpose: l.purpose,
               price_eur: l.price_eur, is_negotiable: l.is_negotiable, status: l.status,
               location: l.location, cover_image_path: l.cover_image_path,
               category_name: cat?.name ?? null, category_slug: cat?.slug ?? null,

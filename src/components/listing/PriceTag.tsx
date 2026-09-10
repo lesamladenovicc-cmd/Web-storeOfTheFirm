@@ -1,6 +1,7 @@
 import { cn } from "@/lib/cn";
 import { COPY } from "@/config/copy";
 import { formatPrice } from "@/lib/format";
+import type { ListingPurpose } from "@/config/taxonomy";
 
 /**
  * Price is set in the mono face, semibold and tabular, in the foreground
@@ -9,12 +10,15 @@ import { formatPrice } from "@/lib/format";
  */
 export function PriceTag({
   price,
+  purpose = "prodaja",
   isNegotiable = false,
   size = "md",
   tone = "fg",
   className,
 }: {
   price: number | null;
+  /** A rent is rendered `450 €/mesec`; a sale price carries no suffix. */
+  purpose?: ListingPurpose;
   isNegotiable?: boolean;
   size?: "sm" | "md" | "lg";
   /** `accent` uses the ground-safe accent-text token, never the fill. */
@@ -41,7 +45,7 @@ export function PriceTag({
         className,
       )}
     >
-      <span>{formatPrice(price)}</span>
+      <span>{formatPrice(price, purpose)}</span>
       {isNegotiable && price !== null ? (
         <span className="u-eyebrow text-fg-faint basis-full font-normal">
           {COPY.listing.negotiable}

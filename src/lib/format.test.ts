@@ -224,6 +224,29 @@ describe("formatPricePerSquare", () => {
     expect(formatPricePerSquare(242_000, undefined)).toBeNull();
     expect(formatPricePerSquare(242_000, 0)).toBeNull();
   });
+
+  it("keeps a decimal place for rent, which rounds to zero without one", () => {
+    // 450 € over 62 m² is 7,3 €/m². Rounded to whole euros that is "7",
+    // and on a small flat it would round to nothing useful at all.
+    expect(formatPricePerSquare(450, 62, "izdavanje")).toBe("7,3 €/m²/mesec");
+    expect(formatPricePerSquare(620, 62, "izdavanje")).toBe("10 €/m²/mesec");
+  });
+});
+
+describe("formatPrice — sale vs. rent", () => {
+  it("leaves a sale price bare", () => {
+    expect(formatPrice(242_000)).toBe("242.000 €");
+    expect(formatPrice(242_000, "prodaja")).toBe("242.000 €");
+  });
+
+  it("marks a rent as monthly, so 450 € cannot read as the price of a flat", () => {
+    expect(formatPrice(450, "izdavanje")).toBe("450 €/mesec");
+  });
+
+  it("says „Po dogovoru” for either purpose rather than „null €/mesec”", () => {
+    expect(formatPrice(null, "izdavanje")).toBe("Po dogovoru");
+    expect(formatPrice(undefined, "izdavanje")).toBe("Po dogovoru");
+  });
 });
 
 describe("formatRooms", () => {

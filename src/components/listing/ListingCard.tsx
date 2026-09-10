@@ -1,7 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { COPY } from "@/config/copy";
-import { CONDITION_LABELS, type ListingCondition } from "@/config/taxonomy";
+import {
+  CONDITION_LABELS,
+  PURPOSE_LABELS,
+  soldLabel,
+  type ListingCondition,
+} from "@/config/taxonomy";
 import { BLUR_DATA_URL, publicImageUrl } from "@/lib/images";
 import { formatRelativeDate } from "@/lib/format";
 import { cn } from "@/lib/cn";
@@ -44,13 +49,28 @@ export function ListingCard({
   priority?: boolean;
 }) {
   const href = `/oglas/${listing.slug}`;
+  // `prodato` is the terminal state for both purposes; the WORD differs.
   const isSold = listing.status === "prodato";
 
-  const specs = [
-    listing.condition ? CONDITION_LABELS[listing.condition] : null,
-    listing.location || null,
-    listing.publishedAt ? formatRelativeDate(listing.publishedAt) : null,
-  ].filter((s): s is string => s !== null);
+  /**
+   * The data strip. `lamp` is a Tailwind background class for the 6px
+   * square that leads its chip — carried per chip rather than assumed to
+   * be the first one, so chips can come and go without moving the lamp.
+   *
+   * The purpose chip appears ONLY on rentals: sale is the default mode
+   * of the whole catalogue, so saying "Prodaja" on every card is noise,
+   * while an unmarked rental is a misread price.
+   */
+  const specs: { label: string; lamp?: string }[] = [
+    ...(listing.purpose === "izdavanje"
+      ? [{ label: PURPOSE_LABELS.izdavanje, lamp: "bg-signal" }]
+      : []),
+    ...(listing.condition
+      ? [{ label: CONDITION_LABELS[listing.condition], lamp: CONDITION_LAMP[listing.condition] }]
+      : []),
+    ...(listing.location ? [{ label: listing.location }] : []),
+    ...(listing.publishedAt ? [{ label: formatRelativeDate(listing.publishedAt) }] : []),
+  ];
 
   return (
     <article
@@ -81,7 +101,7 @@ export function ListingCard({
         {isSold ? (
           <span className="u-eyebrow bg-ink text-paper absolute top-3 left-3 flex items-center gap-2 px-2.5 py-1.5 text-[0.625rem]">
             <span aria-hidden="true" className="bg-signal-red h-1.5 w-1.5" />
-            {COPY.listing.soldRibbon}
+            {soldLabel(listing.purpose)}
           </span>
         ) : null}
       </div>
@@ -89,19 +109,16 @@ export function ListingCard({
       {specs.length ? (
         <ul className="u-eyebrow border-line text-fg-faint flex flex-wrap items-center gap-x-2.5 gap-y-1 border-b px-4 py-2.5 text-[0.625rem]">
           {specs.map((spec, i) => (
-            <li key={i} className="flex items-center gap-2.5 whitespace-nowrap">
-              {i === 0 && listing.condition ? (
-                <span
-                  aria-hidden="true"
-                  className={cn("h-1.5 w-1.5 shrink-0", CONDITION_LAMP[listing.condition])}
-                />
-              ) : null}
+            <li key={spec.label} className="flex items-center gap-2.5 whitespace-nowrap">
               {i > 0 ? (
                 <span aria-hidden="true" className="text-line-strong">
                   /
                 </span>
               ) : null}
-              {spec}
+              {spec.lamp ? (
+                <span aria-hidden="true" className={cn("h-1.5 w-1.5 shrink-0", spec.lamp)} />
+              ) : null}
+              {spec.label}
             </li>
           ))}
         </ul>
@@ -115,7 +132,12 @@ export function ListingCard({
         </h3>
 
         <div className="mt-auto flex items-end justify-between gap-4 pt-6">
-          <PriceTag price={listing.priceEur} isNegotiable={listing.isNegotiable} size="md" />
+          <PriceTag
+            price={listing.priceEur}
+            purpose={listing.purpose}
+            isNegotiable={listing.isNegotiable}
+            size="md"
+          />
           <span
             aria-hidden="true"
             className="border-line text-fg-muted group-hover:border-signal group-hover:bg-signal group-hover:text-on-signal grid h-8 w-8 shrink-0 place-items-center border transition-colors duration-200"

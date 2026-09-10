@@ -22,6 +22,7 @@ function publishable(overrides: Record<string, unknown> = {}) {
     title: "Dvoiposoban stan 62 m2, Vračar",
     description: "Stan na četvrtom spratu, sa terasom i garažnim mestom. Useljivo odmah.",
     condition: "u_izgradnji",
+    purpose: "prodaja",
     priceEur: 8_450_000,
     isNegotiable: true,
     location: "Vračar, Beograd",
@@ -43,6 +44,7 @@ describe("draft schema — deliberately lenient", () => {
       // The whole point of a draft: a seller can park work before
       // deciding the condition. Mirrors listings_active_needs_condition.
       condition: null,
+      purpose: "prodaja",
       priceEur: null,
       isNegotiable: false,
       location: "",
@@ -61,6 +63,7 @@ describe("draft schema — deliberately lenient", () => {
       title: "abc",
       description: "",
       condition: null,
+      purpose: "prodaja",
       priceEur: null,
       isNegotiable: false,
       location: "",
@@ -221,3 +224,49 @@ function issuePaths(result: { success: boolean; error?: { issues: { path: Proper
   if (result.success || !result.error) return [];
   return result.error.issues.map((i) => i.path.join("."));
 }
+
+describe("purpose — sale vs. rent", () => {
+  it("defaults nothing: an unstated purpose is rejected, not guessed", () => {
+    // The action supplies "prodaja" when the form omits the field; the
+    // schema itself must not, or a client bug silently files a rental
+    // as a sale and its monthly rent becomes an asking price.
+    const withoutPurpose: Record<string, unknown> = publishable();
+    delete withoutPurpose.purpose;
+    const result = listingPublishSchema.safeParse(withoutPurpose);
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a purpose that is not one of the two enum values", () => {
+    const result = listingPublishSchema.safeParse(publishable({ purpose: "iznajmljivanje" }));
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts a rental with a monthly figure in the same price field", () => {
+    const result = listingPublishSchema.safeParse(
+      publishable({ purpose: "izdavanje", priceEur: 450 }),
+    );
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.purpose).toBe("izdavanje");
+      expect(result.data.priceEur).toBe(450);
+    }
+  });
+
+  it("requires a purpose on drafts too — an ambiguous price is not half-finished work", () => {
+    const result = schemaForStatus("nacrt").safeParse({
+      title: "Nacrt jedinice",
+      description: "",
+      condition: null,
+      priceEur: null,
+      isNegotiable: false,
+      location: "",
+      categoryId: null,
+      contactName: "",
+      contactPhone: null,
+      contactEmail: null,
+      imagePaths: [],
+      status: "nacrt",
+    });
+    expect(result.success).toBe(false);
+  });
+});

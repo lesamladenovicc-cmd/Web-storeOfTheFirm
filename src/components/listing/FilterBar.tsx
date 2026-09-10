@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { COPY } from "@/config/copy";
-import { CONDITION_LABELS, LISTING_CONDITIONS, SORT_LABELS, SORT_OPTIONS } from "@/config/taxonomy";
+import {
+  CONDITION_LABELS,
+  LISTING_CONDITIONS,
+  LISTING_PURPOSES,
+  PURPOSE_LABELS,
+  SORT_LABELS,
+  SORT_OPTIONS,
+} from "@/config/taxonomy";
 import { Button } from "@/components/ui/Button";
 import { PARAM, activeChips, buildUrl, hasActiveFilters } from "@/lib/filters";
 import type { Category, ListingFilters } from "@/types/domain";
@@ -22,11 +29,14 @@ export function FilterBar({
   basePath = "/oglasi",
   /** Hidden on /kategorija/[slug], where the category is the route. */
   showCategory = true,
+  /** Hidden on /prodaja and /izdavanje, where the purpose is the route. */
+  showPurpose = true,
 }: {
   filters: ListingFilters;
   categories: Category[];
   basePath?: string;
   showCategory?: boolean;
+  showPurpose?: boolean;
 }) {
   const selected = new Set(filters.conditions ?? []);
   const active = hasActiveFilters(filters);
@@ -62,6 +72,27 @@ export function FilterBar({
                 {categories.map((c) => (
                   <option key={c.id} value={c.slug}>
                     {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
+
+          {showPurpose ? (
+            <div>
+              <label htmlFor="filter-purpose" className="u-eyebrow text-fg-muted mb-2.5 block">
+                {COPY.listings.purpose}
+              </label>
+              <select
+                id="filter-purpose"
+                name={PARAM.purpose}
+                defaultValue={filters.purpose ?? ""}
+                className={`${CONTROL} cursor-pointer`}
+              >
+                <option value="">{COPY.listings.allPurposes}</option>
+                {LISTING_PURPOSES.map((p) => (
+                  <option key={p} value={p}>
+                    {PURPOSE_LABELS[p]}
                   </option>
                 ))}
               </select>

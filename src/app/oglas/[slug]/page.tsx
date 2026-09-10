@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { COPY } from "@/config/copy";
 import { SITE } from "@/config/site";
-import { CONDITION_LABELS } from "@/config/taxonomy";
+import { CONDITION_LABELS, PURPOSE_LABELS, soldLabel } from "@/config/taxonomy";
 import { Container } from "@/components/layout/Container";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -114,8 +114,9 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
   // Missing and hidden listings are indistinguishable — both 404.
   if (!listing) notFound();
 
-  const related = await getRelatedListings(listing.categorySlug, listing.id);
+  const related = await getRelatedListings(listing.categorySlug, listing.id, listing.purpose);
   const isSold = listing.status === "prodato";
+  const isRental = listing.purpose === "izdavanje";
 
   const crumbs: Crumb[] = [
     { name: COPY.listing.breadcrumbHome, path: "/" },
@@ -127,7 +128,7 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
   ];
 
   const a = listing.attributes;
-  const pricePerSquare = formatPricePerSquare(listing.priceEur, a.kvadratura);
+  const pricePerSquare = formatPricePerSquare(listing.priceEur, a.kvadratura, listing.purpose);
   const accommodation = accommodationJsonLd(listing);
 
   /**
@@ -150,7 +151,10 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
   const specs: [string, string][] = [
     ...row(COPY.listing.attrKvadratura, a.kvadratura ? formatArea(a.kvadratura) : null),
     ...row(COPY.listing.attrBrojSoba, a.brojSoba ? formatRooms(a.brojSoba) : null),
-    ...row(COPY.listing.pricePerSquare, pricePerSquare),
+    ...row(
+      isRental ? COPY.listing.pricePerSquareMonthly : COPY.listing.pricePerSquare,
+      pricePerSquare,
+    ),
     ...row(COPY.listing.attrSprat, a.sprat),
     ...row(COPY.listing.attrBrojKupatila, a.brojKupatila ? String(a.brojKupatila) : null),
     ...row(COPY.listing.attrTerasa, a.terasaM2 ? formatArea(a.terasaM2) : null),
@@ -165,6 +169,7 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
     ),
     ...row(COPY.listing.attrRokUseljenja, a.rokUseljenja),
     ...row(COPY.listing.attrUknjizen, yesNo(a.uknjizen)),
+    ...row(COPY.listing.purposeLabel, PURPOSE_LABELS[listing.purpose]),
     ...row(COPY.listing.categoryLabel, listing.categoryName),
     ...row(COPY.listing.locationLabel, listing.location),
     ...row(COPY.listing.publishedOn, listing.publishedAt ? formatDate(listing.publishedAt) : null),
@@ -187,9 +192,14 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
                   the visitor reads the price. */}
               {isSold ? (
                 <Badge tone="danger" dot>
-                  {COPY.listing.soldRibbon}
+                  {soldLabel(listing.purpose)}
                 </Badge>
               ) : null}
+              {/* Sale vs. rent changes what every figure below means, so
+                  it is stated before the price, not buried in the specs. */}
+              <Badge tone={isRental ? "accent" : "neutral"}>
+                {PURPOSE_LABELS[listing.purpose]}
+              </Badge>
               <ConditionBadge condition={listing.condition} />
               {listing.categoryName && listing.categorySlug ? (
                 <Link
@@ -210,6 +220,7 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
               <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4 lg:flex-col lg:items-end">
                 <PriceTag
                   price={listing.priceEur}
+                  purpose={listing.purpose}
                   isNegotiable={listing.isNegotiable}
                   size="lg"
                   className={isSold ? "line-through opacity-60" : undefined}

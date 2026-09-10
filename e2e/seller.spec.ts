@@ -249,7 +249,7 @@ test("UPDATE — editing the price is persisted and shown publicly", async ({ pa
   await expect(page.getByText(formatMoney(399_000)).first()).toBeVisible();
 });
 
-test("UPDATE — marking a listing sold removes it from search but keeps the page", async ({
+test("UPDATE — marking a listing sold keeps it in search, ribboned and last", async ({
   page,
 }) => {
   await login(page);
@@ -276,11 +276,36 @@ test("UPDATE — marking a listing sold removes it from search but keeps the pag
    */
   await expect(page.getByText(COPY.dashboard.form.updated)).toBeVisible({ timeout: 15_000 });
 
-  // Gone from browsing...
+  /**
+   * Since migration 0013 a sold listing STAYS in search rather than
+   * vanishing — greyed out, with the ribbon over its cover. A catalogue
+   * that silently drops what it sells looks like a catalogue nothing
+   * ever happens in; the ordering (below) is what keeps it out of the
+   * way. This assertion was inverted deliberately, not relaxed.
+   */
   await page.goto("/oglasi?q=Lokal");
-  await expect(page.getByText(FIXTURE.toSell)).toHaveCount(0);
+  const card = page.locator("article").filter({ hasText: FIXTURE.toSell });
+  await expect(card).toHaveCount(1);
+  await expect(card.getByText(COPY.listing.soldRibbon)).toBeVisible();
 
-  // ...but the page itself still resolves, with the sold treatment.
+  /**
+   * And the sold ones sort behind every available unit, whatever sort
+   * is chosen — the cheapest thing in a catalogue is very often the one
+   * already gone, so "cena: rastuće" is the case that breaks first.
+   *
+   * The invariant is "no available card appears after a sold one", not
+   * "the sold card is last": within the sold group the chosen sort still
+   * applies, so which sold card lands last is not fixed.
+   */
+  await page.goto("/oglasi?q=Lokal&sort=cena_rastuce");
+  const cards = await page.locator("article").allInnerTexts();
+  const soldFlags = cards.map((t) => t.includes(COPY.listing.soldRibbon));
+  const firstSold = soldFlags.indexOf(true);
+  if (firstSold !== -1) {
+    expect(soldFlags.slice(firstSold).every(Boolean)).toBe(true);
+  }
+
+  // The page itself still resolves, with the sold treatment.
   const response = await page.goto(`/oglas/${FIXTURE.toSellSlug}`);
   expect(response?.status()).toBe(200);
   await expect(page.getByText(COPY.listing.soldRibbon).first()).toBeVisible();

@@ -11,6 +11,7 @@
 
 import { COPY } from "@/config/copy";
 import { SITE } from "@/config/site";
+import type { ListingPurpose } from "@/config/taxonomy";
 
 /* ------------------------------------------------------------------ */
 /* Numbers & money                                                     */
@@ -47,10 +48,20 @@ export function formatMoney(amount: number): string {
 /**
  * Price for a listing, where `null` means the price is negotiable.
  * null → "Po dogovoru"
+ *
+ * `price_eur` holds a one-off asking price for a sale and a MONTHLY
+ * rent for a rental (migration 0013), and the two are three orders of
+ * magnitude apart — "450 €" beside a flat reads as a typo, "450 €/mesec"
+ * reads correctly. The suffix is presentation only and appears nowhere
+ * in the database.
  */
-export function formatPrice(amount: number | null | undefined): string {
+export function formatPrice(
+  amount: number | null | undefined,
+  purpose: ListingPurpose = "prodaja",
+): string {
   if (amount === null || amount === undefined) return COPY.listing.priceOnRequest;
-  return formatMoney(amount);
+  const money = formatMoney(amount);
+  return purpose === "izdavanje" ? `${money}${COPY.listing.perMonth}` : money;
 }
 
 /** Plain grouped integer, no currency (view counts, result counts). */
@@ -82,9 +93,19 @@ export function formatArea(value: number): string {
 export function formatPricePerSquare(
   priceEur: number | null | undefined,
   kvadratura: number | null | undefined,
+  purpose: ListingPurpose = "prodaja",
 ): string | null {
   if (priceEur === null || priceEur === undefined) return null;
   if (!kvadratura || kvadratura <= 0) return null;
+  // Rent per m² is a monthly figure and rounds to zero on any realistic
+  // flat, so it keeps one decimal place; a sale price never needs one.
+  if (purpose === "izdavanje") {
+    const perSquare = Math.round((priceEur / kvadratura) * 10) / 10;
+    const whole = Math.floor(perSquare);
+    const decimal = Math.round((perSquare - whole) * 10);
+    const digits = decimal === 0 ? groupDigits(whole) : `${groupDigits(whole)},${decimal}`;
+    return `${digits} ${SITE.currencySuffix}/${COPY.listing.squareMetreSuffix}${COPY.listing.perMonth}`;
+  }
   return `${formatMoney(Math.round(priceEur / kvadratura))}/${COPY.listing.squareMetreSuffix}`;
 }
 

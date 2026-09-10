@@ -40,16 +40,43 @@ type SiteContact = {
   country: string;
 };
 
-/** TODO(BG Building): fill in once the client supplies the details. */
 const CONTACT: SiteContact = {
-  email: null,
-  phone: null,
-  phoneHref: null,
+  email: "jadrankogojak@gmail.com",
+  phone: "064 170 2827",
+  phoneHref: "tel:+381641702827",
+  /** TODO(BG Building): street address still unknown — stays null. */
   address: null,
   city: "Beograd",
   postalCode: null,
   country: "Srbija",
 };
+
+/**
+ * Opening hours.
+ *
+ * `opens`/`closes` are 24h HH:MM because that is what schema.org's
+ * OpeningHoursSpecification requires; `hours` is what the page shows.
+ *
+ * TODO(BG Building): CONFIRM BEFORE LAUNCH. These came from the client
+ * with "valjda je ovako" attached — publishing hours a visitor plans a
+ * site visit around, and being wrong, is worse than publishing none.
+ */
+export const WORKING_HOURS = [
+  {
+    label: "Ponedeljak–petak",
+    hours: "07–17h",
+    schemaDays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+    opens: "07:00",
+    closes: "17:00",
+  },
+  {
+    label: "Subota",
+    hours: "08–17h",
+    schemaDays: ["Saturday"],
+    opens: "08:00",
+    closes: "17:00",
+  },
+] as const;
 
 type SiteRegistration = {
   pib: string | null;
@@ -92,7 +119,8 @@ export const SITE = {
 
 /** Primary navigation, rendered by SiteHeader and MobileNav. */
 export const MAIN_NAV = [
-  { href: "/oglasi", label: "Ponuda" },
+  { href: "/prodaja", label: "Prodaja" },
+  { href: "/izdavanje", label: "Izdavanje" },
   { href: "/o-nama", label: "O nama" },
   { href: "/kontakt", label: "Kontakt" },
 ] as const;
@@ -109,9 +137,10 @@ export const FOOTER_NAV = [
   {
     title: "Ponuda",
     links: [
+      { href: "/prodaja", label: "Na prodaju" },
+      { href: "/izdavanje", label: "Za izdavanje" },
       { href: "/kategorija/stanovi", label: "Stanovi" },
       { href: "/kategorija/lokali", label: "Lokali" },
-      { href: "/kategorija/garaze-i-parking", label: "Garaže i parking" },
       { href: "/oglasi", label: "Cela ponuda" },
     ],
   },

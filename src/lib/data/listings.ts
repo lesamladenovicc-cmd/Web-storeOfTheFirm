@@ -4,7 +4,12 @@ import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { createPublicClient } from "@/lib/supabase/public";
 import { LIMITS } from "@/config/site";
-import { DEFAULT_SORT, type ListingCondition, type ListingStatus } from "@/config/taxonomy";
+import {
+  DEFAULT_SORT,
+  type ListingCondition,
+  type ListingPurpose,
+  type ListingStatus,
+} from "@/config/taxonomy";
 import type {
   Listing,
   ListingAttributes,
@@ -33,6 +38,7 @@ type SearchRow = {
   slug: string;
   title: string;
   condition: ListingCondition;
+  purpose: ListingPurpose;
   price_eur: number | null;
   is_negotiable: boolean;
   status: ListingStatus;
@@ -51,6 +57,7 @@ function toCard(row: SearchRow): ListingCard {
     slug: row.slug,
     title: row.title,
     condition: row.condition,
+    purpose: row.purpose,
     priceEur: row.price_eur,
     isNegotiable: row.is_negotiable,
     status: row.status,
@@ -67,6 +74,7 @@ type SearchArgs = {
   p_query: string | null;
   p_category_slug: string | null;
   p_conditions: ListingCondition[] | null;
+  p_purpose: ListingPurpose | null;
   p_price_min: number | null;
   p_price_max: number | null;
   p_location: string | null;
@@ -80,6 +88,7 @@ function searchArgs(overrides: Partial<SearchArgs>): SearchArgs {
     p_query: null,
     p_category_slug: null,
     p_conditions: null,
+    p_purpose: null,
     p_price_min: null,
     p_price_max: null,
     p_location: null,
@@ -112,6 +121,7 @@ export async function searchListings(
       p_query: filters.q ?? null,
       p_category_slug: filters.categorySlug ?? null,
       p_conditions: filters.conditions?.length ? filters.conditions : null,
+      p_purpose: filters.purpose ?? null,
       p_price_min: filters.priceMin ?? null,
       p_price_max: filters.priceMax ?? null,
       p_location: filters.location ?? null,
@@ -166,6 +176,7 @@ type DetailRow = {
   title: string;
   description: string;
   condition: ListingCondition;
+  purpose: ListingPurpose;
   price_eur: number | null;
   is_negotiable: boolean;
   status: ListingStatus;
@@ -186,7 +197,7 @@ type DetailRow = {
 };
 
 const DETAIL_SELECT =
-  "id, slug, title, description, condition, price_eur, is_negotiable, status, " +
+  "id, slug, title, description, condition, purpose, price_eur, is_negotiable, status, " +
   "location, category_id, seller_id, contact_name, contact_phone, contact_email, " +
   "cover_image_path, attributes, view_count, published_at, created_at, updated_at, " +
   "categories ( name, slug ), " +
@@ -212,6 +223,7 @@ function toListing(row: DetailRow): Listing {
     title: row.title,
     description: row.description,
     condition: row.condition,
+    purpose: row.purpose,
     priceEur: row.price_eur,
     isNegotiable: row.is_negotiable,
     status: row.status,
@@ -282,10 +294,17 @@ export const getListingById = cache(async (id: string): Promise<Listing | null> 
   return toListing(data as unknown as DetailRow);
 });
 
-/** Same-category listings, excluding the one being viewed. */
+/**
+ * Same-category listings, excluding the one being viewed.
+ *
+ * Scoped to the same purpose as well: someone reading a rental has told
+ * us their budget is monthly, and a 240.000 € flat under "slične
+ * nekretnine" is not a related listing, it is a different transaction.
+ */
 export async function getRelatedListings(
   categorySlug: string | null,
   excludeId: string,
+  purpose: ListingPurpose,
   limit = LIMITS.relatedListings,
 ): Promise<ListingCard[]> {
   if (!categorySlug) return [];
@@ -293,7 +312,7 @@ export async function getRelatedListings(
   const supabase = createPublicClient();
   const { data, error } = await supabase.rpc(
     "search_listings",
-    searchArgs({ p_category_slug: categorySlug, p_limit: limit + 1 }),
+    searchArgs({ p_category_slug: categorySlug, p_purpose: purpose, p_limit: limit + 1 }),
   );
 
   if (error) return [];
@@ -439,6 +458,7 @@ type DashboardRow = {
   slug: string;
   title: string;
   condition: ListingCondition;
+  purpose: ListingPurpose;
   price_eur: number | null;
   is_negotiable: boolean;
   status: ListingStatus;
@@ -454,7 +474,7 @@ type DashboardRow = {
 };
 
 const DASHBOARD_SELECT =
-  "id, slug, title, condition, price_eur, is_negotiable, status, location, " +
+  "id, slug, title, condition, purpose, price_eur, is_negotiable, status, location, " +
   "cover_image_path, published_at, updated_at, created_at, view_count, seller_id, " +
   "categories ( name, slug ), profiles ( full_name )";
 
@@ -482,6 +502,7 @@ export async function getDashboardListings(status?: ListingStatus): Promise<List
     slug: row.slug,
     title: row.title,
     condition: row.condition,
+    purpose: row.purpose,
     priceEur: row.price_eur,
     isNegotiable: row.is_negotiable,
     status: row.status,

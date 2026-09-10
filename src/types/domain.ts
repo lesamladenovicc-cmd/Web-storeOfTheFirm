@@ -7,9 +7,14 @@
  * truth for the wire format; the mappers in `lib/data/*` bridge the two.
  */
 
-import type { ListingCondition, ListingStatus, UserRole } from "@/config/taxonomy";
+import type {
+  ListingCondition,
+  ListingPurpose,
+  ListingStatus,
+  UserRole,
+} from "@/config/taxonomy";
 
-export type { ListingCondition, ListingStatus, UserRole };
+export type { ListingCondition, ListingPurpose, ListingStatus, UserRole };
 
 /* ------------------------------------------------------------------ */
 
@@ -60,6 +65,9 @@ export type ListingCard = {
   title: string;
   /** Null only on drafts; publishing requires it. */
   condition: ListingCondition | null;
+  /** Sale or rent. Decides how `priceEur` is read and labelled. */
+  purpose: ListingPurpose;
+  /** A one-off asking price for `prodaja`, a MONTHLY rent for `izdavanje`. */
   priceEur: number | null;
   isNegotiable: boolean;
   status: ListingStatus;
@@ -146,6 +154,7 @@ export type Inquiry = {
 export type ListingFilters = {
   q?: string;
   categorySlug?: string;
+  purpose?: ListingPurpose;
   conditions?: ListingCondition[];
   priceMin?: number;
   priceMax?: number;

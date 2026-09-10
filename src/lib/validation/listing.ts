@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { COPY } from "@/config/copy";
 import { LIMITS } from "@/config/site";
-import { LISTING_CONDITIONS, LISTING_STATUSES } from "@/config/taxonomy";
+import { LISTING_CONDITIONS, LISTING_PURPOSES, LISTING_STATUSES } from "@/config/taxonomy";
 import { normalizePhone } from "@/lib/format";
 
 /**
@@ -117,6 +117,11 @@ const base = {
   // half-finished work, so nothing that only a buyer needs may block
   // saving one. Mirrors listings_active_needs_condition.
   condition: z.enum(LISTING_CONDITIONS, { message: COPY.validation.invalidCondition }).nullable(),
+  // NOT nullable, and required on drafts too: the column is NOT NULL
+  // with a `prodaja` default, and a listing whose price could mean
+  // either a sale or a monthly rent is not a half-finished draft, it is
+  // an ambiguous one.
+  purpose: z.enum(LISTING_PURPOSES, { message: COPY.validation.invalidPurpose }),
   priceEur,
   isNegotiable: z.boolean(),
   location,

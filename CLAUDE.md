@@ -97,12 +97,13 @@ Rules:
 
 ## Domain model (target)
 - **users** — internal staff; `role` (admin | seller)
-- **listings** — title, description, condition (build phase), price_eur, status, location, seller_id, category, attributes (jsonb spec), created_at, updated_at
+- **listings** — title, description, condition (build phase), purpose (sale/rent), price_eur, status, location, seller_id, category, attributes (jsonb spec), created_at, updated_at
 - **listing_images** — listing_id, storage_path, sort_order
 
 Enums (Serbian, user-facing):
 - condition — build phase, not wear. Slugs `u_pripremi`, `u_izgradnji`, `pred_useljenje`, `useljivo`; labels `U pripremi`, `U izgradnji`, `Pred useljenje`, `Useljivo`. Migration 0011 renamed these in place, so the **Postgres enum order is no longer chronological** — display order comes from `LISTING_CONDITIONS` and nothing may `order by condition`.
-- status: `aktivan`, `prodato`, `nacrt`
+- purpose — what the unit is offered for. Slugs `prodaja`, `izdavanje`; labels `Prodaja`, `Izdavanje`. **`price_eur` is a one-off asking price for `prodaja` and a MONTHLY rent for `izdavanje`** — the `/mesec` suffix is presentation only, in `lib/format.ts`. Canonical facet routes are `/prodaja` and `/izdavanje`; `/oglasi?namena=…` is their noindex twin.
+- status: `aktivan`, `prodato`, `nacrt`. **`prodato` is the terminal state for BOTH purposes** — it means "left the offer", and the Serbian word is derived by `soldLabel(purpose)` (`Prodato` / `Izdato`), never stored. There is deliberately no `izdato` enum value: see migration 0013 for why. Search returns `aktivan` AND `prodato`, with sold/rented rows always sorted last.
 
 ## Auth
 - Internal accounts only. Admin creates/invites; no public registration route.
@@ -127,7 +128,7 @@ Enums (Serbian, user-facing):
 - lint: `npm run lint`
 - typecheck: `npm run typecheck`
 - unit tests: `npm run test`
-- **db + RLS verification: `npm run verify:db`** — runs every migration and 114
+- **db + RLS verification: `npm run verify:db`** — runs every migration and 124
   assertions in PGlite (real Postgres in WASM). No Docker needed. Run this after
   ANY change under `supabase/migrations/`.
 - e2e: `npm run test:e2e`

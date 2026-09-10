@@ -78,6 +78,12 @@ export async function getRevenueOverview(
     .from("listings")
     .select(SOLD_SELECT)
     .eq("status", "prodato")
+    // Sales only. Since 0013 `prodato` is the terminal state for rentals
+    // too, and a monthly rent summed into a sales total would inflate it
+    // by a figure that is not revenue in the same sense — one is a
+    // one-off transfer, the other a recurring amount. Rental income, if
+    // the client ever wants it, is a separate report.
+    .eq("purpose", "prodaja")
     .order("sold_at", { ascending: false, nullsFirst: false })
     .limit(MAX_SALES);
 

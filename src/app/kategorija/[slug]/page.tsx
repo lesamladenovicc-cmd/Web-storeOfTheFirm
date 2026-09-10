@@ -1,20 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { COPY } from "@/config/copy";
-import { Container } from "@/components/layout/Container";
-import { PageBanner } from "@/components/layout/PageBanner";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import type { Crumb } from "@/components/layout/Breadcrumbs";
-import { ListingGrid } from "@/components/listing/ListingGrid";
-import { FilterBar, FilterChips } from "@/components/listing/FilterBar";
-import { Pagination } from "@/components/ui/Pagination";
-import { JsonLd } from "@/components/seo/JsonLd";
-import { getActiveCategories, getCategoryBySlug } from "@/lib/data/categories";
-import { searchListings } from "@/lib/data/listings";
-import { countWithNoun } from "@/lib/format";
-import { hasActiveFilters, parseFilters, type RawSearchParams } from "@/lib/filters";
-import { breadcrumbJsonLd, buildMetadata, itemListJsonLd } from "@/lib/seo";
+import { ListingsBrowser } from "@/components/listing/ListingsBrowser";
+import { getCategoryBySlug } from "@/lib/data/categories";
+import { parseFilters, type RawSearchParams } from "@/lib/filters";
+import { buildMetadata } from "@/lib/seo";
 
 /**
  * The money keyword pages ("stanovi u novogradnji Vračar"): indexable and
@@ -69,8 +62,6 @@ export default async function CategoryPage({
   // The route owns the category; a query param must not override it.
   const filters = { ...parseFilters(rawParams), categorySlug: category.slug };
 
-  const [result, categories] = await Promise.all([searchListings(filters), getActiveCategories()]);
-
   const basePath = `/kategorija/${category.slug}`;
   const crumbs: Crumb[] = [
     { name: COPY.listing.breadcrumbHome, path: "/" },
@@ -78,71 +69,21 @@ export default async function CategoryPage({
     { name: category.name, path: basePath },
   ];
 
-  // Only non-category narrowing counts as "filtered" here.
-  const filtered = hasActiveFilters({ ...filters, categorySlug: undefined });
-
   return (
     <>
       <SiteHeader />
-
-      <main id="sadrzaj">
-        <PageBanner
-          tag={COPY.listings.category}
-          title={category.name}
-          lead={category.description ?? undefined}
-          crumbs={crumbs}
-          meta={
-            <p className="u-eyebrow text-fg-muted">
-              {COPY.listings.resultsPrefix} {countWithNoun(result.total, "nekretnina")}
-            </p>
-          }
-        />
-
-        <section className="theme-light">
-          <Container className="py-10 sm:py-14">
-            <FilterBar
-              filters={filters}
-              categories={categories}
-              basePath={basePath}
-              showCategory={false}
-            />
-
-            <FilterChips filters={{ ...filters, categorySlug: undefined }} basePath={basePath} />
-
-            <div className="mt-10">
-              <ListingGrid listings={result.items} filtered={filtered} />
-            </div>
-
-            <Pagination
-              page={result.page}
-              pageCount={result.pageCount}
-              filters={filters}
-              basePath={basePath}
-            />
-          </Container>
-        </section>
-      </main>
-
-      <SiteFooter />
-      {/* The category pages are the money keywords, so the catalogue
-          listing matters most here. Suppressed once the visitor has
-          narrowed or paged, exactly as on /oglasi. */}
-      <JsonLd
-        data={[
-          ...(!filtered && result.page === 1
-            ? [
-                itemListJsonLd({
-                  listings: result.items,
-                  path: basePath,
-                  name: category.name,
-                  description: category.description || undefined,
-                  total: result.total,
-                }),
-              ]
-            : []),
-          breadcrumbJsonLd(crumbs),
-        ]}
+      <ListingsBrowser
+        filters={filters}
+        basePath={basePath}
+        tag={COPY.listings.category}
+        title={category.name}
+        lead={category.description ?? undefined}
+        listDescription={category.description || undefined}
+        crumbs={crumbs}
+        showCategory={false}
+        owns={["categorySlug"]}
       />
+      <SiteFooter />
     </>
   );
 }

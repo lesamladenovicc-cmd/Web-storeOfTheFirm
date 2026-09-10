@@ -198,9 +198,14 @@ async function createFlowSection(db) {
     `select sold_at is not null from public.listings where id = '${NEW_ID}'`, true);
 
   await asRole(db, "anon", null);
-  await expectValue(db, "a sold listing drops out of public SEARCH",
-    "select count(*) from public.search_listings('bager za test')", 0);
-  // ...but the page itself must still resolve, so a shared or indexed
+  // Since 0013 a sold listing STAYS in search, greyed out and ribboned
+  // "Prodato" (or "Izdato"), instead of vanishing: a visitor who never
+  // sees a sold unit cannot tell a moving catalogue from a dead one.
+  await expectValue(db, "a sold listing stays in public SEARCH",
+    "select count(*) from public.search_listings('bager za test')", 1);
+  await expectValue(db, "…and search reports it as sold, not active",
+    "select status::text from public.search_listings('bager za test')", "prodato");
+  // ...and the page itself must still resolve, so a shared or indexed
   // link does not 404 the moment the seller marks the item sold.
   await expectValue(db, "yet the sold page is still readable by anon",
     `select count(*) from public.listings where id = '${NEW_ID}'`, 1);
@@ -246,6 +251,76 @@ async function createFlowSection(db) {
   );
 
   await asRole(db, null, null);
+}
+
+/**
+ * Purpose — sale vs. rent (migration 0013).
+ *
+ * Self-contained: it inserts its own rows and deletes them again, so
+ * the listing counts asserted by every section above stay valid.
+ */
+async function purposeSection(db) {
+  console.log("\nPurpose — prodaja vs. izdavanje");
+  await asRole(db, null, null);
+
+  const CATEGORY = "aaaaaaaa-0000-4000-8000-000000000001";
+  const SELLER = "22222222-2222-4222-8222-222222222222";
+  const R_ACTIVE = "cccccccc-0000-4000-8000-000000000001";
+  const R_RENTED = "cccccccc-0000-4000-8000-000000000002";
+  const S_ACTIVE = "cccccccc-0000-4000-8000-000000000003";
+
+  // The rented one is deliberately the CHEAPEST of the three: it is the
+  // row that would lead a "cena_rastuce" page if availability did not
+  // outrank the user's sort.
+  await allowScript(db, "three purpose fixtures insert", `
+    insert into public.listings
+      (id, slug, title, description, condition, purpose, price_eur, status,
+       location, category_id, seller_id, contact_phone)
+    values
+      ('${R_ACTIVE}', 'zakup-test-alfa-p1q2r3', 'Stan zakuptest alfa',
+       'Slobodan.', 'useljivo', 'izdavanje', 500, 'aktivan', 'Beograd',
+       '${CATEGORY}', '${SELLER}', '+381641234567'),
+      ('${R_RENTED}', 'zakup-test-beta-s4t5u6', 'Stan zakuptest beta',
+       'Izdat.', 'useljivo', 'izdavanje', 300, 'prodato', 'Beograd',
+       '${CATEGORY}', '${SELLER}', '+381641234567'),
+      ('${S_ACTIVE}', 'zakup-test-gama-v7w8x9', 'Stan zakuptest gama',
+       'Na prodaju.', 'useljivo', 'prodaja', 200000, 'aktivan', 'Beograd',
+       '${CATEGORY}', '${SELLER}', '+381641234567');
+  `);
+
+  await expectValue(db, "a listing inserted without a purpose is a sale",
+    `select purpose::text from public.listings where id = '${S_ACTIVE}'`, "prodaja");
+  await expectValue(db, "marking a rental sold keeps it a rental",
+    `select purpose::text from public.listings where id = '${R_RENTED}'`, "izdavanje");
+  await expectValue(db, "the rented unit still got a sold_at stamp",
+    `select sold_at is not null from public.listings where id = '${R_RENTED}'`, true);
+
+  await asRole(db, "anon", null);
+
+  await expectValue(db, "unfiltered search returns sales AND rentals",
+    "select count(*) from public.search_listings('zakuptest')", 3);
+  await expectValue(db, "p_purpose = izdavanje returns only rentals",
+    "select count(*) from public.search_listings(p_query => 'zakuptest', p_purpose => 'izdavanje')", 2);
+  await expectValue(db, "p_purpose = prodaja returns only sales",
+    "select count(*) from public.search_listings(p_query => 'zakuptest', p_purpose => 'prodaja')", 1);
+
+  // The load-bearing assertion for the new first sort key.
+  await expectValue(db, "cena_rastuce still opens with the AVAILABLE unit, not the cheapest",
+    `select price_eur from public.search_listings(
+       p_query => 'zakuptest', p_purpose => 'izdavanje', p_sort => 'cena_rastuce') limit 1`, 500);
+  await expectValue(db, "…and the rented one is parked last",
+    `select status::text from public.search_listings(
+       p_query => 'zakuptest', p_sort => 'cena_rastuce') offset 2 limit 1`, "prodato");
+
+  await expectValue(db, "search exposes purpose so the card can label the ribbon",
+    `select purpose::text from public.search_listings(p_query => 'zakuptest beta')`, "izdavanje");
+  await expectValue(db, "a rental DRAFT stays invisible to anon",
+    `select count(*) from public.search_listings(p_query => 'zakuptest', p_purpose => 'izdavanje')
+      where status = 'nacrt'`, 0);
+
+  await asRole(db, null, null);
+  await allow(db, "purpose fixtures clean up",
+    `delete from public.listings where id in ('${R_ACTIVE}', '${R_RENTED}', '${S_ACTIVE}')`);
 }
 
 /** seed.sql now only seeds category taxonomy — no demo listings. */
@@ -619,6 +694,7 @@ async function main() {
 
   // =================================================================
   await createFlowSection(db);
+  await purposeSection(db);
   await seedSection(db);
 
   await asRole(db, null, null);

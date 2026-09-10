@@ -42,7 +42,9 @@ export function ContactPanel({ listing }: { listing: Listing }) {
 
         {isSold ? (
           <p className="border-danger/40 bg-danger-soft text-danger mt-5 border px-3 py-2.5 text-sm">
-            {COPY.listing.soldNotice}
+            {listing.purpose === "izdavanje"
+              ? COPY.listing.rentedNotice
+              : COPY.listing.soldNotice}
           </p>
         ) : null}
       </div>

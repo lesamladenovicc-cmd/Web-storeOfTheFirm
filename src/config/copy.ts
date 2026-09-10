@@ -134,6 +134,28 @@ export const COPY = {
     applyFilters: "Primeni",
     category: "Tip nekretnine",
     allCategories: "Svi tipovi",
+    // The URL parameter is `namena`.
+    purpose: "Namena",
+    allPurposes: "Prodaja i izdavanje",
+    /**
+     * The two canonical purpose landing pages, /prodaja and /izdavanje.
+     * They carry the search terms people actually type — "stanovi za
+     * izdavanje Beograd" — which the generic /oglasi title cannot.
+     */
+    purposePages: {
+      prodaja: {
+        tag: "Prodaja",
+        title: "Nekretnine na prodaju",
+        lead: "Stanovi, lokali i poslovni prostor iz naših objekata u Beogradu, u prodaji direktno od investitora.",
+        meta: "Stanovi i poslovni prostor na prodaju u Beogradu, direktno od investitora — bez agencijske provizije, uz uvid u projekat i dinamiku radova.",
+      },
+      izdavanje: {
+        tag: "Izdavanje",
+        title: "Nekretnine za izdavanje",
+        lead: "Jedinice iz naših objekata koje izdajemo — cene su mesečne, a ugovor se sklapa direktno sa nama.",
+        meta: "Stanovi, lokali i poslovni prostor za izdavanje u Beogradu, direktno od vlasnika objekta. Mesečne cene u evrima, bez posrednika.",
+      },
+    },
     // The URL parameter stays `stanje` — only the label moved on.
     condition: "Faza",
     price: "Cena",
@@ -155,8 +177,16 @@ export const COPY = {
   listing: {
     negotiable: "Cena po dogovoru",
     priceOnRequest: "Po dogovoru",
+    // The ribbon WORD itself comes from soldLabel(purpose) in
+    // taxonomy.ts — a rented unit reads "Izdato", not "Prodato".
     soldRibbon: "Prodato",
     soldNotice: "Ova jedinica je prodata i više nije u ponudi.",
+    rentedNotice: "Ova jedinica je izdata i trenutno nije u ponudi.",
+    /** Appended to a rent figure: `450 €/mesec`. */
+    perMonth: "/mesec",
+    purposeLabel: "Namena",
+    monthlyRent: "Mesečna zakupnina",
+    pricePerSquareMonthly: "Zakupnina po m²",
     publishedOn: "Objavljeno",
     updatedOn: "Ažurirano",
     views: "pregleda",
@@ -469,7 +499,12 @@ export const COPY = {
       update: "Sačuvaj izmene",
       unpublish: "Vrati u nacrt",
       markSold: "Označi kao prodato",
+      markRented: "Označi kao izdato",
       markActive: "Vrati u prodaju",
+      markAvailable: "Vrati u ponudu",
+      purpose: "Namena",
+      rentHint: "Mesečna zakupnina u evrima. Ostavite prazno za „Po dogovoru”.",
+      rentPlaceholder: "npr. 450",
 
       savedDraft: "Nekretnina je sačuvana kao nacrt.",
       published: "Nekretnina je objavljena.",
@@ -561,6 +596,7 @@ export const COPY = {
     invalidNumber: "Unesite ispravan broj.",
     priceTooHigh: "Cena je prevelika.",
     invalidCondition: "Izaberite stanje.",
+    invalidPurpose: "Izaberite namenu — prodaja ili izdavanje.",
     invalidCategory: "Izaberite kategoriju.",
     locationLength: "Lokacija mora imati između 2 i 80 karaktera.",
     contactRequired: "Unesite telefon ili e-mail adresu.",
@@ -587,22 +623,29 @@ export const COPY = {
   pages: {
     about: {
       title: "O nama",
-      lead: "BG Building je beogradski investitor i izvođač. Gradimo stambene objekte i prodajemo stanove u njima bez posrednika.",
+      lead: "BG Building je beogradski investitor i izvođač. Gradimo objekte i sami raspolažemo jedinicama u njima — deo prodajemo, deo izdajemo, u oba slučaja bez posrednika.",
       body: [
-        "BG Building nije agencija. Objekat koji gradimo vodimo od pribavljanja dozvole i pripreme lokacije, preko grube gradnje i instalacija, do tehničkog prijema i primopredaje ključeva. Kada kupujete kod nas, razgovarate sa firmom koja je taj stan i sagradila — a ne sa posrednikom koji ga je preuzeo u ponudu.",
-        "Gradimo u Beogradu, u naseljima sa gotovom infrastrukturom: tamo gde već postoje škola, prevoz i pijaca, a ne na periferiji koja se tek priprema. Objekti su manji i srednji, po pravilu do desetak spratova, sa podzemnom garažom i sopstvenim priključcima.",
-        "Kupovina je moguća u svakoj fazi. U ranoj fazi cena kvadrata je najniža, a izbor etaže i orijentacije najveći; kod useljivih stanova plaćate više, ali ulazite odmah i vidite tačno ono što kupujete. Šta god da izaberete, dinamika plaćanja se prati uz dinamiku radova i definiše se ugovorom kod javnog beležnika.",
-        "Obilazak gradilišta je moguć i pre nego što je objekat završen, uz najavu i zaštitnu opremu. Na uvid dajemo građevinsku dozvolu, projekat stana sa merama i specifikaciju radova i materijala — da biste znali šta je uračunato u cenu, a šta nije.",
-        "Posle primopredaje ostajemo dostupni. Za radove i ugrađenu opremu važi garantni rok predviđen zakonom, a prijave se rešavaju direktno kod nas, bez posrednika.",
+        "BG Building nije agencija. Objekat koji gradimo vodimo od pribavljanja dozvole i pripreme lokacije, preko gradnje i instalacija, do tehničkog prijema i primopredaje ključeva. Kada dođete kod nas, razgovarate sa firmom koja je tu jedinicu i sagradila — a ne sa posrednikom koji ju je preuzeo u ponudu.",
+        "Deo jedinica prodajemo, a deo zadržavamo i izdajemo. To znači da i kada iznajmljujete, ugovor sklapate direktno sa vlasnikom objekta: nema agencijske provizije, a za kvar ili reklamaciju zovete istu firmu koja je objekat i podigla. U ponudi su obe namene jasno razdvojene — cene za izdavanje su mesečne.",
+        "Kupovina je moguća u svakoj fazi. U ranoj fazi cena kvadrata je najniža, a izbor etaže i orijentacije najveći; kod useljivih jedinica plaćate više, ali ulazite odmah i vidite tačno ono što kupujete. Dinamika plaćanja prati dinamiku radova i definiše se ugovorom kod javnog beležnika.",
+        "Obilazak je moguć i pre nego što je objekat završen, uz najavu i zaštitnu opremu. Na uvid dajemo građevinsku dozvolu, projekat jedinice sa merama i specifikaciju radova i materijala — da biste znali šta je uračunato u cenu, a šta nije.",
+        "Posle primopredaje ostajemo dostupni. Reklamacije na izvedene radove i ugrađenu opremu prijavljuju se direktno nama, bez posrednika.",
       ],
       // TODO(BG Building): brojke (godina osnivanja, broj objekata, broj
       // predatih stanova) tek kad ih klijent potvrdi — izmišljene brojke
       // na "O nama" su najlakše proverljiva laž na sajtu.
+      //
+      // TODO(BG Building): pravni deo (oblik firme, PIB, matični broj,
+      // garantni rokovi) čeka knjigovođu. Do tada se ovde NE pominje ni
+      // pravni oblik ni konkretan garantni rok — raniji tekst je tvrdio
+      // "garantni rok predviđen zakonom", što je obećanje koje ne
+      // možemo potkrepiti dok ugovorni okvir nije potvrđen.
     },
     contact: {
       title: "Kontakt",
       lead: "Za ponudu, obilazak objekta i uslove plaćanja.",
       infoTitle: "Podaci",
+      hoursLabel: "Radno vreme",
       addressLabel: "Adresa",
       note: "Za konkretnu jedinicu iz ponude najbrže je da pošaljete upit sa njene stranice — poruka stiže direktno prodaji, zajedno sa podacima o toj nekretnini.",
       // Prikazuje se dok su telefon i e-mail još `null` u SITE.contact.
@@ -615,6 +658,14 @@ export const COPY = {
         {
           q: "Da li se plaća agencijska provizija?",
           a: "Ne. BG Building je investitor i prodaje sopstvene stanove, pa nema posrednika ni provizije. Cena iskazana u ponudi je cena o kojoj se pregovara.",
+        },
+        {
+          q: "Da li izdajete stanove i poslovni prostor?",
+          // TODO(BG Building): konkretni uslovi zakupa — minimalni
+          // period, depozit, ko plaća režije, namešteno/nenamešteno —
+          // NISU poznati i ne smeju se izmisliti. Kada ih klijent
+          // potvrdi, ovo pitanje se razlaže na nekoliko konkretnih.
+          a: "Da. Deo jedinica iz naših objekata izdajemo, a ugovor se sklapa direktno sa nama kao vlasnikom — bez agencije i bez provizije. Sve što je trenutno slobodno vidite na stranici „Nekretnine za izdavanje”, sa mesečnom cenom. Uslove zakupa dogovaramo za svaku jedinicu posebno, pa nas za konkretnu ponudu pozovite ili nam pišite.",
         },
         {
           q: "Može li se kupiti stan dok je objekat još u izgradnji?",

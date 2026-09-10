@@ -155,7 +155,7 @@ npm run build        # production build (needs a reachable Supabase)
 npm run typecheck    # tsc --noEmit
 npm run lint         # eslint
 npm run test         # vitest — formatting, plurals, transliteration
-npm run verify:db    # migrations + 114 RLS assertions in PGlite (no Docker)
+npm run verify:db    # migrations + 124 RLS assertions in PGlite (no Docker)
 npm run test:e2e     # playwright
 npm run seed:users   # create the seed staff accounts
 ```

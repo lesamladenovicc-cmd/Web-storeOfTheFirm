@@ -7,11 +7,11 @@
 
 import type { Metadata } from "next";
 import { COPY } from "@/config/copy";
-import { SITE, SITE_URL } from "@/config/site";
+import { SITE, SITE_URL, WORKING_HOURS } from "@/config/site";
 import {
   CONDITION_LABELS,
   CONDITION_SCHEMA_URL,
-  STATUS_SCHEMA_AVAILABILITY,
+  availabilityFor,
 } from "@/config/taxonomy";
 import { toPlainText, truncate } from "./format";
 import { publicImageUrl } from "./images";
@@ -166,12 +166,8 @@ export function productJsonLd(listing: Listing, now: Date = new Date()): JsonLdO
 
   if (listing.priceEur !== null) {
     jsonLd.offers = {
-      "@type": "Offer",
-      url,
-      priceCurrency: SITE.currency,
-      price: String(listing.priceEur),
+      ...offerFor(listing, url),
       priceValidUntil: priceValidUntil(now),
-      availability: STATUS_SCHEMA_AVAILABILITY[listing.status],
       // Omitted rather than emitted as null: a null value is invalid
       // markup, whereas an absent optional property is fine.
       ...(condition ? { itemCondition: condition } : {}),
@@ -182,6 +178,43 @@ export function productJsonLd(listing: Listing, now: Date = new Date()): JsonLdO
   }
 
   return jsonLd;
+}
+
+/**
+ * The Offer node, shared by the detail page and the catalogue listing so
+ * the two can never disagree about the same unit.
+ *
+ * A RENTAL IS NOT A CHEAP SALE. Without `businessFunction` a crawler
+ * reads "450 EUR" as the price of the flat, which is both wrong and the
+ * kind of wrong that gets a rich result pulled. GoodRelations' LeaseOut
+ * is the vocabulary schema.org itself points at for this, and the
+ * UnitPriceSpecification states the period the 450 belongs to.
+ *
+ * Only call it when `priceEur` is non-null — "Po dogovoru" has no Offer.
+ */
+function offerFor(listing: ListingCard, url: string): JsonLdObject {
+  const offer: JsonLdObject = {
+    "@type": "Offer",
+    url,
+    priceCurrency: SITE.currency,
+    price: String(listing.priceEur),
+    availability: availabilityFor(listing.status, listing.purpose),
+  };
+
+  if (listing.purpose === "izdavanje") {
+    offer.businessFunction = "http://purl.org/goodrelations/v1#LeaseOut";
+    offer.priceSpecification = {
+      "@type": "UnitPriceSpecification",
+      price: String(listing.priceEur),
+      priceCurrency: SITE.currency,
+      // MON is the UN/CEFACT code for "month".
+      referenceQuantity: { "@type": "QuantitativeValue", value: 1, unitCode: "MON" },
+    };
+  } else {
+    offer.businessFunction = "http://purl.org/goodrelations/v1#Sell";
+  }
+
+  return offer;
 }
 
 /**
@@ -303,13 +336,7 @@ export function itemListJsonLd({
         });
 
         if (listing.priceEur !== null) {
-          product.offers = {
-            "@type": "Offer",
-            price: String(listing.priceEur),
-            priceCurrency: SITE.currency,
-            availability: STATUS_SCHEMA_AVAILABILITY[listing.status],
-            url: itemUrl,
-          };
+          product.offers = offerFor(listing, itemUrl);
         }
 
         return {
@@ -419,6 +446,16 @@ export function siteGraphJsonLd(): JsonLdObject {
   });
   // Only telephone/email carry information; without either the node is noise.
   if (SITE.contact.phone || SITE.contact.email) org.contactPoint = contactPoint;
+
+  // Hours are what turn a phone number into "can I call them now?" in a
+  // knowledge panel, so they are worth stating in the graph rather than
+  // only on /kontakt.
+  org.openingHoursSpecification = WORKING_HOURS.map((w) => ({
+    "@type": "OpeningHoursSpecification",
+    dayOfWeek: w.schemaDays.map((d) => `https://schema.org/${d}`),
+    opens: w.opens,
+    closes: w.closes,
+  }));
 
   const website: JsonLdObject = {
     "@type": "WebSite",

@@ -25,6 +25,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: absoluteUrl("/"), lastModified: now, changeFrequency: "daily", priority: 1 },
     { url: absoluteUrl("/oglasi"), lastModified: now, changeFrequency: "daily", priority: 0.9 },
+    // The purpose facets are canonical routes of their own, and the
+    // rental one carries search terms /oglasi cannot compete for.
+    { url: absoluteUrl("/prodaja"), lastModified: now, changeFrequency: "daily", priority: 0.9 },
+    { url: absoluteUrl("/izdavanje"), lastModified: now, changeFrequency: "daily", priority: 0.9 },
     { url: absoluteUrl("/o-nama"), lastModified: now, changeFrequency: "monthly", priority: 0.5 },
     { url: absoluteUrl("/kontakt"), lastModified: now, changeFrequency: "monthly", priority: 0.5 },
     {

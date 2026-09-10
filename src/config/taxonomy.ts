@@ -65,27 +65,79 @@ export const CONDITION_SCHEMA_URL: Record<ListingCondition, string> = {
 };
 
 /* ------------------------------------------------------------------ */
+/* Purpose — sale or rent (migration 0013)                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * What the unit is offered FOR. An axis of its own: orthogonal to
+ * `condition` (how far the building has got) and to `status` (whether
+ * it is still in the offer).
+ *
+ * `price_eur` carries a one-off asking price for `prodaja` and a
+ * MONTHLY rent for `izdavanje` — the "/mesec" suffix is presentation
+ * and lives in lib/format.ts, never in the database.
+ */
+export const LISTING_PURPOSES = ["prodaja", "izdavanje"] as const;
+
+export type ListingPurpose = (typeof LISTING_PURPOSES)[number];
+
+export const PURPOSE_LABELS: Record<ListingPurpose, string> = {
+  prodaja: "Prodaja",
+  izdavanje: "Izdavanje",
+};
+
+/* ------------------------------------------------------------------ */
 /* Status                                                              */
 /* ------------------------------------------------------------------ */
 
+/**
+ * `prodato` IS THE TERMINAL STATE FOR BOTH PURPOSES — it means "left
+ * the offer", not literally "sold". A rented-out unit is stored as
+ * `status = 'prodato', purpose = 'izdavanje'` and reads "Izdato".
+ *
+ * There is no separate `izdato` enum value on purpose: the pair
+ * ('aktivan','prodato') is hardcoded in two RLS policies, three publish
+ * CHECK constraints, four partial indexes and the search RPC, and a
+ * third value missed in any one of them would 404 every rented unit.
+ * See migration 0013 for the full argument. Use `soldLabel()` for the
+ * user-facing word; never render `STATUS_LABELS.prodato` on the public
+ * site.
+ */
 export const LISTING_STATUSES = ["nacrt", "aktivan", "prodato"] as const;
 
 export type ListingStatus = (typeof LISTING_STATUSES)[number];
 
+/** Dashboard-only. The public site derives its wording from `soldLabel`. */
 export const STATUS_LABELS: Record<ListingStatus, string> = {
   nacrt: "Nacrt",
   aktivan: "Aktivan",
-  prodato: "Prodato",
+  prodato: "Prodato / Izdato",
 };
 
 /** Only `aktivan` listings are publicly visible and indexable. */
 export const PUBLIC_STATUS: ListingStatus = "aktivan";
 
-export const STATUS_SCHEMA_AVAILABILITY: Record<ListingStatus, string> = {
-  nacrt: "https://schema.org/OutOfStock",
-  aktivan: "https://schema.org/InStock",
-  prodato: "https://schema.org/SoldOut",
-};
+/** The ribbon over the cover image, and the notice on the listing page. */
+export function soldLabel(purpose: ListingPurpose): string {
+  return purpose === "izdavanje" ? "Izdato" : "Prodato";
+}
+
+/**
+ * schema.org availability.
+ *
+ * A rented unit is `OutOfStock`, not `SoldOut`: SoldOut asserts a sale
+ * that did not happen, and the unit returns to the market when the
+ * lease ends.
+ */
+export function availabilityFor(status: ListingStatus, purpose: ListingPurpose): string {
+  if (status === "aktivan") return "https://schema.org/InStock";
+  if (status === "prodato") {
+    return purpose === "izdavanje"
+      ? "https://schema.org/OutOfStock"
+      : "https://schema.org/SoldOut";
+  }
+  return "https://schema.org/OutOfStock";
+}
 
 /* ------------------------------------------------------------------ */
 /* Roles                                                               */
@@ -178,6 +230,10 @@ export function isListingCondition(v: unknown): v is ListingCondition {
 
 export function isListingStatus(v: unknown): v is ListingStatus {
   return typeof v === "string" && (LISTING_STATUSES as readonly string[]).includes(v);
+}
+
+export function isListingPurpose(v: unknown): v is ListingPurpose {
+  return typeof v === "string" && (LISTING_PURPOSES as readonly string[]).includes(v);
 }
 
 export function isSortOption(v: unknown): v is SortOption {

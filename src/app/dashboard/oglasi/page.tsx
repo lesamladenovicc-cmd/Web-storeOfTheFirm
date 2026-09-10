@@ -145,7 +145,7 @@ export default async function DashboardListingsPage({
                       ) : null}
                     </Td>
                     <Td>
-                      <StatusBadge status={listing.status} />
+                      <StatusBadge status={listing.status} purpose={listing.purpose} />
                     </Td>
                     <Td className="u-numeric text-right whitespace-nowrap">
                       {formatPrice(listing.priceEur)}
